@@ -179,7 +179,10 @@ class RecordListView(LoginRequiredMixin, ListView):
             del query_params['sort']
         if 'order' in query_params:
             del query_params['order']
-        context['other_filter_params'] = f"&{query_params.urlencode()}" if query_params else ""
+        context['other_params'] = query_params.urlencode()
+        # 상세 페이지로 이동할 때 사용할 모든 파라미터 (페이지 포함)
+        all_params = self.request.GET.copy()
+        context['all_params'] = all_params.urlencode()
         context['ids_from'] = self.request.GET.get('ids_from', '')
         context['ids_to'] = self.request.GET.get('ids_to', '')
         context['selected_changed_fields'] = self.request.GET.getlist('changed_fields')
