@@ -1,0 +1,31 @@
+<!-- confirmation_section.html -->
+<div class="confirmation-section">
+  <h3>확인 체크박스</h3>
+  <table class="confirmation-table">
+    <tr>
+      <td>
+        <input type="checkbox" id="id_disease_confirmed" name="disease_confirmed" {% if record.disease_confirmed %}checked{% endif %} />
+        <label for="id_disease_confirmed">질병 확인</label>
+      </td>
+      <td>
+        <input type="checkbox" id="id_job_confirmed" name="job_confirmed" {% if record.job_confirmed %}checked{% endif %} />
+        <label for="id_job_confirmed">직종 확인</label>
+      </td>
+      <td>
+        <input type="checkbox" id="id_exposure_confirmed" name="exposure_confirmed" {% if record.exposure_confirmed %}checked{% endif %} />
+        <label for="id_exposure_confirmed">유해인자 확인</label>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <input type="checkbox" id="id_decision_confirmed" name="decision_confirmed" {% if record.decision_confirmed %}checked{% endif %} />
+        <label for="id_decision_confirmed">결정 확인</label>
+      </td>
+      <td>
+        <input type="checkbox" id="id_smry_confirmed" name="smry_confirmed" {% if record.smry_confirmed %}checked{% endif %} />
+        <label for="id_smry_confirmed">고찰 확인</label>
+      </td>
+      <td></td>
+    </tr>
+  </table>
+</div>

@@ -1,0 +1,28 @@
+<div class="sidebar-status">
+    <h3 class="status-title">접속 중인 사용자 ({{ online_users.count }})</h3>
+    <ul class="user-list">
+        {% for user in online_users %}
+            <li class="status-item">
+                <span class="status-indicator"></span>
+                <span class="status-user">{{ user.username }}</span>
+            </li>
+        {% empty %}
+            <li class="status-item-empty">
+                접속 중인 사용자가 없습니다.
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+
+<style>
+/* 기존 CSS에 이 스타일을 추가하거나 여기에 두어도 됩니다. */
+.user-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.status-item-empty {
+    font-size: 14px;
+    color: #6c757d;
+}
+</style>

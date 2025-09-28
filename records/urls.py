@@ -1,0 +1,23 @@
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    # 기록 관리 URL
+    path('', views.RecordListView.as_view(), name='record_list'),
+    path('<int:pk>/', views.RecordDetailView.as_view(), name='record_detail'),
+    path('<int:pk>/edit/', views.RecordUpdateView.as_view(), name='record_edit'),
+    
+    # API URL
+    path('api/get-disease-code/', views.get_disease_code_by_name, name='get_disease_code_by_name'),
+    path('api/get-job-code/', views.get_job_code_by_occupation_name, name='get_job_code_by_occupation_name'),
+    
+    path('api/autocomplete/', views.get_unique_field_values, name='autocomplete_suggestions'),
+    
+    # 기타 URL (사전 및 외부 연동)
+    path('proxy/rag_search/', views.proxy_rag_search, name='proxy_rag_search'),
+    path('exposure-dictionary/', views.ExposureDictionaryListView.as_view(), name='exposure_dictionary_list'),
+    path('disease-dictionary/', views.DiseaseDictionaryListView.as_view(), name='disease_dictionary_list'),
+
+    # 레코드 복원 API
+    path('api/reset-record/<int:pk>/', views.reset_record, name='reset_record'),
+]

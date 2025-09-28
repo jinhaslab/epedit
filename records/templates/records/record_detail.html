@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>상세 정보: {{ record.case.fid }}</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap");
+
+      :root {
+        --primary-color: #28a745; /* 옅은 초록색 테마 */
+        --primary-hover-color: #218838;
+        --secondary-color: #6c757d;
+        --secondary-hover-color: #5a6268;
+        --border-color: #cdd4da; /* 테이블 테두리 색상 좀 더 진하게 */
+        --background-color: #f8f9fa;
+        --table-header-bg: #e9ecef; /* 테이블 헤더 배경색 */
+        --table-row-odd-bg: #ffffff; /* 홀수 행 배경색 */
+        --table-row-even-bg: #f2f2f2; /* 짝수 행 배경색 */
+      }
+
+      html,
+      body {
+        font-family: "Noto Sans KR", sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #fff;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .main-container {
+        display: flex;
+        height: 100%;
+      }
+
+      .pdf-viewer {
+        flex: 1;
+        border-right: 1px solid var(--border-color);
+      }
+
+      .pdf-viewer iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+      }
+
+      .content-container {
+        flex: 1;
+        overflow-y: auto;
+        background-color: var(--background-color);
+        padding: 30px;
+      }
+
+      .container {
+        background: #fff;
+        padding: 25px;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        margin-bottom: 25px;
+      }
+
+      .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+      }
+
+      .page-header h1 {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0;
+      }
+
+      h2 {
+        font-size: 20px;
+        color: #333;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 15px;
+        margin-top: 0;
+        margin-bottom: 20px;
+      }
+
+      .summary-card {
+        display: flex;
+        gap: 20px;
+        justify-content: space-around;
+      }
+
+      .summary-item {
+        text-align: center;
+      }
+
+      .summary-item .label {
+        font-size: 13px;
+        color: #6c757d;
+        margin-bottom: 8px;
+      }
+
+      .summary-item .value {
+        font-size: 16px;
+        font-weight: 500;
+        color: #212529;
+      }
+
+      /* --- Table Styles --- */
+      .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+        font-size: 14px;
+        border: 1px solid var(--border-color); /* 테이블 전체 테두리 */
+        border-radius: 6px;
+        overflow: hidden; /* 둥근 모서리 적용을 위해 */
+      }
+      .data-table th,
+      .data-table td {
+        border: 1px solid var(--border-color); /* 모든 셀 테두리 */
+        padding: 12px 10px;
+        text-align: left;
+        vertical-align: top;
+        line-height: 1.6;
+        color: #343a40; /* 폰트 색상 */
+      }
+      .data-table thead th {
+        background-color: var(--table-header-bg); /* 헤더 배경색 */
+        color: #495057;
+        font-weight: 500;
+        border-bottom: 2px solid var(--border-color);
+      }
+      .data-table tbody th {
+        width: 18%;
+        font-weight: 500;
+        background-color: var(--table-row-even-bg); /* 변수 셀 배경색 */
+      }
+      .data-table tbody tr:nth-child(odd) {
+        /* 홀수 행 배경 */
+        background-color: var(--table-row-odd-bg);
+      }
+      .data-table tbody tr:nth-child(even) {
+        /* 짝수 행 배경 */
+        background-color: var(--table-row-even-bg);
+      }
+      .data-table td {
+        word-break: break-word;
+      }
+      /* 불필요한 이중 테두리 제거 */
+      .data-table tr:first-child th,
+      .data-table tr:first-child td {
+        border-top: none;
+      }
+      .data-table tr:last-child th,
+      .data-table tr:last-child td {
+        border-bottom: none;
+      }
+      .data-table th:first-child,
+      .data-table td:first-child {
+        border-left: none;
+      }
+      .data-table th:last-child,
+      .data-table td:last-child {
+        border-right: none;
+      }
+
+      /* --- Actions & Buttons --- */
+      .actions {
+        margin-top: 30px;
+        text-align: right;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+      }
+      .btn {
+        display: inline-block;
+        padding: 10px 20px;
+        margin-left: 10px;
+        border-radius: 5px;
+        text-decoration: none;
+        color: #fff;
+        font-weight: 500;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+      }
+      .btn-edit {
+        background-color: var(--primary-color);
+      }
+      .btn-edit:hover {
+        background-color: var(--primary-hover-color);
+      }
+      .btn-list {
+        background-color: var(--secondary-color);
+      }
+      .btn-list:hover {
+        background-color: var(--secondary-hover-color);
+      }
+      .btn-reset {
+        background-color: #dc3545;
+      }
+      .btn-reset:hover {
+        background-color: #c82333;
+      }
+
+      /* Dictionary validation styles */
+      .dict-error {
+        color: #dc3545;
+        font-weight: bold;
+        font-size: 12px;
+        margin-left: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="main-container">
+      <div class="pdf-viewer">
+        {% if record.pdf_link %}
+        <iframe src="{{ record.pdf_link }}" title="PDF 뷰어"></iframe>
+        {% else %}
+        <p style="text-align: center; padding-top: 40px">표시할 PDF가 없습니다.</p>
+        {% endif %}
+      </div>
+      <div class="content-container">
+        <div class="page-header">
+          <h1>상세 정보: {{ record.case.fid }}</h1>
+          <a href="{% url 'record_list' %}?{{ other_params }}" class="btn btn-list">목록</a>
+        </div>
+
+        <div class="container summary-card">
+          <div class="summary-item">
+            <div class="label">변경 항목</div>
+            <div class="value">{{ record.changed_fields_str|default:"변경 없음" }}</div>
+          </div>
+          <div class="summary-item">
+            <div class="label">최종 수정자</div>
+            <div class="value">{{ record.last_modified_by.username|default:"N/A" }}</div>
+          </div>
+          <div class="summary-item">
+            <div class="label">최종 수정 시간</div>
+            <div class="value">{{ record.last_modified_at|date:"Y-m-d H:i" }}</div>
+          </div>
+        </div>
+        <div class="container">
+          <h2>최초 데이터 vs 최종 데이터 비교</h2>
+          <form action="{% url 'record_edit' record.pk %}?{{ other_params }}" method="post">
+            {% csrf_token %}
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>항목</th>
+                  <th>최초 데이터</th>
+                  <th>최종 데이터 (수정 가능)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                <th>질병명</th>
+                <td>{{ original_data.disease_name|default:"-" }}</td>
+                <td>
+                  {{ current_data.disease_name|default:"-" }}
+                  {% if current_data.disease_name and current_data.disease_name != "-" and not record.disease %}
+                    <span class="dict-error">(사전에 없는 질병)</span>
+                  {% endif %}
+                </td>
+              </tr>
+              <tr>
+                <th>질병 코드</th>
+                <td>{{ original_data.disease_code|default:"-" }}</td>
+                <td>{{ current_data.disease_code|default:"-" }}</td>
+              </tr>
+              <tr>
+                <th>직종</th>
+                <td>{{ original_data.job|default:"-" }}</td>
+                <td>
+                  {{ current_data.job|default:"-" }}
+                  {% if current_data.job and current_data.job != "-" and not record.job %}
+                    <span class="dict-error">(사전에 없는 직종)</span>
+                  {% endif %}
+                </td>
+              </tr>
+              <tr>
+                <th>직종 코드</th>
+                <td>{{ original_data.job_code|default:"-" }}</td>
+                <td>{{ current_data.job_code|default:"-" }}</td>
+              </tr>
+              <tr>
+                <th>유해인자</th>
+                <td>{{ original_data.exposure|default:"-" }}</td>
+                <td>
+                  {{ current_data.exposure|default:"-" }}
+                  {% if current_data.exposure and current_data.exposure != "-" and not record.exposure.exists %}
+                    <span class="dict-error">(사전에 없는 유해인자)</span>
+                  {% endif %}
+                </td>
+              </tr>
+              <tr>
+                <th>노출 시작(년)</th>
+                <td>{{ original_data.exp_start|default:"-" }}</td>
+                <td>{{ current_data.exp_start|default:"-" }}</td>
+              </tr>
+              <tr>
+                <th>노출 기간(년)</th>
+                <td>{{ original_data.exp_period|default:"-" }}</td>
+                <td>{{ current_data.exp_period|default:"-" }}</td>
+              </tr>
+              <tr>
+                <th>결정 사항</th>
+                <td>{{ original_data.decision|default:"-" }}</td>
+                <td>{{ current_data.decision|default:"-" }}</td>
+              </tr>
+              <tr>
+                <th>고찰</th>
+                <td>{{ original_data.smry|default:"-" }}</td>
+                <td>{{ current_data.smry|default:"-" }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="actions">
+            <a href="{% url 'record_list' %}?{{ other_params }}" class="btn btn-list">목록으로</a>
+            <a href="{% url 'record_edit' record.pk %}?{{ other_params }}" class="btn btn-edit">수정하기</a>
+            <button type="button" class="btn btn-reset" onclick="resetRecord({{ record.pk }})">원본으로 복원</button>
+          </div>
+        </div>
+
+        {% if population_data %}
+        <div class="container">
+          <h2>인구학적 정보</h2>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width: 30%">변수</th>
+                <th>값</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in population_data %}
+              <tr>
+                <th>{{ item.variable }}</th>
+                <td>{{ item.value }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %} {% if work_process_data %}
+        <div class="container">
+          <h2>작업 공정 정보</h2>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width: 30%">변수</th>
+                <th>값</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in work_process_data %}
+              <tr>
+                <th>{{ item.variable }}</th>
+                <td>{{ item.value }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- CSRF 토큰 -->
+    {% csrf_token %}
+
+    <script>
+      function resetRecord(recordId) {
+        if (confirm('이 레코드를 원본 데이터로 복원하시겠습니까? 모든 수정사항이 사라집니다.')) {
+          fetch(`/records/api/reset-record/${recordId}/`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              alert('레코드가 성공적으로 복원되었습니다.');
+              location.reload();
+            } else {
+              alert('복원 중 오류가 발생했습니다: ' + data.error);
+            }
+          })
+          .catch(error => {
+            alert('복원 중 오류가 발생했습니다.');
+            console.error('Error:', error);
+          });
+        }
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>분석 대시보드</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap");
+      body {
+        font-family: "Noto Sans KR", sans-serif;
+        margin: 0;
+        background-color: #f4f7fc;
+      }
+      .dashboard-container {
+        display: flex;
+      }
+      .sidebar {
+        /* record_list.html에서 복사한 사이드바 스타일 */
+        width: 260px;
+        height: 100vh;
+        background-color: #fff;
+        border-right: 1px solid #dee2e6;
+        position: sticky;
+        top: 0;
+        transition: width 0.3s ease;
+      }
+      .main-content {
+        flex-grow: 1;
+        padding: 30px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+        gap: 25px;
+      }
+      .chart-container {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      }
+      h1 {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="dashboard-container">
+      <aside class="sidebar" id="sidebar">
+        <div style="padding: 22px; border-bottom: 1px solid #dee2e6">
+          <h1 style="font-size: 20px; margin: 0">DB 수정 작업 검수</h1>
+        </div>
+        <div style="padding: 15px; border-bottom: 1px solid #dee2e6">
+          <a href="{% url 'record_list' %}" style="display: flex; align-items: center; gap: 15px; padding: 12px; text-decoration: none; color: #343a40; font-weight: 500">
+            <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"></path></svg>
+            <span>목록으로</span>
+          </a>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <div class="chart-container" id="chart1"></div>
+        <div class="chart-container" id="chart2"></div>
+        <div class="chart-container" id="chart3"></div>
+      </main>
+    </div>
+
+    <script>
+      // 뷰에서 전달받은 JSON 데이터를 사용하여 Plotly 차트를 렌더링합니다.
+      const chart1_data = JSON.parse('{{ chart1_json|safe }}');
+      Plotly.newPlot('chart1', chart1_data.data, chart1_data.layout);
+
+      {% if chart2_json %}
+      const chart2_data = JSON.parse('{{ chart2_json|safe }}');
+      Plotly.newPlot('chart2', chart2_data.data, chart2_data.layout);
+      {% endif %}
+
+      const chart3_data = JSON.parse('{{ chart3_json|safe }}');
+      Plotly.newPlot('chart3', chart3_data.data, chart3_data.layout);
+    </script>
+  </body>
+</html>

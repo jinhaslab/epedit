@@ -1,0 +1,106 @@
+<!-- comparison_table.html -->
+<table class="comparison-table">
+  <thead>
+    <tr>
+      <th>항목</th>
+      <th>최초</th>
+      <th>최종 (수정)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>질병명</th>
+      <td class="initial-value">{{ original_data.disease_name|default:"-" }}</td>
+      <td>
+        <div class="autocomplete-wrapper">
+          <div id="disease_tags" class="selected-tags-container"></div>
+          <input type="text" id="disease_input" class="autocomplete-input" data-field-name="disease_name" placeholder="질병명 입력" />
+          <div id="disease_suggestions" class="autocomplete-suggestions"></div>
+        </div>
+        <input type="hidden" name="disease" id="disease_hidden"
+               value="{% if record.disease %}{{ record.disease.disease_name }}{% else %}{{ original_data.disease_name|default:'' }}{% endif %}"
+               data-initial-name="{% if record.disease %}{{ record.disease.disease_name }}{% else %}{{ original_data.disease_name|default:'' }}{% endif %}" />
+      </td>
+    </tr>
+    <tr>
+      <th>질병 코드</th>
+      <td class="initial-value">{{ original_data.disease_code|default:"-" }}</td>
+      <td>
+        <input type="text" id="disease_code_display" name="disease_code_display"
+               value="{% if record.disease_code %}{{ record.disease_code }}{% else %}{{ original_data.disease_code|default:'' }}{% endif %}" readonly />
+        <input type="hidden" name="disease_code" id="disease_code_hidden_form"
+               value="{% if record.disease_code %}{{ record.disease_code }}{% else %}{{ original_data.disease_code|default:'' }}{% endif %}" />
+      </td>
+    </tr>
+    <tr>
+      <th>직종</th>
+      <td class="initial-value">{{ original_data.job|default:"-" }}</td>
+      <td>
+        <div class="autocomplete-wrapper">
+          <div id="job_tags" class="selected-tags-container"></div>
+          <input type="text" id="job_input" class="autocomplete-input" data-field-name="job" placeholder="직종명 입력" />
+          <div id="job_suggestions" class="autocomplete-suggestions"></div>
+        </div>
+        <input type="hidden" name="job" id="job_hidden"
+               value="{% if record.job %}{{ record.job.occupation }}{% else %}{{ original_data.job|default:'' }}{% endif %}"
+               data-initial-name="{% if record.job %}{{ record.job.occupation }}{% else %}{{ original_data.job|default:'' }}{% endif %}" />
+      </td>
+    </tr>
+    <tr>
+      <th>직종 코드</th>
+      <td class="initial-value">{{ original_data.job_code|default:"-" }}</td>
+      <td>
+        <input type="text" id="job_code_display" name="job_code_display"
+               value="{% if record.job_code %}{{ record.job_code }}{% else %}{{ original_data.job_code|default:'' }}{% endif %}" readonly />
+        <input type="hidden" name="job_code" id="job_code_hidden_form"
+               value="{% if record.job_code %}{{ record.job_code }}{% else %}{{ original_data.job_code|default:'' }}{% endif %}" />
+      </td>
+    </tr>
+    <tr>
+      <th>유해인자</th>
+      <td class="initial-value">{{ original_data.exposure|default:"-" }}</td>
+      <td>
+        <div class="autocomplete-wrapper">
+          <div id="exposure_tags" class="selected-tags-container"></div>
+          <input type="text" id="exposure_input" class="autocomplete-input" data-field-name="exposure" placeholder="유해인자 입력" />
+          <div id="exposure_suggestions" class="autocomplete-suggestions"></div>
+        </div>
+        <input type="hidden" name="exposure" id="exposure_hidden"
+               value="{% for exp in record.exposure.all %}{{ exp.name }}{% if not forloop.last %},{% endif %}{% endfor %}"
+               data-initial-exposure="{% if record.exposure.all %}{% for exp in record.exposure.all %}{{ exp.name }}{% if not forloop.last %},{% endif %}{% endfor %}{% else %}{{ original_data.exposure|default:'' }}{% endif %}" />
+      </td>
+    </tr>
+    <tr>
+      <th>노출 시작(년)</th>
+      <td class="initial-value">{{ original_data.exp_start|default:"-" }}</td>
+      <td>
+        <input type="number" name="exp_start" class="form-control"
+               value="{% if record.exp_start %}{{ record.exp_start }}{% else %}{{ original_data.exp_start|default:'' }}{% endif %}"
+               placeholder="노출 시작 연도" />
+      </td>
+    </tr>
+    <tr>
+      <th>노출 기간(년)</th>
+      <td class="initial-value">{{ original_data.exp_period|default:"-" }}</td>
+      <td>
+        <input type="number" name="exp_period" class="form-control"
+               value="{% if record.exp_period %}{{ record.exp_period }}{% else %}{{ original_data.exp_period|default:'' }}{% endif %}"
+               placeholder="노출 기간" />
+      </td>
+    </tr>
+    <tr>
+      <th>결정 사항</th>
+      <td class="initial-value">{{ original_data.decision|default:"-" }}</td>
+      <td>
+        <textarea name="decision" class="form-control" rows="2" placeholder="결정 사항">{% if record.decision %}{{ record.decision }}{% else %}{{ original_data.decision|default:'' }}{% endif %}</textarea>
+      </td>
+    </tr>
+    <tr>
+      <th>고찰</th>
+      <td class="initial-value">{{ original_data.smry|default:"-" }}</td>
+      <td>
+        <textarea name="smry" class="form-control" rows="5" placeholder="고찰">{% if record.smry %}{{ record.smry }}{% else %}{{ original_data.smry|default:'' }}{% endif %}</textarea>
+      </td>
+    </tr>
+  </tbody>
+</table>

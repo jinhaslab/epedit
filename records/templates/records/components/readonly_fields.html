@@ -1,0 +1,36 @@
+<!-- readonly_fields.html -->
+<div class="readonly-field-group">
+  <div class="readonly-field">
+    <label>파일 ID:</label>
+    <span class="readonly-value">{{ record.case.fid|default:'' }}</span>
+    <input type="hidden" name="fid" value="{{ record.fid|default:'' }}" />
+  </div>
+  <div class="readonly-field">
+    <label>파일 이름:</label>
+    <span class="readonly-value multiline">{{ record.fnames|default:'' }}</span>
+    <input type="hidden" name="fnames" id="fnames" value="{{ record.fnames|default:'' }}" />
+  </div>
+  <div class="readonly-field">
+    <label>PDF 링크:</label>
+    <a href="{{ record.pdf_link|default:'' }}" target="_blank" class="readonly-value link-style">PDF 별도창으로</a>
+    <input type="hidden" name="pdf_link" value="{{ record.pdf_link|default:'' }}" />
+  </div>
+  <div class="readonly-field">
+    <label>인구 링크:</label>
+    <a href="{{ record.pop_link|default:'' }}" target="_blank" class="readonly-value link-style">인구 링크 별도창으로</a>
+    <input type="hidden" name="pop_link" value="{{ record.pop_link|default:'' }}" />
+  </div>
+  <div class="readonly-field">
+    <label>공정 링크:</label>
+    <a href="{{ record.process_link|default:'' }}" target="_blank" class="readonly-value link-style">공정 링크 별도창으로</a>
+    <input type="hidden" name="process_link" value="{{ record.process_link|default:'' }}" />
+  </div>
+  <div class="readonly-field">
+    <label>질병 사전:</label>
+    <a href="{% url 'disease_dictionary_list' %}" target="_blank" class="readonly-value link-style">질병 사전 바로가기</a>
+  </div>
+  <div class="readonly-field">
+    <label>유해인자 사전:</label>
+    <a href="{% url 'exposure_dictionary_list' %}" target="_blank" class="readonly-value link-style">유해인자 사전 바로가기</a>
+  </div>
+</div>
