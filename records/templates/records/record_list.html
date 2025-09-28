@@ -16,6 +16,161 @@
             --pdf-red-color: #E53E3E;
         }
 
+        /* --- Responsive Design --- */
+        @media (max-width: 1200px) {
+            :root {
+                --sidebar-width: 320px;
+            }
+            .main-content {
+                padding: 20px;
+            }
+            .sidebar-header h1 {
+                font-size: 16px;
+                white-space: normal;
+                word-break: keep-all;
+                line-height: 1.3;
+            }
+        }
+
+        @media (max-width: 992px) {
+            :root {
+                --sidebar-width: 360px;
+            }
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .filter-actions {
+                margin-left: 0;
+                margin-top: 15px;
+            }
+            .sidebar-header h1 {
+                font-size: 15px;
+                white-space: normal;
+                word-break: keep-all;
+                line-height: 1.2;
+            }
+            .sidebar-user {
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --sidebar-width: 400px;
+            }
+            .sidebar {
+                width: var(--sidebar-width) !important;
+                min-width: var(--sidebar-width);
+                position: relative;
+            }
+            .sidebar.collapsed {
+                width: var(--sidebar-width) !important;
+            }
+            .sidebar.collapsed .sidebar-header h1,
+            .sidebar.collapsed .sidebar-user {
+                display: block !important;
+            }
+            .sidebar.collapsed .sidebar-header {
+                justify-content: flex-start !important;
+            }
+            .sidebar-header h1 {
+                font-size: 14px;
+                white-space: normal;
+                word-break: keep-all;
+                line-height: 1.2;
+            }
+            .sidebar-user {
+                font-size: 12px;
+            }
+            .main-content {
+                padding: 15px;
+                flex: 1;
+                min-width: 0;
+            }
+            .record-item {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 15px;
+            }
+            .record-actions {
+                justify-content: space-between;
+            }
+        }
+
+        @media (max-width: 576px) {
+            :root {
+                --sidebar-width: 380px;
+            }
+            .sidebar {
+                width: var(--sidebar-width) !important;
+                min-width: var(--sidebar-width);
+            }
+            .sidebar.collapsed {
+                width: var(--sidebar-width) !important;
+            }
+            .sidebar-header h1 {
+                font-size: 13px !important;
+                white-space: normal !important;
+                word-break: keep-all !important;
+                line-height: 1.1;
+            }
+            .sidebar-user {
+                padding: 15px !important;
+                font-size: 11px;
+            }
+            .main-content {
+                flex: 1;
+                min-width: 150px;
+            }
+            .filter-item {
+                width: 100%;
+            }
+            .autocomplete-input-wrapper,
+            .filter-select {
+                width: 100%;
+            }
+            .details {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .pagination {
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            :root {
+                --sidebar-width: 360px;
+            }
+            .sidebar {
+                width: var(--sidebar-width) !important;
+                min-width: var(--sidebar-width);
+            }
+            .sidebar.collapsed {
+                width: var(--sidebar-width) !important;
+            }
+            .sidebar-header h1 {
+                font-size: 12px !important;
+                white-space: normal !important;
+                word-break: keep-all !important;
+                line-height: 1.0;
+            }
+            .sidebar-user {
+                padding: 12px !important;
+                font-size: 10px;
+            }
+            .menu-item {
+                padding: 8px !important;
+                font-size: 12px;
+            }
+            .main-content {
+                flex: 1;
+                min-width: 100px;
+            }
+        }
+
         body {
             font-family: "Noto Sans KR", sans-serif;
             margin: 0;
@@ -92,7 +247,7 @@
         }
         .filter-form form { display: flex; flex-direction: column; gap: 15px; }
         .filter-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 20px; }
-        .filter-item { display: flex; flex-direction: column; gap: 8px; position: relative; }
+        .filter-item { display: flex; flex-direction: column; gap: 8px; position: relative; flex: 1; min-width: 200px; }
         .filter-item label, .filter-group label { font-size: 13px; font-weight: 500; }
         .filter-actions { margin-left: auto; }
         .filter-actions button, .filter-actions a {
@@ -107,7 +262,7 @@
         /* --- Autocomplete & Tag Styles --- */
         .autocomplete-input-wrapper {
             display: flex; flex-wrap: wrap; align-items: center;
-            width: 240px; box-sizing: border-box; min-height: 38px;
+            width: 100%; max-width: 240px; box-sizing: border-box; min-height: 38px;
             border: 1px solid #ced4da; border-radius: 4px; padding: 2px 5px;
             background-color: #fff; transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
         }
@@ -136,8 +291,8 @@
         .suggestion-item:hover { background-color: #f0f0f0; }
         
         .filter-select {
-            width: 240px; padding: 8px 10px; font-size: 13px;
-            border: 1px solid #ced4da; border-radius: 4px; height: 38px;
+            width: 100%; max-width: 240px; padding: 8px 10px; font-size: 13px;
+            border: 1px solid #ced4da; border-radius: 4px; height: 38px; box-sizing: border-box;
         }
 
         /* --- Record List (Card View) & Popup --- */
@@ -233,11 +388,10 @@
        
 
         <div class="sidebar-status">
-            <h3 class="status-title">로그인 상태</h3>
-            
-                        {% online_user_list %} 
-            
-            
+            <h3 class="status-title" style="padding-left: 15px;">로그인 상태</h3>
+            <div style="padding-left: 15px;">
+                {% online_user_list %}
+            </div>
         </div>
 
     </aside>
