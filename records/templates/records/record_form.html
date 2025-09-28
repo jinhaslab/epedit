@@ -9,6 +9,59 @@
     <title>기록 수정:{{ record.case.fid }}</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
     <link rel="stylesheet" href="{% static 'records/css/record_form.css' %}" />
+    <style>
+      /* Override Bootstrap link styles with highest specificity */
+      .readonly-field a.readonly-value.link-style,
+      .readonly-field-group a.readonly-value.link-style,
+      a.readonly-value.link-style {
+        display: inline-block !important;
+        padding: 6px 12px !important;
+        border: 1px solid #6c757d !important;
+        border-radius: 4px !important;
+        color: #6c757d !important;
+        text-decoration: none !important;
+        font-size: 14px !important;
+        background-color: transparent !important;
+        background: none !important;
+        transition: all 0.2s ease !important;
+      }
+
+      .readonly-field a.readonly-value.link-style:hover,
+      .readonly-field-group a.readonly-value.link-style:hover,
+      a.readonly-value.link-style:hover {
+        background-color: #6c757d !important;
+        background: #6c757d !important;
+        color: white !important;
+        text-decoration: none !important;
+        border-color: #6c757d !important;
+      }
+
+      .readonly-field a.readonly-value.link-style:visited,
+      .readonly-field-group a.readonly-value.link-style:visited,
+      a.readonly-value.link-style:visited {
+        color: #6c757d !important;
+        background-color: transparent !important;
+        background: none !important;
+      }
+
+      .readonly-field a.readonly-value.link-style:focus,
+      .readonly-field-group a.readonly-value.link-style:focus,
+      a.readonly-value.link-style:focus {
+        color: #6c757d !important;
+        background-color: transparent !important;
+        background: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+      }
+
+      .readonly-field a.readonly-value.link-style:active,
+      .readonly-field-group a.readonly-value.link-style:active,
+      a.readonly-value.link-style:active {
+        color: #6c757d !important;
+        background-color: #f8f9fa !important;
+        background: #f8f9fa !important;
+      }
+    </style>
   </head>
   <body>
     <div class="main-wrapper">
