@@ -577,3 +577,53 @@ table.comparison-table td:nth-child(3),
     font-size: 14px;
     line-height: 1.4;
 }
+
+/* Readonly field styles */
+.readonly-field-group {
+    margin-bottom: 20px;
+}
+
+.readonly-field {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 10px;
+}
+
+.readonly-field label {
+    min-width: 120px;
+    font-weight: 500;
+    color: #555;
+}
+
+.readonly-value {
+    flex: 1;
+}
+
+.readonly-value.multiline {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* Link styles - remove blue color and make them look like buttons with borders */
+.link-style {
+    display: inline-block;
+    padding: 6px 12px;
+    border: 1px solid #6c757d;
+    border-radius: 4px;
+    color: #6c757d !important;
+    text-decoration: none !important;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    background-color: transparent;
+}
+
+.link-style:hover {
+    background-color: #6c757d;
+    color: white !important;
+    text-decoration: none !important;
+}
+
+.link-style:visited {
+    color: #6c757d !important;
+}
