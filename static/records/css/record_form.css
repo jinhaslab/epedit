@@ -207,9 +207,114 @@ h1 {
     flex-shrink: 0;
 }
 
+/* 테이블 전체 컨테이너 스타일 강화 */
 .comparison-table {
-    border-collapse: collapse; /* Ensure borders are applied correctly */
-    width: 100%;
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin-top: 15px;
+    font-size: 14px;
+    border: 1px solid #cdd4da;
+    border-radius: 6px;
+    overflow: hidden;
+    table-layout: fixed !important; /* 강제 고정 레이아웃 */
+    max-width: 100% !important;
+    min-width: 100% !important;
+}
+
+/* 컬럼 그룹 정의로 강제 너비 설정 */
+.comparison-table colgroup col:first-child { width: 18% !important; }
+.comparison-table colgroup col:nth-child(2) { width: 41% !important; }
+.comparison-table colgroup col:nth-child(3) { width: 41% !important; }
+
+/* 모든 셀 기본 스타일 */
+.comparison-table th,
+.comparison-table td {
+    border: 1px solid #cdd4da;
+    padding: 12px 10px;
+    text-align: left;
+    vertical-align: top;
+    line-height: 1.6;
+    color: #343a40;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    box-sizing: border-box !important;
+}
+
+/* 헤더 스타일 */
+.comparison-table thead th {
+    background-color: #e9ecef;
+    color: #495057;
+    font-weight: 500;
+    border-bottom: 2px solid #cdd4da;
+}
+
+/* 강력한 컬럼 너비 강제 설정 */
+table.comparison-table th:first-child,
+table.comparison-table td:first-child,
+.comparison-table tbody th:first-child,
+.comparison-table tbody td:first-child {
+    width: 18% !important;
+    max-width: 18% !important;
+    min-width: 18% !important;
+}
+
+table.comparison-table th:nth-child(2),
+table.comparison-table td:nth-child(2),
+.comparison-table tbody th:nth-child(2),
+.comparison-table tbody td:nth-child(2) {
+    width: 41% !important;
+    max-width: 41% !important;
+    min-width: 41% !important;
+}
+
+table.comparison-table th:nth-child(3),
+table.comparison-table td:nth-child(3),
+.comparison-table tbody th:nth-child(3),
+.comparison-table tbody td:nth-child(3) {
+    width: 41% !important;
+    max-width: 41% !important;
+    min-width: 41% !important;
+}
+
+/* tbody th 스타일 */
+.comparison-table tbody th {
+    font-weight: 500;
+    background-color: #f2f2f2;
+}
+
+.comparison-table tbody tr:nth-child(odd) {
+    /* 홀수 행 배경 */
+    background-color: #ffffff;
+}
+
+.comparison-table tbody tr:nth-child(even) {
+    /* 짝수 행 배경 */
+    background-color: #f2f2f2;
+}
+
+.comparison-table td {
+    word-break: break-word;
+}
+
+/* 불필요한 이중 테두리 제거 */
+.comparison-table tr:first-child th,
+.comparison-table tr:first-child td {
+    border-top: none;
+}
+
+.comparison-table tr:last-child th,
+.comparison-table tr:last-child td {
+    border-bottom: none;
+}
+
+.comparison-table th:first-child,
+.comparison-table td:first-child {
+    border-left: none;
+}
+
+.comparison-table th:last-child,
+.comparison-table td:last-child {
+    border-right: none;
 }
 
 /* Autocomplete styles */
