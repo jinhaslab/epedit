@@ -607,23 +607,75 @@ table.comparison-table td:nth-child(3),
 
 /* Link styles - remove blue color and make them look like buttons with borders */
 .link-style {
-    display: inline-block;
-    padding: 6px 12px;
-    border: 1px solid #6c757d;
-    border-radius: 4px;
+    display: inline-block !important;
+    padding: 6px 12px !important;
+    border: 1px solid #6c757d !important;
+    border-radius: 4px !important;
     color: #6c757d !important;
     text-decoration: none !important;
-    font-size: 14px;
-    transition: all 0.2s ease;
-    background-color: transparent;
+    font-size: 14px !important;
+    transition: all 0.2s ease !important;
+    background-color: transparent !important;
+    background: none !important;
 }
 
 .link-style:hover {
-    background-color: #6c757d;
+    background-color: #6c757d !important;
+    background: #6c757d !important;
     color: white !important;
     text-decoration: none !important;
+    border-color: #6c757d !important;
 }
 
 .link-style:visited {
     color: #6c757d !important;
+    background-color: transparent !important;
+    background: none !important;
+}
+
+.link-style:focus {
+    color: #6c757d !important;
+    background-color: transparent !important;
+    background: none !important;
+    outline: none !important;
+}
+
+.link-style:active {
+    color: #6c757d !important;
+    background-color: #f8f9fa !important;
+    background: #f8f9fa !important;
+}
+
+/* More specific selectors to override Bootstrap */
+.readonly-field a.link-style,
+.readonly-field-group a.link-style,
+a.readonly-value.link-style {
+    display: inline-block !important;
+    padding: 6px 12px !important;
+    border: 1px solid #6c757d !important;
+    border-radius: 4px !important;
+    color: #6c757d !important;
+    text-decoration: none !important;
+    font-size: 14px !important;
+    transition: all 0.2s ease !important;
+    background-color: transparent !important;
+    background: none !important;
+}
+
+.readonly-field a.link-style:hover,
+.readonly-field-group a.link-style:hover,
+a.readonly-value.link-style:hover {
+    background-color: #6c757d !important;
+    background: #6c757d !important;
+    color: white !important;
+    text-decoration: none !important;
+    border-color: #6c757d !important;
+}
+
+.readonly-field a.link-style:visited,
+.readonly-field-group a.link-style:visited,
+a.readonly-value.link-style:visited {
+    color: #6c757d !important;
+    background-color: transparent !important;
+    background: none !important;
 }
