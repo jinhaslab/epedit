@@ -94,7 +94,6 @@
         .result-item {
             padding: 20px;
             border-bottom: 1px solid #f0f0f0;
-            cursor: pointer;
             transition: all 0.2s ease;
             position: relative;
         }
@@ -149,6 +148,84 @@
             font-size: 14px;
             line-height: 1.6;
             margin: 0;
+        }
+
+        .description-preview {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .description-full {
+            display: none;
+        }
+
+        .show-more-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .show-more-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .select-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            width: 100%;
+        }
+
+        .select-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+
+        .symptom-item {
+            margin-bottom: 8px;
+            padding: 6px 0;
+            border-left: 3px solid #f8f9ff;
+            padding-left: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .symptom-item:hover {
+            border-left-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 4px;
+            padding-left: 14px;
+        }
+
+        .symptom-title {
+            font-weight: 600;
+            color: #667eea;
+            display: block;
+            margin-bottom: 2px;
+            font-size: 13px;
+        }
+
+        .symptom-content {
+            color: #4a5568;
+            line-height: 1.4;
+            display: block;
+            font-size: 13px;
         }
 
         .no-results {
@@ -287,22 +364,126 @@
                 const name = result.disease_name || result.job_name || '';
                 const description = result.description || '';
 
+                // 설명 포맷팅
+                const formattedDescription = formatDescriptionList(description);
+                const cleanDescription = cleanTextContent(description);
+                const previewText = truncateText(cleanDescription, 150);
+
                 resultItem.innerHTML = `
                     <div class="result-header">
                         <span class="result-score">${score}%</span>
                         <span class="result-code">${code}</span>
                     </div>
                     <div class="result-name">${name}</div>
-                    <div class="result-description">${description}</div>
+                    <div class="description-container">
+                        <div class="result-description description-preview">
+                            ${previewText}${cleanDescription.length > 150 ? '...' : ''}
+                        </div>
+                        <div class="result-description description-full">
+                            ${formattedDescription}
+                        </div>
+                        ${cleanDescription.length > 150 ?
+                            '<button class="show-more-btn" onclick="toggleDescription(this, event)">더보기</button>' :
+                            ''
+                        }
+                        <button class="select-btn" onclick="selectResultFromButton(event)"
+                                data-score="${result.score}"
+                                data-code="${result.code || ''}"
+                                data-disease-name="${result.disease_name || result.job_name || ''}"
+                                data-description="${(result.description || '').replace(/"/g, '&quot;')}">
+                            ✓ 이 결과 선택하기
+                        </button>
+                    </div>
                 `;
-
-                // 결과 클릭 이벤트
-                resultItem.addEventListener('click', function() {
-                    selectResult(result);
-                });
 
                 resultsContainer.appendChild(resultItem);
             });
+        }
+
+        function formatDescriptionList(description) {
+            // 리스트 형태 ['항목1', '항목2'] 를 파싱해서 예쁘게 포맷팅
+            try {
+                if (description.startsWith('[') && description.endsWith(']')) {
+                    const items = description.slice(1, -1).split("', '").map(item =>
+                        item.replace(/^'|'$/g, '').trim()
+                    );
+
+                    const formattedItems = items.map(item => {
+                        if (item.includes(':')) {
+                            const colonIndex = item.indexOf(':');
+                            const title = item.substring(0, colonIndex).trim();
+                            const content = item.substring(colonIndex + 1).trim();
+                            return `<div class="symptom-item">
+                                <span class="symptom-title">${title}:</span>
+                                <span class="symptom-content">${content}</span>
+                            </div>`;
+                        } else {
+                            return `<div class="symptom-item">
+                                <span class="symptom-content">• ${item}</span>
+                            </div>`;
+                        }
+                    });
+
+                    return formattedItems.join('');
+                }
+            } catch (e) {
+                console.log('Description parsing error:', e);
+            }
+
+            return description;
+        }
+
+        function cleanTextContent(text) {
+            // HTML 태그 제거 및 텍스트 정리
+            const temp = document.createElement("div");
+            temp.innerHTML = text;
+            let cleanText = temp.textContent || temp.innerText || "";
+            cleanText = cleanText.replace(/\s+/g, ' ').trim();
+            return cleanText;
+        }
+
+        function truncateText(text, maxLength) {
+            if (text.length <= maxLength) return text;
+            return text.substring(0, maxLength);
+        }
+
+        function toggleDescription(button, event) {
+            event.stopPropagation(); // 이벤트 전파 중단
+
+            const container = button.closest('.description-container');
+            const preview = container.querySelector('.description-preview');
+            const full = container.querySelector('.description-full');
+
+            if (full.style.display === 'none' || !full.style.display) {
+                preview.style.display = 'none';
+                full.style.display = 'block';
+                button.textContent = '접기';
+            } else {
+                preview.style.display = 'block';
+                full.style.display = 'none';
+                button.textContent = '더보기';
+            }
+        }
+
+        function selectResultFromButton(event) {
+            event.stopPropagation(); // 이벤트 전파 중단
+
+            try {
+                const button = event.target;
+                const resultData = {
+                    score: parseFloat(button.getAttribute('data-score')),
+                    code: button.getAttribute('data-code'),
+                    disease_name: button.getAttribute('data-disease-name'),
+                    job_name: button.getAttribute('data-disease-name'), // 호환성을 위해
+                    description: button.getAttribute('data-description').replace(/&quot;/g, '"')
+                };
+
+                console.log('Button clicked, result data:', resultData);
+                selectResult(resultData);
+            } catch (error) {
+                console.error('결과 선택 오류:', error);
+                alert('결과 선택 중 오류가 발생했습니다.');
+            }
         }
 
         function selectResult(result) {

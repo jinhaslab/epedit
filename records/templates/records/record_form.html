@@ -12,15 +12,16 @@
   </head>
   <body>
     <div class="main-wrapper">
-      <div class="pdf-viewer">
-        {% if record.pdf_link %}
-        <iframe src="{{ record.pdf_link }}" title="PDF 뷰어"></iframe>
-        {% else %}
-        <p style="text-align: center; padding-top: 40px">표시할 PDF가 없습니다.</p>
-        {% endif %}
+      <div class="pdf-section">
+        <div class="resizer" id="resizer"></div>
+        <div class="pdf-viewer">
+          {% if record.pdf_link %}
+          <iframe src="{{ record.pdf_link }}" title="PDF 뷰어"></iframe>
+          {% else %}
+          <p style="text-align: center; padding-top: 40px">표시할 PDF가 없습니다.</p>
+          {% endif %}
+        </div>
       </div>
-
-      <div class="resizer" id="resizer"></div>
 
       <div class="form-content">
         <h1>기록 수정 {{ record.case.fid }}</h1>
@@ -149,45 +150,103 @@
           console.error('Disease input NOT found!');
         }
 
-        // Resizable panels functionality
+        // 🎡 **SCROLL WHEEL RESIZER SYSTEM (600px start) - TOP POSITION**
         const resizer = document.getElementById('resizer');
-        const pdfViewer = document.querySelector('.pdf-viewer');
-        const formContent = document.querySelector('.form-content');
         const mainWrapper = document.querySelector('.main-wrapper');
+        const pdfSection = document.querySelector('.pdf-section');
 
-        if (resizer && pdfViewer && formContent && mainWrapper) {
-          let isResizing = false;
+        console.log('🎡 Initializing TOP RESIZER system...');
 
-          resizer.addEventListener('mousedown', function(e) {
-            isResizing = true;
-            document.addEventListener('mousemove', resize);
-            document.addEventListener('mouseup', stopResize);
+        if (resizer && mainWrapper && pdfSection) {
+          let currentPdfWidth = 600; // 초기값
+          let isHoveringResizer = false;
+
+          // 🎡 **Get current PDF width from grid**
+          function getCurrentPdfWidth() {
+            const currentCols = window.getComputedStyle(mainWrapper).gridTemplateColumns;
+            const match = currentCols.match(/^(\d+)px/);
+            return match ? parseInt(match[1]) : 600;
+          }
+
+          // 🎨 **Update PDF section width**
+          function updatePdfWidth(newWidth) {
+            const containerRect = mainWrapper.getBoundingClientRect();
+            const totalWidth = containerRect.width;
+            const gap = 12; // grid gap
+
+            const minPdfWidth = 200;
+            const minContentWidth = 300;
+            const maxPdfWidth = totalWidth - gap - minContentWidth;
+
+            // 🎨 **Smooth clamping**
+            const clampedWidth = Math.max(minPdfWidth, Math.min(newWidth, maxPdfWidth));
+
+            // ✨ **Update grid template columns**
+            mainWrapper.style.gridTemplateColumns = `${clampedWidth}px 1fr`;
+            currentPdfWidth = clampedWidth;
+
+            console.log(`🎡 TOP Resize: ${clampedWidth}px`);
+            return clampedWidth;
+          }
+
+          // 🎡 **Scroll wheel event handler**
+          function handleWheelResize(e) {
+            if (!isHoveringResizer) return;
+
+            e.preventDefault(); // 페이지 스크롤 방지
+
+            // 🎡 **Scroll direction and step size**
+            const delta = e.deltaY > 0 ? -20 : 20; // 아래 스크롤 = 축소, 위 스크롤 = 확대
+            const newWidth = getCurrentPdfWidth() + delta;
+
+            updatePdfWidth(newWidth);
+
+            // 🎨 **Visual feedback during scroll**
+            resizer.style.background = 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)';
+            resizer.style.transform = 'scale(1.1)';
+
+            // Reset visual feedback after 200ms
+            setTimeout(() => {
+              resizer.style.background = 'linear-gradient(90deg, #e2e8f0 0%, #cbd5e0 50%, #e2e8f0 100%)';
+              resizer.style.transform = 'scale(1)';
+            }, 200);
+          }
+
+          // 🖱️ **Hover detection for resizer**
+          resizer.addEventListener('mouseenter', function() {
+            isHoveringResizer = true;
+            resizer.style.background = 'linear-gradient(90deg, #28a745 0%, #20c997 50%, #28a745 100%)';
+            resizer.style.cursor = 'grab';
+            console.log('🎡 Hovering resizer - scroll to resize!');
           });
 
-          function resize(e) {
-            if (!isResizing) return;
+          resizer.addEventListener('mouseleave', function() {
+            isHoveringResizer = false;
+            resizer.style.background = 'linear-gradient(90deg, #e2e8f0 0%, #cbd5e0 50%, #e2e8f0 100%)';
+            resizer.style.cursor = 'col-resize';
+            console.log('🎡 Left resizer');
+          });
 
-            const containerRect = mainWrapper.getBoundingClientRect();
-            const newPdfWidth = e.clientX - containerRect.left;
-            const totalWidth = containerRect.width;
-            const resizerWidth = 5;
+          // 🎡 **Add scroll event listener**
+          resizer.addEventListener('wheel', handleWheelResize, { passive: false });
 
-            // 최소/최대 너비 제한
-            const minPdfWidth = 300;
-            const minFormWidth = 600;
-            const maxPdfWidth = totalWidth - resizerWidth - minFormWidth;
+          // 🎯 **Optional: Keyboard shortcuts**
+          document.addEventListener('keydown', function(e) {
+            if (!isHoveringResizer) return;
 
-            if (newPdfWidth >= minPdfWidth && newPdfWidth <= maxPdfWidth) {
-              pdfViewer.style.flex = `0 0 ${newPdfWidth}px`;
-              formContent.style.flex = `1`;
+            if (e.key === 'ArrowLeft' || e.key === '-') {
+              e.preventDefault();
+              updatePdfWidth(getCurrentPdfWidth() - 50);
+            } else if (e.key === 'ArrowRight' || e.key === '+') {
+              e.preventDefault();
+              updatePdfWidth(getCurrentPdfWidth() + 50);
             }
-          }
+          });
 
-          function stopResize() {
-            isResizing = false;
-            document.removeEventListener('mousemove', resize);
-            document.removeEventListener('mouseup', stopResize);
-          }
+          console.log('✅ SCROLL WHEEL Resizer initialized! Starting at 600px');
+          console.log('💡 Hover over resizer and use mouse wheel to resize!');
+        } else {
+          console.error('❌ Failed to initialize resizer');
         }
       });
     </script>

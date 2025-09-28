@@ -5,53 +5,83 @@ body {
 }
 
 .main-wrapper {
-    display: flex;
-    /* PDF 뷰어와 상세 정보를 나란히 배치 */
+    display: grid;
+    grid-template-columns: 600px 1fr;
+    /* PDF Section(600px) + Content(나머지) */
     max-width: 1600px;
-    /* 전체 컨테이너 최대 너비 확장 */
     margin: 20px auto;
-    align-items: flex-start;
-    /* 상단 정렬 */
     height: 90vh;
+    gap: 12px;
+}
+
+.pdf-section {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    gap: 8px;
 }
 
 .pdf-viewer {
-    flex: 2;
-    /* PDF 뷰어를 상세 정보보다 2배 넓게 */
-    min-width: 300px;
-    /* 최소 너비 설정 */
-    height: 100%;
-    /* PDF 뷰어 높이 고정 */
+    flex: 1;
+    width: 100%;
+    min-width: 100px;
     background-color: white;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     overflow: hidden;
-    /* iframe이 넘치지 않도록 */
 }
 
 .resizer {
-    width: 5px;
-    background-color: #cdd4da;
-    cursor: col-resize;
+    height: 40px;
+    width: 100%;
+    background: linear-gradient(45deg, #4a5568 0%, #2d3748 50%, #4a5568 100%);
+    cursor: row-resize;
     user-select: none;
     position: relative;
-    border-radius: 2px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    /* 🎯 PDF 위에 수평 리사이저 */
+    border: 2px solid #2d3748;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .resizer:hover {
-    background-color: #28a745;
+    background: linear-gradient(90deg, #28a745 0%, #20c997 50%, #28a745 100%);
+    width: 10px;
+    box-shadow: 0 0 15px rgba(40, 167, 69, 0.3);
+}
+
+.resizer::before {
+    content: '⋯ PDF 크기 조절 (마우스 휠) ⋯';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 11px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.resizer:hover::before {
+    color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .resizer::after {
     content: '';
     position: absolute;
-    top: 50%;
+    top: 0;
     left: 50%;
-    transform: translate(-50%, -50%);
-    width: 3px;
-    height: 30px;
-    background-color: rgba(0, 0, 0, 0.3);
-    border-radius: 2px;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 1px;
 }
 
 .pdf-viewer iframe {
@@ -62,24 +92,17 @@ body {
 
 .detail-content,
 .form-content {
-    flex: 1;
-    /* 상세 정보 영역 */
-    min-width: 600px;
-    /* 최소 너비 설정 */
+    /* Grid에서 자동으로 세 번째 컬럼 차지 */
+    min-width: 200px;
     height: 100%;
     background-color: white;
     padding: 30px;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-
     overflow-y: auto;
-    /* 내용이 넘치면 스크롤바 표시 */
     position: relative;
-    /* sticky 버튼의 기준점 */
     display: flex;
-    /* 내부 요소들을 flex로 배치 */
     flex-direction: column;
-    /* 세로 방향으로 쌓기 */
 }
 
 h1 {

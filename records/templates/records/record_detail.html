@@ -29,14 +29,27 @@
       }
 
       .main-container {
+        display: grid;
+        grid-template-columns: 600px 1fr;
+        /* PDF Section(600px) + Content(나머지) */
+        height: 100%;
+        gap: 12px;
+      }
+
+      .pdf-section {
         display: flex;
+        flex-direction: column;
         height: 100%;
       }
 
       .pdf-viewer {
         flex: 1;
+        width: 100%;
         border-right: 1px solid var(--border-color);
-        min-width: 300px;
+        min-width: 200px;
+        background-color: white;
+        border-radius: 8px;
+        overflow: hidden;
       }
 
       .pdf-viewer iframe {
@@ -45,36 +58,15 @@
         border: none;
       }
 
-      .resizer {
-        width: 5px;
-        background-color: var(--border-color);
-        cursor: col-resize;
-        user-select: none;
-        position: relative;
-      }
-
-      .resizer:hover {
-        background-color: var(--primary-color);
-      }
-
-      .resizer::after {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 3px;
-        height: 30px;
-        background-color: rgba(0, 0, 0, 0.3);
-        border-radius: 2px;
-      }
 
       .content-container {
         flex: 1;
         overflow-y: auto;
         background-color: var(--background-color);
         padding: 30px;
-        min-width: 400px;
+        min-width: 200px;
+        flex-shrink: 1;
+        flex-grow: 1;
       }
 
       .container {
@@ -306,14 +298,15 @@
   </head>
   <body>
     <div class="main-container">
-      <div class="pdf-viewer">
-        {% if record.pdf_link %}
-        <iframe src="{{ record.pdf_link }}" title="PDF 뷰어"></iframe>
-        {% else %}
-        <p style="text-align: center; padding-top: 40px">표시할 PDF가 없습니다.</p>
-        {% endif %}
+      <div class="pdf-section">
+        <div class="pdf-viewer">
+          {% if record.pdf_link %}
+          <iframe src="{{ record.pdf_link }}" title="PDF 뷰어"></iframe>
+          {% else %}
+          <p style="text-align: center; padding-top: 40px">표시할 PDF가 없습니다.</p>
+          {% endif %}
+        </div>
       </div>
-      <div class="resizer" id="resizer"></div>
       <div class="content-container">
         <div class="page-header">
           <h1>상세 정보: {{ record.case.fid }}</h1>
@@ -507,49 +500,6 @@
         }
       }
 
-      // Resizable panels functionality
-      document.addEventListener('DOMContentLoaded', function() {
-        const resizer = document.getElementById('resizer');
-        const pdfViewer = document.querySelector('.pdf-viewer');
-        const contentContainer = document.querySelector('.content-container');
-        const mainContainer = document.querySelector('.main-container');
-
-        let isResizing = false;
-
-        resizer.addEventListener('mousedown', function(e) {
-          isResizing = true;
-          document.addEventListener('mousemove', resize);
-          document.addEventListener('mouseup', stopResize);
-        });
-
-        function resize(e) {
-          if (!isResizing) return;
-
-          const containerRect = mainContainer.getBoundingClientRect();
-          const newPdfWidth = e.clientX - containerRect.left;
-          const totalWidth = containerRect.width;
-          const resizerWidth = 5;
-
-          // 최소/최대 너비 제한
-          const minPdfWidth = 300;
-          const minContentWidth = 400;
-          const maxPdfWidth = totalWidth - resizerWidth - minContentWidth;
-
-          if (newPdfWidth >= minPdfWidth && newPdfWidth <= maxPdfWidth) {
-            const pdfFlex = newPdfWidth / totalWidth;
-            const contentFlex = (totalWidth - newPdfWidth - resizerWidth) / totalWidth;
-
-            pdfViewer.style.flex = `0 0 ${newPdfWidth}px`;
-            contentContainer.style.flex = `1`;
-          }
-        }
-
-        function stopResize() {
-          isResizing = false;
-          document.removeEventListener('mousemove', resize);
-          document.removeEventListener('mouseup', stopResize);
-        }
-      });
     </script>
   </body>
 </html>
