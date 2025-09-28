@@ -33,20 +33,36 @@ class Command(BaseCommand):
 
         self.stdout.write("Importing cleaned data...")
         count = 0
+        swap_count = 0  # 뒤바뀐 항목 카운트
+
         for _, row in df.iterrows():
-            disease_name = row['질병명'].strip()
-            
-            # ▼▼▼▼▼ 질병 코드 클리닝 로직 ▼▼▼▼▼
+            disease_name_raw = row['질병명'].strip()
             disease_code_raw = row['질병코드'].strip()
-            # 영문자와 숫자, 점(.), 쉼표(,), 하이픈(-)만 남기고 모두 제거 후 대문자화
-            disease_code_cleaned = re.sub(r'[^A-Z0-9.,-]', '', disease_code_raw.upper())
-            # ▲▲▲▲▲ 클리닝 완료 ▲▲▲▲▲
-            
+
+            # ▼▼▼▼▼ 데이터 뒤바뀜 감지 및 수정 로직 ▼▼▼▼▼
+            # 질병명이 코드처럼 보이고, 코드가 한글 질병명처럼 보이는 경우 감지
+            name_looks_like_code = bool(re.match(r'^[A-Z0-9.,-]+$', disease_name_raw))
+            code_has_korean = bool(re.search(r'[가-힣]', disease_code_raw))
+
+            if name_looks_like_code and code_has_korean:
+                # 뒤바뀐 것으로 판단되면 교체
+                disease_name = disease_code_raw
+                disease_code_cleaned = re.sub(r'[^A-Z0-9.,-]', '', disease_name_raw.upper())
+                swap_count += 1
+                self.stdout.write(f"  SWAPPED: '{disease_name_raw}' <-> '{disease_code_raw}'")
+            else:
+                # 정상적인 경우
+                disease_name = disease_name_raw
+                disease_code_cleaned = re.sub(r'[^A-Z0-9.,-]', '', disease_code_raw.upper())
+            # ▲▲▲▲▲ 뒤바뀜 수정 완료 ▲▲▲▲▲
+
             if disease_name:
                 DiseaseDictionaryEntry.objects.create(
                     disease_name=disease_name,
-                    disease_code=disease_code_cleaned # 깨끗해진 코드를 저장
+                    disease_code=disease_code_cleaned
                 )
                 count += 1
 
         self.stdout.write(self.style.SUCCESS(f"Successfully imported {count} unique disease entries."))
+        if swap_count > 0:
+            self.stdout.write(self.style.WARNING(f"Fixed {swap_count} entries where disease name and code were swapped."))

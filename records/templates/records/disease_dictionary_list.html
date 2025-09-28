@@ -6,8 +6,50 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
         body { padding: 20px; }
-        .container { max-width: 800px; }
+        .container { max-width: 1000px; }
         .pagination .step-links a { margin: 0 5px; }
+
+        /* 테이블 일관성을 위한 고정 레이아웃 */
+        .table {
+            table-layout: fixed;
+            width: 100%;
+        }
+
+        /* 컬럼 너비 고정 */
+        .table th:first-child,
+        .table td:first-child {
+            width: 60%;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .table th:last-child,
+        .table td:last-child {
+            width: 40%;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            font-family: monospace;
+            text-align: center;
+        }
+
+        /* 텍스트 정렬 및 패딩 일관성 */
+        .table td {
+            vertical-align: middle;
+            padding: 12px 8px;
+        }
+
+        /* 질병명 컬럼 스타일 */
+        .table td:first-child {
+            text-align: left;
+            font-weight: 500;
+        }
+
+        /* 질병코드 컬럼 스타일 */
+        .table td:last-child {
+            background-color: #f8f9fa;
+            color: #495057;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -33,7 +75,7 @@
             <tbody>
                 {% for entry in dictionary_entries %}
                 <tr>
-                    <td>{{ entry.disease_name }}</td>
+                    <td>{{ entry.disease_name|default:"-" }}</td>
                     <td>{{ entry.disease_code|default:"-" }}</td>
                 </tr>
                 {% empty %}
