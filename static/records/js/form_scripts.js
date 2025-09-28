@@ -377,4 +377,143 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
     // --- RAG 검색 기능 끝 ---
+
+    // --- AI 검색 기능 시작 ---
+    let currentAiSearchTarget = null;
+
+    // AI 검색 버튼 이벤트 리스너
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('ai-search-btn')) {
+            const target = e.target.dataset.target;
+            currentAiSearchTarget = target;
+
+            // 검색어 준비 (고찰 내용 사용)
+            const smryField = document.getElementById('id_smry');
+            const searchQuery = smryField && smryField.value.trim() ? smryField.value.trim() : '';
+
+            // 팝업 창 열기
+            let popupTitle = target === 'disease' ? 'D-ai: 질병 AI 검색' : 'J-ai: 직종 AI 검색';
+            openAiSearchPopup(target, popupTitle, searchQuery);
+        }
+    });
+
+    // 팝업 창 열기 함수
+    function openAiSearchPopup(target, title, initialQuery) {
+        // URL 매개변수를 간단하게 구성
+        const params = new URLSearchParams({
+            target: target,
+            title: title,
+            query: initialQuery || ''
+        });
+        const popupUrl = `/epedit/ai-search-popup/?${params.toString()}`;
+        const popup = window.open(
+            popupUrl,
+            'aiSearchPopup',
+            'width=900,height=700,scrollbars=yes,resizable=yes,menubar=no,toolbar=no,location=no,status=no'
+        );
+
+        // 팝업에서 결과 선택시 처리할 함수를 전역으로 등록
+        window.handleAiSearchResult = function(result, searchTarget) {
+            try {
+                selectAiSearchResult(result, searchTarget);
+                console.log('AI 검색 결과 적용 완료:', result);
+
+                // 팝업 닫기
+                if (popup && !popup.closed) {
+                    popup.close();
+                }
+            } catch (error) {
+                console.error('AI 검색 결과 처리 중 오류:', error);
+            }
+        };
+
+        return popup;
+    }
+
+
+    // AI 검색 결과 선택 (팝업에서 호출됨)
+    function selectAiSearchResult(result, searchTarget) {
+        const target = searchTarget || currentAiSearchTarget;
+
+        if (target === 'disease') {
+            // 질병 필드에 결과 적용
+            const diseaseName = result.disease_name || result.job_name || result.name || '';
+            const diseaseCode = result.code || '';
+
+            const diseaseInput = document.getElementById('disease_input');
+            const diseaseHidden = document.getElementById('disease_hidden');
+            const diseaseCodeDisplay = document.getElementById('disease_code_display');
+            const diseaseCodeHidden = document.getElementById('disease_code_hidden_form');
+
+            if (diseaseInput) diseaseInput.value = diseaseName;
+            if (diseaseHidden) diseaseHidden.value = diseaseName;
+
+            // 질병 코드 직접 설정 (AI 검색 결과의 코드 사용)
+            if (diseaseCodeDisplay) diseaseCodeDisplay.value = diseaseCode;
+            if (diseaseCodeHidden) diseaseCodeHidden.value = diseaseCode;
+
+            // 질병 태그 추가
+            const diseaseTagsContainer = document.getElementById('disease_tags');
+            if (diseaseTagsContainer) {
+                // 기존 태그 제거 (단일 선택)
+                diseaseTagsContainer.innerHTML = '';
+                // 새 태그 추가
+                const tagItem = document.createElement('div');
+                tagItem.className = 'tag-item';
+                tagItem.innerHTML = `<span>${diseaseName}</span><span class="tag-close">X</span>`;
+                tagItem.addEventListener('click', function() {
+                    tagItem.remove();
+                    if (diseaseInput) diseaseInput.value = '';
+                    if (diseaseHidden) diseaseHidden.value = '';
+                    if (diseaseCodeDisplay) diseaseCodeDisplay.value = '';
+                    if (diseaseCodeHidden) diseaseCodeHidden.value = '';
+                });
+                diseaseTagsContainer.appendChild(tagItem);
+            }
+
+            // Dictionary에서 질병 코드도 함께 업데이트 (보조적으로)
+            updateDiseaseCodeField(diseaseName);
+
+        } else if (target === 'job') {
+            // 직종 필드에 결과 적용
+            const jobName = result.job_name || result.name || '';
+            const jobCode = result.code || '';
+
+            const jobInput = document.getElementById('job_input');
+            const jobHidden = document.getElementById('job_hidden');
+            const jobCodeDisplay = document.getElementById('job_code_display');
+            const jobCodeHidden = document.getElementById('job_code_hidden_form');
+
+            if (jobInput) jobInput.value = jobName;
+            if (jobHidden) jobHidden.value = jobName;
+
+            // 직종 코드 직접 설정 (AI 검색 결과의 코드 사용)
+            if (jobCodeDisplay) jobCodeDisplay.value = jobCode;
+            if (jobCodeHidden) jobCodeHidden.value = jobCode;
+
+            // 직종 태그 추가
+            const jobTagsContainer = document.getElementById('job_tags');
+            if (jobTagsContainer) {
+                // 기존 태그 제거 (단일 선택)
+                jobTagsContainer.innerHTML = '';
+                // 새 태그 추가
+                const tagItem = document.createElement('div');
+                tagItem.className = 'tag-item';
+                tagItem.innerHTML = `<span>${jobName}</span><span class="tag-close">X</span>`;
+                tagItem.addEventListener('click', function() {
+                    tagItem.remove();
+                    if (jobInput) jobInput.value = '';
+                    if (jobHidden) jobHidden.value = '';
+                    if (jobCodeDisplay) jobCodeDisplay.value = '';
+                    if (jobCodeHidden) jobCodeHidden.value = '';
+                });
+                jobTagsContainer.appendChild(tagItem);
+            }
+
+            // Dictionary에서 직종 코드도 함께 업데이트 (보조적으로)
+            updateJobCodeField(jobName);
+        }
+    }
+
+    // --- AI 검색 기능 끝 ---
 });

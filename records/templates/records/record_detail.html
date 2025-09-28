@@ -36,6 +36,7 @@
       .pdf-viewer {
         flex: 1;
         border-right: 1px solid var(--border-color);
+        min-width: 300px;
       }
 
       .pdf-viewer iframe {
@@ -44,11 +45,36 @@
         border: none;
       }
 
+      .resizer {
+        width: 5px;
+        background-color: var(--border-color);
+        cursor: col-resize;
+        user-select: none;
+        position: relative;
+      }
+
+      .resizer:hover {
+        background-color: var(--primary-color);
+      }
+
+      .resizer::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 3px;
+        height: 30px;
+        background-color: rgba(0, 0, 0, 0.3);
+        border-radius: 2px;
+      }
+
       .content-container {
         flex: 1;
         overflow-y: auto;
         background-color: var(--background-color);
         padding: 30px;
+        min-width: 400px;
       }
 
       .container {
@@ -207,6 +233,75 @@
         font-size: 12px;
         margin-left: 5px;
       }
+
+      /* Revision History Styles */
+      .revision-history {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        margin-top: 15px;
+      }
+
+      .revision-item {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+        background-color: #fff;
+      }
+
+      .revision-item:last-child {
+        border-bottom: none;
+      }
+
+      .revision-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .revision-time {
+        font-size: 14px;
+        color: var(--primary-color);
+        font-weight: 500;
+      }
+
+      .revision-user {
+        font-size: 13px;
+        color: #6c757d;
+        background-color: #f8f9fa;
+        padding: 2px 8px;
+        border-radius: 12px;
+      }
+
+      .revision-summary {
+        font-size: 14px;
+        color: #495057;
+        font-weight: 500;
+        margin-bottom: 5px;
+      }
+
+      .revision-fields {
+        font-size: 12px;
+        color: #6c757d;
+      }
+
+      .revision-history::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .revision-history::-webkit-scrollbar-track {
+        background: #f1f1f1;
+      }
+
+      .revision-history::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 3px;
+      }
+
+      .revision-history::-webkit-scrollbar-thumb:hover {
+        background: #999;
+      }
     </style>
   </head>
   <body>
@@ -218,12 +313,30 @@
         <p style="text-align: center; padding-top: 40px">표시할 PDF가 없습니다.</p>
         {% endif %}
       </div>
+      <div class="resizer" id="resizer"></div>
       <div class="content-container">
         <div class="page-header">
           <h1>상세 정보: {{ record.case.fid }}</h1>
           <a href="{% url 'record_list' %}?{{ other_params }}" class="btn btn-list">목록</a>
         </div>
 
+        {% if revision_history %}
+        <div class="container">
+          <h2>수정 이력</h2>
+          <div class="revision-history">
+            {% for revision in revision_history %}
+            <div class="revision-item">
+              <div class="revision-header">
+                <span class="revision-time">{{ revision.modified_at|date:"Y-m-d H:i:s" }}</span>
+                <span class="revision-user">{{ revision.modified_by.username|default:"시스템" }}</span>
+              </div>
+              <div class="revision-summary">{{ revision.summary }}</div>
+              <div class="revision-fields">변경 필드: {{ revision.changed_fields|default:"없음" }}</div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% else %}
         <div class="container summary-card">
           <div class="summary-item">
             <div class="label">변경 항목</div>
@@ -238,6 +351,7 @@
             <div class="value">{{ record.last_modified_at|date:"Y-m-d H:i" }}</div>
           </div>
         </div>
+        {% endif %}
         <div class="container">
           <h2>최초 데이터 vs 최종 데이터 비교</h2>
           <form action="{% url 'record_edit' record.pk %}?{{ other_params }}" method="post">
@@ -392,6 +506,50 @@
           });
         }
       }
+
+      // Resizable panels functionality
+      document.addEventListener('DOMContentLoaded', function() {
+        const resizer = document.getElementById('resizer');
+        const pdfViewer = document.querySelector('.pdf-viewer');
+        const contentContainer = document.querySelector('.content-container');
+        const mainContainer = document.querySelector('.main-container');
+
+        let isResizing = false;
+
+        resizer.addEventListener('mousedown', function(e) {
+          isResizing = true;
+          document.addEventListener('mousemove', resize);
+          document.addEventListener('mouseup', stopResize);
+        });
+
+        function resize(e) {
+          if (!isResizing) return;
+
+          const containerRect = mainContainer.getBoundingClientRect();
+          const newPdfWidth = e.clientX - containerRect.left;
+          const totalWidth = containerRect.width;
+          const resizerWidth = 5;
+
+          // 최소/최대 너비 제한
+          const minPdfWidth = 300;
+          const minContentWidth = 400;
+          const maxPdfWidth = totalWidth - resizerWidth - minContentWidth;
+
+          if (newPdfWidth >= minPdfWidth && newPdfWidth <= maxPdfWidth) {
+            const pdfFlex = newPdfWidth / totalWidth;
+            const contentFlex = (totalWidth - newPdfWidth - resizerWidth) / totalWidth;
+
+            pdfViewer.style.flex = `0 0 ${newPdfWidth}px`;
+            contentContainer.style.flex = `1`;
+          }
+        }
+
+        function stopResize() {
+          isResizing = false;
+          document.removeEventListener('mousemove', resize);
+          document.removeEventListener('mouseup', stopResize);
+        }
+      });
     </script>
   </body>
 </html>

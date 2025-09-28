@@ -14,7 +14,10 @@
       <td>
         <div class="autocomplete-wrapper">
           <div id="disease_tags" class="selected-tags-container"></div>
-          <input type="text" id="disease_input" class="autocomplete-input" data-field-name="disease_name" placeholder="질병명 입력" />
+          <div class="input-with-ai-button">
+            <input type="text" id="disease_input" class="autocomplete-input" data-field-name="disease_name" placeholder="질병명 입력" />
+            <button type="button" class="ai-search-btn" id="disease-ai-btn" data-target="disease">D-ai</button>
+          </div>
           <div id="disease_suggestions" class="autocomplete-suggestions"></div>
         </div>
         <input type="hidden" name="disease" id="disease_hidden"
@@ -39,7 +42,10 @@
       <td>
         <div class="autocomplete-wrapper">
           <div id="job_tags" class="selected-tags-container"></div>
-          <input type="text" id="job_input" class="autocomplete-input" data-field-name="job" placeholder="직종명 입력" />
+          <div class="input-with-ai-button">
+            <input type="text" id="job_input" class="autocomplete-input" data-field-name="job" placeholder="직종명 입력" />
+            <button type="button" class="ai-search-btn" id="job-ai-btn" data-target="job">J-ai</button>
+          </div>
           <div id="job_suggestions" class="autocomplete-suggestions"></div>
         </div>
         <input type="hidden" name="job" id="job_hidden"

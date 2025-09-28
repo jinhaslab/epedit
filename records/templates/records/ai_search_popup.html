@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 100%;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .search-section {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .search-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 16px;
+        }
+
+        .results-container {
+            max-height: 500px;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        .result-item {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .result-item:hover {
+            background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
+            transform: translateX(4px);
+            box-shadow: -4px 0 0 #667eea;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .result-score {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+        }
+
+        .result-code {
+            color: #667eea;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            font-weight: 600;
+            background: #f8f9ff;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+
+        .result-name {
+            font-weight: 700;
+            font-size: 18px;
+            color: #2d3748;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+
+        .result-description {
+            color: #4a5568;
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+            font-size: 18px;
+        }
+
+        .no-results::before {
+            content: "🔍";
+            display: block;
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .error {
+            text-align: center;
+            padding: 40px 20px;
+            color: #e53e3e;
+            font-size: 16px;
+        }
+
+        .error::before {
+            content: "⚠️";
+            display: block;
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        /* 스크롤바 스타일링 */
+        .results-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .results-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .results-container::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        .results-container::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{ title }}</h1>
+        </div>
+
+        <div class="search-section">
+            <div class="search-input-group">
+                <input type="text" id="searchInput" class="search-input"
+                       placeholder="검색어를 입력하세요..." value="{{ initial_query }}">
+                <button type="button" id="searchBtn" class="search-btn">검색</button>
+            </div>
+        </div>
+
+        <div id="resultsContainer" class="results-container">
+            <!-- 검색 결과가 여기에 표시됩니다 -->
+        </div>
+    </div>
+
+    <script>
+        const target = '{{ target }}';
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const resultsContainer = document.getElementById('resultsContainer');
+
+        // 초기 검색어가 있으면 자동으로 검색
+        if (searchInput.value.trim()) {
+            performSearch();
+        }
+
+        // 검색 버튼 클릭 이벤트
+        searchBtn.addEventListener('click', performSearch);
+
+        // 엔터 키로 검색
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        async function performSearch() {
+            const query = searchInput.value.trim();
+            if (!query) {
+                alert('검색어를 입력해주세요.');
+                return;
+            }
+
+            // 로딩 표시
+            resultsContainer.innerHTML = '<div class="loading">검색 중입니다...</div>';
+
+            try {
+                let apiUrl;
+                if (target === 'disease') {
+                    apiUrl = 'https://sehnr.org/ohsearch/dzsearch/api/search/';
+                } else if (target === 'job') {
+                    apiUrl = 'https://sehnr.org/ohsearch/jobsearch/api/search/';
+                } else {
+                    throw new Error('잘못된 검색 대상입니다.');
+                }
+
+                const response = await fetch(`${apiUrl}?query=${encodeURIComponent(query)}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP 오류! 상태: ${response.status}`);
+                }
+
+                const data = await response.json();
+                renderResults(data.results || []);
+            } catch (error) {
+                console.error('AI 검색 중 오류 발생:', error);
+                resultsContainer.innerHTML = '<div class="error">검색 중 오류가 발생했습니다.<br>잠시 후 다시 시도해주세요.</div>';
+            }
+        }
+
+        function renderResults(results) {
+            if (results.length === 0) {
+                resultsContainer.innerHTML = '<div class="no-results">검색 결과가 없습니다.</div>';
+                return;
+            }
+
+            resultsContainer.innerHTML = '';
+            results.forEach(result => {
+                const resultItem = document.createElement('div');
+                resultItem.className = 'result-item';
+
+                const score = Math.round(result.score * 100);
+                const code = result.code || '';
+                const name = result.disease_name || result.job_name || '';
+                const description = result.description || '';
+
+                resultItem.innerHTML = `
+                    <div class="result-header">
+                        <span class="result-score">${score}%</span>
+                        <span class="result-code">${code}</span>
+                    </div>
+                    <div class="result-name">${name}</div>
+                    <div class="result-description">${description}</div>
+                `;
+
+                // 결과 클릭 이벤트
+                resultItem.addEventListener('click', function() {
+                    selectResult(result);
+                });
+
+                resultsContainer.appendChild(resultItem);
+            });
+        }
+
+        function selectResult(result) {
+            // 부모 창의 handleAiSearchResult 함수 호출
+            try {
+                if (window.opener && !window.opener.closed && window.opener.handleAiSearchResult) {
+                    // 부모 창이 여전히 열려있고 함수가 존재하는 경우
+                    window.opener.handleAiSearchResult(result, target);
+                    window.close();
+                } else {
+                    // 부모 창을 찾을 수 없거나 닫힌 경우
+                    alert('결과가 선택되었습니다: ' + (result.disease_name || result.job_name));
+                    window.close();
+                }
+            } catch (error) {
+                console.error('부모 창과의 통신 오류:', error);
+                alert('결과가 선택되었습니다: ' + (result.disease_name || result.job_name));
+                window.close();
+            }
+        }
+    </script>
+</body>
+</html>

@@ -20,6 +20,8 @@
         {% endif %}
       </div>
 
+      <div class="resizer" id="resizer"></div>
+
       <div class="form-content">
         <h1>기록 수정 {{ record.case.fid }}</h1>
         <form method="post" action="{% url 'record_edit' record.pk %}?{{ other_params }}">
@@ -52,6 +54,7 @@
 
     <!-- RAG 검색 모달 -->
     {% include 'records/components/rag_search_modal.html' %}
+
 
     <!-- JavaScript -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
@@ -144,6 +147,47 @@
           });
         } else {
           console.error('Disease input NOT found!');
+        }
+
+        // Resizable panels functionality
+        const resizer = document.getElementById('resizer');
+        const pdfViewer = document.querySelector('.pdf-viewer');
+        const formContent = document.querySelector('.form-content');
+        const mainWrapper = document.querySelector('.main-wrapper');
+
+        if (resizer && pdfViewer && formContent && mainWrapper) {
+          let isResizing = false;
+
+          resizer.addEventListener('mousedown', function(e) {
+            isResizing = true;
+            document.addEventListener('mousemove', resize);
+            document.addEventListener('mouseup', stopResize);
+          });
+
+          function resize(e) {
+            if (!isResizing) return;
+
+            const containerRect = mainWrapper.getBoundingClientRect();
+            const newPdfWidth = e.clientX - containerRect.left;
+            const totalWidth = containerRect.width;
+            const resizerWidth = 5;
+
+            // 최소/최대 너비 제한
+            const minPdfWidth = 300;
+            const minFormWidth = 600;
+            const maxPdfWidth = totalWidth - resizerWidth - minFormWidth;
+
+            if (newPdfWidth >= minPdfWidth && newPdfWidth <= maxPdfWidth) {
+              pdfViewer.style.flex = `0 0 ${newPdfWidth}px`;
+              formContent.style.flex = `1`;
+            }
+          }
+
+          function stopResize() {
+            isResizing = false;
+            document.removeEventListener('mousemove', resize);
+            document.removeEventListener('mouseup', stopResize);
+          }
         }
       });
     </script>

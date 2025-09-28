@@ -1,0 +1,7 @@
+ 좋아 https://sehnr.org/ohsearch/jobsearch/, https://sehnr.org/ohsearch/dzsearch/  에 RAG를 만들어 놨어, 
+
+ 여기에 job을 질병을 찾을 수 있는 것을 만들어 놨다는 거야. 
+
+ 이게 /home/rag/papps/ohsearch 에 django로 만들어 놨어, 이걸 이용해서 
+ record_from.html에 J-ai, D-ai 링크를 만들고 작동하게 할꺼야, 그리고 만약 거기서 결과를 클릭하면 그게 직종에, 질병에 들어가게 하려는 거고. 
+  

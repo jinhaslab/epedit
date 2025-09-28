@@ -167,6 +167,58 @@ class WorkProcessData(models.Model):
         verbose_name = "작업 공정 정보"
         verbose_name_plural = "작업 공정 정보 목록"
 
+## 수정 이력 모델
+class RecordRevision(models.Model):
+    """질병 기록의 수정 이력을 저장하는 모델"""
+    record = models.ForeignKey(DiseaseRecord, on_delete=models.CASCADE, related_name='revisions', verbose_name="질병 기록")
+    modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name="수정자")
+    modified_at = models.DateTimeField(auto_now_add=True, verbose_name="수정 시간")
+    changed_fields = models.TextField(verbose_name="변경된 필드", blank=True)
+
+    # 변경 내용 요약
+    summary = models.CharField(max_length=500, verbose_name="변경 요약", blank=True)
+
+    # 변경 전후 값 (JSON 형태로 저장)
+    before_values = models.JSONField(verbose_name="변경 전 값", blank=True, default=dict)
+    after_values = models.JSONField(verbose_name="변경 후 값", blank=True, default=dict)
+
+    def __str__(self):
+        return f"{self.record.case.fid} - {self.modified_at.strftime('%Y-%m-%d %H:%M')} by {self.modified_by}"
+
+    class Meta:
+        verbose_name = "수정 이력"
+        verbose_name_plural = "수정 이력 목록"
+        ordering = ['-modified_at']
+
+    @property
+    def changed_fields_list(self):
+        """변경된 필드를 리스트로 반환"""
+        if not self.changed_fields:
+            return []
+        return [field.strip() for field in self.changed_fields.split(',') if field.strip()]
+
+    @property
+    def changed_categories(self):
+        """변경된 카테고리를 반환"""
+        if not self.changed_fields:
+            return []
+
+        changed_set = set(self.changed_fields_list)
+        categories = []
+
+        if changed_set.intersection({'disease_name', 'disease_code', 'disease'}):
+            categories.append('질병')
+        if changed_set.intersection({'job', 'job_code'}):
+            categories.append('직종')
+        if changed_set.intersection({'exposure', 'exp_start', 'exp_period'}):
+            categories.append('노출')
+        if changed_set.intersection({'smry', 'decision'}):
+            categories.append('진단/결정')
+        if changed_set.intersection({'disease_confirmed', 'job_confirmed', 'exposure_confirmed', 'decision_confirmed', 'smry_confirmed'}):
+            categories.append('확인상태')
+
+        return categories
+
 ## 사용자 프로필 모델
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)

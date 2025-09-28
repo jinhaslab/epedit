@@ -7,13 +7,12 @@ body {
 .main-wrapper {
     display: flex;
     /* PDF 뷰어와 상세 정보를 나란히 배치 */
-    gap: 20px;
-    /* 두 섹션 사이의 간격 */
     max-width: 1600px;
     /* 전체 컨테이너 최대 너비 확장 */
     margin: 20px auto;
     align-items: flex-start;
     /* 상단 정렬 */
+    height: 90vh;
 }
 
 .pdf-viewer {
@@ -21,8 +20,7 @@ body {
     /* PDF 뷰어를 상세 정보보다 2배 넓게 */
     min-width: 300px;
     /* 최소 너비 설정 */
-    min-height: 50vh;
-    height: 90vh;
+    height: 100%;
     /* PDF 뷰어 높이 고정 */
     background-color: white;
     border-radius: 8px;
@@ -31,19 +29,44 @@ body {
     /* iframe이 넘치지 않도록 */
 }
 
+.resizer {
+    width: 5px;
+    background-color: #cdd4da;
+    cursor: col-resize;
+    user-select: none;
+    position: relative;
+    border-radius: 2px;
+}
+
+.resizer:hover {
+    background-color: #28a745;
+}
+
+.resizer::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 3px;
+    height: 30px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 2px;
+}
+
 .pdf-viewer iframe {
     width: 100%;
     height: 100%;
     border: none;
 }
 
-.detail-content {
+.detail-content,
+.form-content {
     flex: 1;
     /* 상세 정보 영역 */
     min-width: 600px;
     /* 최소 너비 설정 */
-    max-height: 90vh;
-    min-height: 50vh;
+    height: 100%;
     background-color: white;
     padding: 30px;
     border-radius: 8px;
@@ -264,4 +287,165 @@ h1 {
     border-color: #007bff;
     outline: none;
     box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* AI Search Button Styles */
+.input-with-ai-button {
+    display: flex;
+    gap: 5px;
+    align-items: stretch;
+}
+
+.input-with-ai-button .autocomplete-input {
+    flex: 1;
+}
+
+.ai-search-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 50px;
+    white-space: nowrap;
+}
+
+.ai-search-btn:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.ai-search-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 4px rgba(102, 126, 234, 0.2);
+}
+
+/* AI Search Modal */
+.ai-search-modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.ai-search-modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: none;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 800px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.ai-search-close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.ai-search-close:hover,
+.ai-search-close:focus {
+    color: #000;
+}
+
+.ai-search-input-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.ai-search-input {
+    flex: 1;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 16px;
+}
+
+.ai-search-submit {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.ai-search-submit:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+}
+
+.ai-search-results {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.ai-result-item {
+    padding: 15px;
+    border: 1px solid #eee;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ai-result-item:hover {
+    background-color: #f8f9fa;
+    border-color: #667eea;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ai-result-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.ai-result-score {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.ai-result-code {
+    color: #666;
+    font-family: monospace;
+    font-size: 14px;
+}
+
+.ai-result-name {
+    font-weight: bold;
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.ai-result-description {
+    color: #666;
+    font-size: 14px;
+    line-height: 1.4;
 }

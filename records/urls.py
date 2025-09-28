@@ -15,6 +15,7 @@ urlpatterns = [
     
     # 기타 URL (사전 및 외부 연동)
     path('proxy/rag_search/', views.proxy_rag_search, name='proxy_rag_search'),
+    path('ai-search-popup/', views.ai_search_popup, name='ai_search_popup'),
     path('exposure-dictionary/', views.ExposureDictionaryListView.as_view(), name='exposure_dictionary_list'),
     path('disease-dictionary/', views.DiseaseDictionaryListView.as_view(), name='disease_dictionary_list'),
 
