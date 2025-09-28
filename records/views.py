@@ -9,6 +9,7 @@ from django.db.models.functions import Substr, Cast
 from django.db.models import IntegerField
 from django.views.decorators.csrf import csrf_exempt
 import json
+import requests
 
 # 👇 필요한 모델들을 import 합니다.
 from dictionaries.models import DiseaseDictionaryEntry, JobCodeOccupation, ExposureDictionary
@@ -206,10 +207,10 @@ class RecordDetailView(LoginRequiredMixin, DetailView):
         }
         context['current_data'] = {
             'disease_name': record.disease.disease_name if record.disease else (record.original_disease_name if record.original_disease_name else "-"),
-            'disease_code': record.disease_code if record.disease_code else (record.original_disease_code if record.original_disease_code else "-"),
+            'disease_code': record.disease.disease_code if record.disease else (record.disease_code if record.disease_code else (record.original_disease_code if record.original_disease_code else "-")),
             # 📝 'occupation' -> 'job'으로 변경
             'job': record.job.occupation if record.job else (record.original_job if record.original_job else "-"),
-            'job_code': record.job_code if record.job_code else (record.original_job_code if record.original_job_code else "-"),
+            'job_code': record.job.job_code if record.job else (record.job_code if record.job_code else (record.original_job_code if record.original_job_code else "-")),
             'exposure': ", ".join([e.name for e in record.exposure.all()]) if record.exposure.exists() else (record.original_exposure if record.original_exposure else "-"),
             'decision': record.decision if record.decision else (record.original_decision if record.original_decision else "-"),
             'smry': record.smry if record.smry else (record.original_smry if record.original_smry else "-"),
@@ -288,78 +289,78 @@ class RecordUpdateView(LoginRequiredMixin, UpdateView):
         else:
             record_to_save.job = None
 
-            # 코드 필드 처리
-            record_to_save.disease_code = self.request.POST.get('disease_code_display', '')
-            record_to_save.job_code = self.request.POST.get('job_code_display', '')
+        # 코드 필드 처리
+        record_to_save.disease_code = self.request.POST.get('disease_code_display', '')
+        record_to_save.job_code = self.request.POST.get('job_code_display', '')
 
-            # 핵심 필드들 보존 (수정되지 않도록)
-            record_to_save.ids = record_from_db.ids
-            record_to_save.case = record_from_db.case
-            record_to_save.fnames = record_from_db.fnames
+        # 핵심 필드들 보존 (수정되지 않도록)
+        record_to_save.ids = record_from_db.ids
+        record_to_save.case = record_from_db.case
+        record_to_save.fnames = record_from_db.fnames
 
-            if self.request.POST.get('disease_name') != record_from_db.original_disease_name:
-                changed_fields.append('disease_name')
-            if self.request.POST.get('disease_code') != record_from_db.original_disease_code:
-                changed_fields.append('disease_code')
-            # 📝 self.request.POST.get('occupation') -> self.request.POST.get('job')로 변경
-            # 📝 record_from_db.original_occupation -> record_from_db.original_job으로 변경
-            if self.request.POST.get('job') != record_from_db.original_job:
-                changed_fields.append('job')
-            if self.request.POST.get('job_code') != record_from_db.original_job_code:
-                changed_fields.append('job_code')
-        
-            if record_to_save.decision != record_from_db.original_decision:
-                changed_fields.append('decision')
-            if record_to_save.smry != record_from_db.original_smry:
-                changed_fields.append('smry')
-            if str(record_to_save.exp_start or '') != str(record_from_db.original_exp_start or ''):
-                changed_fields.append('exp_start')
-            if str(record_to_save.exp_period or '') != str(record_from_db.original_exp_period or ''):
-                changed_fields.append('exp_period')
+        if self.request.POST.get('disease_name') != record_from_db.original_disease_name:
+            changed_fields.append('disease_name')
+        if self.request.POST.get('disease_code') != record_from_db.original_disease_code:
+            changed_fields.append('disease_code')
+        # 📝 self.request.POST.get('occupation') -> self.request.POST.get('job')로 변경
+        # 📝 record_from_db.original_occupation -> record_from_db.original_job으로 변경
+        if self.request.POST.get('job') != record_from_db.original_job:
+            changed_fields.append('job')
+        if self.request.POST.get('job_code') != record_from_db.original_job_code:
+            changed_fields.append('job_code')
 
-            exposure_from_post = self.request.POST.get('exposure', '')
-            new_exposure_names = set([item.strip() for item in exposure_from_post.split(',') if item.strip()])
-            original_exposure_names = set([item.strip() for item in (record_from_db.original_exposure or "").split(',') if item.strip()])
-            if new_exposure_names != original_exposure_names:
-                changed_fields.append('exposure')
-            
-            confirmed_fields = [
-                'disease_confirmed',
-                # 📝 'occupation_confirmed' -> 'job_confirmed'로 변경
-                'job_confirmed',
-                'exposure_confirmed',
-                'decision_confirmed',
-                'smry_confirmed'
-            ]
-            for field in confirmed_fields:
-                new_value = (self.request.POST.get(field) == 'on')
-                old_value = getattr(record_from_db, field)
-                if new_value != old_value:
-                    changed_fields.append(field)
-                setattr(record_to_save, field, new_value)
+        if record_to_save.decision != record_from_db.original_decision:
+            changed_fields.append('decision')
+        if record_to_save.smry != record_from_db.original_smry:
+            changed_fields.append('smry')
+        if str(record_to_save.exp_start or '') != str(record_from_db.original_exp_start or ''):
+            changed_fields.append('exp_start')
+        if str(record_to_save.exp_period or '') != str(record_from_db.original_exp_period or ''):
+            changed_fields.append('exp_period')
 
-            # 변경된 필드와 메타데이터 설정
-            record_to_save.changed_fields = ",".join(list(set(changed_fields)))
-            record_to_save.last_modified_by = self.request.user
+        exposure_from_post = self.request.POST.get('exposure', '')
+        new_exposure_names = set([item.strip() for item in exposure_from_post.split(',') if item.strip()])
+        original_exposure_names = set([item.strip() for item in (record_from_db.original_exposure or "").split(',') if item.strip()])
+        if new_exposure_names != original_exposure_names:
+            changed_fields.append('exposure')
 
-            # 저장
-            record_to_save.save()
+        confirmed_fields = [
+            'disease_confirmed',
+            # 📝 'occupation_confirmed' -> 'job_confirmed'로 변경
+            'job_confirmed',
+            'exposure_confirmed',
+            'decision_confirmed',
+            'smry_confirmed'
+        ]
+        for field in confirmed_fields:
+            new_value = (self.request.POST.get(field) == 'on')
+            old_value = getattr(record_from_db, field)
+            if new_value != old_value:
+                changed_fields.append(field)
+            setattr(record_to_save, field, new_value)
 
-            # Exposure (ManyToMany) 처리
-            exposure_names = self.request.POST.get('exposure', '')
-            if exposure_names:
-                exposure_list = [name.strip() for name in exposure_names.split(',') if name.strip()]
-                from dictionaries.models import ExposureDictionary
-                exposures = []
-                for name in exposure_list:
-                    try:
-                        exp = ExposureDictionary.objects.get(name=name)
-                        exposures.append(exp)
-                    except ExposureDictionary.DoesNotExist:
-                        pass  # 존재하지 않는 유해인자는 무시
-                record_to_save.exposure.set(exposures)
-            else:
-                record_to_save.exposure.clear()
+        # 변경된 필드와 메타데이터 설정
+        record_to_save.changed_fields = ",".join(list(set(changed_fields)))
+        record_to_save.last_modified_by = self.request.user
+
+        # 저장
+        record_to_save.save()
+
+        # Exposure (ManyToMany) 처리
+        exposure_names = self.request.POST.get('exposure', '')
+        if exposure_names:
+            exposure_list = [name.strip() for name in exposure_names.split(',') if name.strip()]
+            from dictionaries.models import ExposureDictionary
+            exposures = []
+            for name in exposure_list:
+                try:
+                    exp = ExposureDictionary.objects.get(name=name)
+                    exposures.append(exp)
+                except ExposureDictionary.DoesNotExist:
+                    pass  # 존재하지 않는 유해인자는 무시
+            record_to_save.exposure.set(exposures)
+        else:
+            record_to_save.exposure.clear()
 
         self.object = record_to_save
         return redirect(self.get_success_url())

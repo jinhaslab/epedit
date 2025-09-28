@@ -257,7 +257,7 @@
                 <td>
                   {{ current_data.disease_name|default:"-" }}
                   {% if current_data.disease_name and current_data.disease_name != "-" and not record.disease %}
-                    <span class="dict-error">(사전에 없는 질병)</span>
+                    <span class="dict-error">(사전에 없는 질병명입니다)</span>
                   {% endif %}
                 </td>
               </tr>
@@ -272,7 +272,7 @@
                 <td>
                   {{ current_data.job|default:"-" }}
                   {% if current_data.job and current_data.job != "-" and not record.job %}
-                    <span class="dict-error">(사전에 없는 직종)</span>
+                    <span class="dict-error">(사전에 없는 직종명입니다)</span>
                   {% endif %}
                 </td>
               </tr>
@@ -287,7 +287,7 @@
                 <td>
                   {{ current_data.exposure|default:"-" }}
                   {% if current_data.exposure and current_data.exposure != "-" and not record.exposure.exists %}
-                    <span class="dict-error">(사전에 없는 유해인자)</span>
+                    <span class="dict-error">(사전에 없는 유해인자입니다)</span>
                   {% endif %}
                 </td>
               </tr>

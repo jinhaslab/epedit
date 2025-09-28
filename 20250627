@@ -1,0 +1,11 @@
+ 이 프로젝트는 너가 판단한 것 처럼 django framework를 사용하고 있어.
+ 여기서 record_detail에서 최초데이터 (origin)와 수정된 데이터 (modified)를 비교하는데, 
+ 질병, 직종, 유해인자 입력은 dictionary를 통해 하고 있어. 최초 데이터는 basic_data.xlsx에서 가져오고, 수정된 데이터는 form에서 입력받아.
+basic_data.xlsx에 질병, 직종, 유해인자가 dictionary에 없는 값을 입력한 경우가 많어 왜냐면 이거는 최초 pdf ocr로 그냥 가져온 거거든, 그래서 질병이나 직종이 표준화가 되어 있지 않아. 
+유해인자는 basic_data.xlsx에서 unique해서 dictionary를 만들었으나, 질병과 직종은 dictionary에 없는 값이 많아. 왜냐면 질병과 직종 dictionary는 표준 직업분류, 표준 질병분류 체계를 가져왔거든. 
+
+이제 최종 데이터는 처음에는 최초 데이터를 그냥 가져와서 record_detail에서 보여주다가, 사용자가 form에서 질병, 직종, 유해인자를 수정하면 그걸 modified에 반영하는데,
+이때 사용자가 form에서 질병, 직종, 유해인자에 dictionary에 있는 것을 탐색하고 dropdown에서 선택할 수 있게 하고 싶어.
+
+그리고 수정이 되면 dictionary에 있는 값만 들어갔으니, record_detail에서 최초데이터(origin)와 수정된 데이터(modified)를 비교할 때,
+dictionary에 없는 값은 최초데이터(origin)에서만 나오고, 수정된 데이터(modified)에는 수정된 값만 나오니, '사전에 없는 직종 명입니다'가 사라지는 거지. 이걸 먼저 해줘. 

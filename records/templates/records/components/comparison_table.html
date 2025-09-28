@@ -18,8 +18,9 @@
           <div id="disease_suggestions" class="autocomplete-suggestions"></div>
         </div>
         <input type="hidden" name="disease" id="disease_hidden"
-               value="{% if record.disease %}{{ record.disease.disease_name }}{% else %}{{ original_data.disease_name|default:'' }}{% endif %}"
-               data-initial-name="{% if record.disease %}{{ record.disease.disease_name }}{% else %}{{ original_data.disease_name|default:'' }}{% endif %}" />
+               value="{{ original_data.disease_name|default:'' }}"
+               data-initial-name="{{ original_data.disease_name|default:'' }}"
+               data-current-value="{% if record.disease %}{{ record.disease.disease_name }}{% endif %}" />
       </td>
     </tr>
     <tr>
@@ -27,7 +28,7 @@
       <td class="initial-value">{{ original_data.disease_code|default:"-" }}</td>
       <td>
         <input type="text" id="disease_code_display" name="disease_code_display"
-               value="{% if record.disease_code %}{{ record.disease_code }}{% else %}{{ original_data.disease_code|default:'' }}{% endif %}" readonly />
+               value="{{ original_data.disease_code|default:'' }}" readonly />
         <input type="hidden" name="disease_code" id="disease_code_hidden_form"
                value="{% if record.disease_code %}{{ record.disease_code }}{% else %}{{ original_data.disease_code|default:'' }}{% endif %}" />
       </td>
@@ -42,8 +43,9 @@
           <div id="job_suggestions" class="autocomplete-suggestions"></div>
         </div>
         <input type="hidden" name="job" id="job_hidden"
-               value="{% if record.job %}{{ record.job.occupation }}{% else %}{{ original_data.job|default:'' }}{% endif %}"
-               data-initial-name="{% if record.job %}{{ record.job.occupation }}{% else %}{{ original_data.job|default:'' }}{% endif %}" />
+               value="{{ original_data.job|default:'' }}"
+               data-initial-name="{{ original_data.job|default:'' }}"
+               data-current-value="{% if record.job %}{{ record.job.occupation }}{% endif %}" />
       </td>
     </tr>
     <tr>
@@ -51,7 +53,7 @@
       <td class="initial-value">{{ original_data.job_code|default:"-" }}</td>
       <td>
         <input type="text" id="job_code_display" name="job_code_display"
-               value="{% if record.job_code %}{{ record.job_code }}{% else %}{{ original_data.job_code|default:'' }}{% endif %}" readonly />
+               value="{{ original_data.job_code|default:'' }}" readonly />
         <input type="hidden" name="job_code" id="job_code_hidden_form"
                value="{% if record.job_code %}{{ record.job_code }}{% else %}{{ original_data.job_code|default:'' }}{% endif %}" />
       </td>
@@ -66,8 +68,9 @@
           <div id="exposure_suggestions" class="autocomplete-suggestions"></div>
         </div>
         <input type="hidden" name="exposure" id="exposure_hidden"
-               value="{% for exp in record.exposure.all %}{{ exp.name }}{% if not forloop.last %},{% endif %}{% endfor %}"
-               data-initial-exposure="{% if record.exposure.all %}{% for exp in record.exposure.all %}{{ exp.name }}{% if not forloop.last %},{% endif %}{% endfor %}{% else %}{{ original_data.exposure|default:'' }}{% endif %}" />
+               value="{{ original_data.exposure|default:'' }}"
+               data-initial-exposure="{{ original_data.exposure|default:'' }}"
+               data-current-value="{% for exp in record.exposure.all %}{{ exp.name }}{% if not forloop.last %},{% endif %}{% endfor %}" />
       </td>
     </tr>
     <tr>
@@ -75,7 +78,7 @@
       <td class="initial-value">{{ original_data.exp_start|default:"-" }}</td>
       <td>
         <input type="number" name="exp_start" class="form-control"
-               value="{% if record.exp_start %}{{ record.exp_start }}{% else %}{{ original_data.exp_start|default:'' }}{% endif %}"
+               value="{{ original_data.exp_start|default:'' }}"
                placeholder="노출 시작 연도" />
       </td>
     </tr>
@@ -84,7 +87,7 @@
       <td class="initial-value">{{ original_data.exp_period|default:"-" }}</td>
       <td>
         <input type="number" name="exp_period" class="form-control"
-               value="{% if record.exp_period %}{{ record.exp_period }}{% else %}{{ original_data.exp_period|default:'' }}{% endif %}"
+               value="{{ original_data.exp_period|default:'' }}"
                placeholder="노출 기간" />
       </td>
     </tr>
@@ -92,14 +95,14 @@
       <th>결정 사항</th>
       <td class="initial-value">{{ original_data.decision|default:"-" }}</td>
       <td>
-        <textarea name="decision" class="form-control" rows="2" placeholder="결정 사항">{% if record.decision %}{{ record.decision }}{% else %}{{ original_data.decision|default:'' }}{% endif %}</textarea>
+        <textarea name="decision" class="form-control" rows="2" placeholder="결정 사항">{{ original_data.decision|default:'' }}</textarea>
       </td>
     </tr>
     <tr>
       <th>고찰</th>
       <td class="initial-value">{{ original_data.smry|default:"-" }}</td>
       <td>
-        <textarea name="smry" class="form-control" rows="5" placeholder="고찰">{% if record.smry %}{{ record.smry }}{% else %}{{ original_data.smry|default:'' }}{% endif %}</textarea>
+        <textarea name="smry" class="form-control" rows="5" placeholder="고찰">{{ original_data.smry|default:'' }}</textarea>
       </td>
     </tr>
   </tbody>
