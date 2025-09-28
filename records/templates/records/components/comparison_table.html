@@ -42,6 +42,24 @@
       </td>
     </tr>
     <tr>
+      <th>세부 질병명</th>
+      <td class="initial-value">{{ original_data.sub_disease_name|default:"-" }}</td>
+      <td>
+        <input type="text" name="sub_disease_name" class="form-control"
+               value="{{ original_data.sub_disease_name|default:'' }}"
+               placeholder="세부 질병명 입력" />
+      </td>
+    </tr>
+    <tr>
+      <th>세부 질병 코드</th>
+      <td class="initial-value">{{ original_data.sub_disease_code|default:"-" }}</td>
+      <td>
+        <input type="text" name="sub_disease_code" class="form-control"
+               value="{{ original_data.sub_disease_code|default:'' }}"
+               placeholder="세부 질병 코드 입력" />
+      </td>
+    </tr>
+    <tr>
       <th>직종</th>
       <td class="initial-value">{{ original_data.job|default:"-" }}</td>
       <td>

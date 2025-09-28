@@ -120,10 +120,22 @@ class RecordListView(LoginRequiredMixin, ListView):
                         for val in values:
                             q_objects |= Q(exposure__name=val)
                         queryset = queryset.filter(q_objects).distinct()
+                    elif field == 'disease_name':
+                        q_objects = Q()
+                        for val in values:
+                            # ForeignKey 관계에서는 관련 필드를 통해 검색
+                            q_objects |= Q(disease__disease_name__iexact=val)
+                        queryset = queryset.filter(q_objects)
+                    elif field == 'job':
+                        q_objects = Q()
+                        for val in values:
+                            # ForeignKey 관계에서는 관련 필드를 통해 검색
+                            q_objects |= Q(job__occupation__iexact=val)
+                        queryset = queryset.filter(q_objects)
                     else:
                         q_objects = Q()
                         for val in values:
-                            # 📝 f"{field}__iexact" -> f"{field}__iexact" (변수명은 그대로 유지)
+                            # 다른 필드들은 기존처럼 처리
                             q_objects |= Q(**{f"{field}__iexact": val})
                         queryset = queryset.filter(q_objects)
         
