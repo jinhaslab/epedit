@@ -401,6 +401,15 @@
             <form method="get" id="filterForm">
                 <div class="filter-row">
                     <div class="filter-item">
+                        <label for="fname_input">파일명:</label>
+                        <input type="text"
+                               name="fname"
+                               id="fname_input"
+                               class="filter-select"
+                               placeholder="파일명 검색"
+                               value="{{ request.GET.fname }}" />
+                    </div>
+                    <div class="filter-item">
                         <label for="disease_name_input">질병명:</label>
                         <div class="autocomplete-input-wrapper">
                             <div id="disease_name_tags" class="selected-tags-container"></div>

@@ -8,14 +8,14 @@ body {
 .main-wrapper {
   display: flex;
   gap: 10px;
-  max-width: 1600px;
+  max-width: 2800px;
   margin: 20px auto;
   align-items: flex-start;
 }
 
 .pdf-viewer {
-  flex: 1.2;
-  min-width: 500px;
+  flex: 2;
+  min-width: 700px;
   height: 90vh;
   min-height: 50vh;
   background-color: white;

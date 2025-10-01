@@ -6,9 +6,9 @@ body {
 
 .main-wrapper {
     display: grid;
-    grid-template-columns: 1300px 1fr;
-    /* PDF Section(1300px) + Content(나머지) */
-    max-width: 2400px;
+    grid-template-columns: 4800px 1fr;
+    /* PDF Section(4800px) + Content(나머지) */
+    max-width: 6000px;
     margin: 20px auto;
     height: 90vh;
     gap: 12px;
@@ -376,7 +376,7 @@ table.comparison-table td:nth-child(3),
     display: flex;
     flex-wrap: wrap;
     gap: 5px;
-    margin-bottom: 5px;
+    margin-bottom: 12px;
     min-height: 20px;
 }
 
@@ -420,8 +420,9 @@ table.comparison-table td:nth-child(3),
 /* AI Search Button Styles */
 .input-with-ai-button {
     display: flex;
-    gap: 5px;
+    gap: 8px;
     align-items: stretch;
+    margin-top: 8px;
 }
 
 .input-with-ai-button .autocomplete-input {
@@ -429,28 +430,56 @@ table.comparison-table td:nth-child(3),
 }
 
 .ai-search-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 0.25px solid #6c757d;
     border-radius: 4px;
-    padding: 8px 12px;
-    font-size: 12px;
-    font-weight: bold;
+    color: #6c757d;
+    background-color: transparent;
+    font-size: 13px;
+    font-weight: normal;
     cursor: pointer;
-    transition: all 0.3s ease;
-    min-width: 50px;
+    transition: all 0.2s ease;
     white-space: nowrap;
+    text-decoration: none;
 }
 
 .ai-search-btn:hover {
-    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    background-color: #6c757d;
+    color: white;
+    border-color: #6c757d;
 }
 
 .ai-search-btn:active {
-    transform: translateY(0);
-    box-shadow: 0 1px 4px rgba(102, 126, 234, 0.2);
+    background-color: #6c757d;
+    color: white;
+}
+
+/* D-ai specific styling (disease) - matches 질병사전 style */
+#disease-ai-btn {
+    color: #2196F3;
+    border-color: #2196F3;
+}
+
+#disease-ai-btn:hover {
+    background-color: #2196F3;
+    color: white;
+    border-color: #2196F3;
+}
+
+/* J-ai specific styling (job) - matches 직종사전 style */
+#job-ai-btn {
+    color: #4CAF50;
+    border-color: #4CAF50;
+}
+
+#job-ai-btn:hover {
+    background-color: #4CAF50;
+    color: white;
+    border-color: #4CAF50;
 }
 
 /* AI Search Modal */

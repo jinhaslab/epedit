@@ -137,6 +137,11 @@ class RecordListView(LoginRequiredMixin, ListView):
         if fid_query:
             queryset = queryset.filter(case__fid__icontains=fid_query)
 
+        # fname 필터 추가
+        fname = self.request.GET.get('fname', '').strip()
+        if fname:
+            queryset = queryset.filter(fnames__icontains=fname)
+
         filter_configs = {
             'disease_name': self.request.GET.get('disease_name'),
             # 📝 'occupation' -> 'job'으로 변경
@@ -219,7 +224,7 @@ class RecordListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['sort_by'] = self.request.GET.get('sort', '-created_at')
         context['order'] = self.request.GET.get('order', 'desc')
-        
+
         query_params = self.request.GET.copy()
         if 'page' in query_params:
             del query_params['page']
@@ -234,6 +239,7 @@ class RecordListView(LoginRequiredMixin, ListView):
         context['ids_from'] = self.request.GET.get('ids_from', '')
         context['ids_to'] = self.request.GET.get('ids_to', '')
         context['selected_changed_fields'] = self.request.GET.getlist('changed_fields')
+        context['fname'] = self.request.GET.get('fname', '')
 
         return context
 
@@ -426,6 +432,9 @@ class RecordUpdateView(LoginRequiredMixin, UpdateView):
         record_to_save.ids = record_from_db.ids
         record_to_save.case = record_from_db.case
         record_to_save.fnames = record_from_db.fnames
+        record_to_save.pdf_link = record_from_db.pdf_link
+        record_to_save.pop_link = record_from_db.pop_link
+        record_to_save.process_link = record_from_db.process_link
 
         # 변경 사항 감지 및 기록
         if self.request.POST.get('disease_name') != record_from_db.original_disease_name:

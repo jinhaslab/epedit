@@ -1,36 +1,36 @@
 <!-- readonly_fields.html -->
 <div class="readonly-field-group">
-  <div class="readonly-field">
-    <label>파일 ID:</label>
-    <span class="readonly-value">{{ record.case.fid|default:'' }}</span>
-    <input type="hidden" name="fid" value="{{ record.fid|default:'' }}" />
-  </div>
-  <div class="readonly-field">
-    <label>파일 이름:</label>
-    <span class="readonly-value multiline">{{ record.fnames|default:'' }}</span>
-    <input type="hidden" name="fnames" id="fnames" value="{{ record.fnames|default:'' }}" />
-  </div>
-  <div class="readonly-field">
-    <label>PDF 링크:</label>
-    <a href="{{ record.pdf_link|default:'' }}" target="_blank" class="readonly-value link-style">PDF 별도창으로</a>
-    <input type="hidden" name="pdf_link" value="{{ record.pdf_link|default:'' }}" />
-  </div>
-  <div class="readonly-field">
-    <label>인구 링크:</label>
-    <a href="{{ record.pop_link|default:'' }}" target="_blank" class="readonly-value link-style">인구 링크 별도창으로</a>
-    <input type="hidden" name="pop_link" value="{{ record.pop_link|default:'' }}" />
-  </div>
-  <div class="readonly-field">
-    <label>공정 링크:</label>
-    <a href="{{ record.process_link|default:'' }}" target="_blank" class="readonly-value link-style">공정 링크 별도창으로</a>
-    <input type="hidden" name="process_link" value="{{ record.process_link|default:'' }}" />
-  </div>
-  <div class="readonly-field">
-    <label>질병 사전:</label>
-    <a href="https://sehnr.org/ohsearch/kcdsearch/" target="_blank" class="readonly-value link-style">질병 사전 바로가기</a>
-  </div>
-  <div class="readonly-field">
-    <label>유해인자 사전:</label>
-    <a href="{% url 'exposure_dictionary_list' %}" target="_blank" class="readonly-value link-style">유해인자 사전 바로가기</a>
+  <div style="display: flex; gap: 12px; margin-top: 12px">
+    <div class="readonly-field" style="flex: 1; max-width: 50%">
+      <a
+        href="https://sehnr.org/ohsearch/kcdsearch/"
+        target="_blank"
+        class="readonly-value link-style"
+        style="width: 100%; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        질병 사전
+      </a>
+    </div>
+    <div class="readonly-field" style="flex: 1; max-width: 50%">
+      <a
+        href="https://sehnr.org/ohsearch/jobsearch/"
+        target="_blank"
+        class="readonly-value link-style"
+        style="width: 100%; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+        </svg>
+        직종 사전
+      </a>
+    </div>
   </div>
 </div>

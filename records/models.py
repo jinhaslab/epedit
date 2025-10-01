@@ -142,6 +142,11 @@ class DiseaseRecord(models.Model):
         ordering = ['-created_at']
 
     @property
+    def get_pdf_url(self):
+        """PDF URL을 반환하는 프로퍼티"""
+        return self.pdf_link or ''
+
+    @property
     def changed_fields_str(self):
         if not self.changed_fields:
             return ""

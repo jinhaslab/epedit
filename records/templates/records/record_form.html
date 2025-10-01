@@ -223,14 +223,14 @@
         console.log("🎡 Initializing TOP RESIZER system...");
 
         if (resizer && mainWrapper && pdfSection) {
-          let currentPdfWidth = 600; // 초기값
+          let currentPdfWidth = 4800; // 초기값
           let isHoveringResizer = false;
 
           // 🎡 **Get current PDF width from grid**
           function getCurrentPdfWidth() {
             const currentCols = window.getComputedStyle(mainWrapper).gridTemplateColumns;
             const match = currentCols.match(/^(\d+)px/);
-            return match ? parseInt(match[1]) : 600;
+            return match ? parseInt(match[1]) : 4800;
           }
 
           // 🎨 **Update PDF section width**
@@ -308,7 +308,7 @@
             }
           });
 
-          console.log("✅ SCROLL WHEEL Resizer initialized! Starting at 600px");
+          console.log("✅ SCROLL WHEEL Resizer initialized! Starting at 4800px");
           console.log("💡 Hover over resizer and use mouse wheel to resize!");
         } else {
           console.error("❌ Failed to initialize resizer");
