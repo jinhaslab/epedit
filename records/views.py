@@ -35,17 +35,21 @@ def get_unique_field_values(request):
             disease_name__icontains=query
         ).values_list('disease_name', flat=True)[:50]
 
-        # 2. original_disease_name에서 검색 (비어있지 않은 값만)
-        original_results = DiseaseRecord.objects.filter(
+        # 2. 수정된 레코드의 current_data (disease ForeignKey가 있는 경우)
+        modified_results = DiseaseRecord.objects.filter(
+            disease__disease_name__icontains=query
+        ).exclude(
+            disease__isnull=True
+        ).values_list('disease__disease_name', flat=True).distinct()[:50]
+
+        # 3. 수정되지 않은 레코드의 current_data (disease가 NULL인 경우 original_disease_name 사용)
+        unmodified_results = DiseaseRecord.objects.filter(
+            disease__isnull=True,
             original_disease_name__icontains=query
-        ).exclude(
-            original_disease_name=''
-        ).exclude(
-            original_disease_name__isnull=True
         ).values_list('original_disease_name', flat=True).distinct()[:50]
 
-        # 3. 합치기 + 중복 제거 + 정렬
-        all_names = sorted(set(dict_results) | set(original_results))[:20]
+        # 4. 합치기 + 중복 제거 + 정렬
+        all_names = sorted(set(dict_results) | set(modified_results) | set(unmodified_results))[:20]
         suggestions = [{'id': idx, 'name': name} for idx, name in enumerate(all_names)]
 
     # 📝 field_name == 'occupation' -> 'job'으로 변경
@@ -55,17 +59,21 @@ def get_unique_field_values(request):
             occupation__icontains=query
         ).values_list('occupation', flat=True)[:50]
 
-        # 2. original_job에서 검색 (비어있지 않은 값만)
-        original_results = DiseaseRecord.objects.filter(
+        # 2. 수정된 레코드의 current_data (job ForeignKey가 있는 경우)
+        modified_results = DiseaseRecord.objects.filter(
+            job__occupation__icontains=query
+        ).exclude(
+            job__isnull=True
+        ).values_list('job__occupation', flat=True).distinct()[:50]
+
+        # 3. 수정되지 않은 레코드의 current_data (job이 NULL인 경우 original_job 사용)
+        unmodified_results = DiseaseRecord.objects.filter(
+            job__isnull=True,
             original_job__icontains=query
-        ).exclude(
-            original_job=''
-        ).exclude(
-            original_job__isnull=True
         ).values_list('original_job', flat=True).distinct()[:50]
 
-        # 3. 합치기 + 중복 제거 + 정렬
-        all_jobs = sorted(set(dict_results) | set(original_results))[:20]
+        # 4. 합치기 + 중복 제거 + 정렬
+        all_jobs = sorted(set(dict_results) | set(modified_results) | set(unmodified_results))[:20]
         suggestions = [{'id': idx, 'name': name} for idx, name in enumerate(all_jobs)]
 
     elif field_name == 'exposure':
@@ -157,14 +165,20 @@ class RecordListView(LoginRequiredMixin, ListView):
                     elif field == 'disease_name':
                         q_objects = Q()
                         for val in values:
-                            # ForeignKey 관계 + original_disease_name 모두 검색
-                            q_objects |= Q(disease__disease_name__iexact=val) | Q(original_disease_name__iexact=val)
+                            # 수정된 레코드 + 수정되지 않은 레코드 모두 검색
+                            q_objects |= (
+                                Q(disease__disease_name__iexact=val) |  # 수정된 레코드
+                                Q(disease__isnull=True, original_disease_name__iexact=val)  # 수정되지 않은 레코드
+                            )
                         queryset = queryset.filter(q_objects)
                     elif field == 'job':
                         q_objects = Q()
                         for val in values:
-                            # ForeignKey 관계 + original_job 모두 검색
-                            q_objects |= Q(job__occupation__iexact=val) | Q(original_job__iexact=val)
+                            # 수정된 레코드 + 수정되지 않은 레코드 모두 검색
+                            q_objects |= (
+                                Q(job__occupation__iexact=val) |  # 수정된 레코드
+                                Q(job__isnull=True, original_job__iexact=val)  # 수정되지 않은 레코드
+                            )
                         queryset = queryset.filter(q_objects)
                     else:
                         q_objects = Q()
