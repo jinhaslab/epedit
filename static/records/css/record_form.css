@@ -6,9 +6,9 @@ body {
 
 .main-wrapper {
     display: grid;
-    grid-template-columns: 600px 1fr;
-    /* PDF Section(600px) + Content(나머지) */
-    max-width: 1600px;
+    grid-template-columns: 1300px 1fr;
+    /* PDF Section(1300px) + Content(나머지) */
+    max-width: 2400px;
     margin: 20px auto;
     height: 90vh;
     gap: 12px;

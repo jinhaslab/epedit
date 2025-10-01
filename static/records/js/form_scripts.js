@@ -107,11 +107,19 @@ document.addEventListener('DOMContentLoaded', function () {
         let currentFetchController = null;
 
         function loadInitialTags() {
+            // ✅ 우선순위 1: hidden input에서 값 가져오기
             if (hiddenInput.value) {
                 const initialValues = hiddenInput.value.split(',').map(v => v.trim()).filter(v => v !== '');
                 initialValues.forEach(tagText => {
                     addTag(tagText, false);
                 });
+            }
+            // ✅ 우선순위 2: hidden input이 비어있고 visible input에 값이 있으면 그 값을 사용
+            else if (inputElement.value && inputElement.value.trim() !== '') {
+                console.log(`Loading initial value from visible input ${inputElementId}: "${inputElement.value}"`);
+                addTag(inputElement.value.trim(), false);
+                // 입력 필드 비우기 (태그로 변환되었으므로)
+                inputElement.value = '';
             }
         }
 
@@ -281,10 +289,16 @@ document.addEventListener('DOMContentLoaded', function () {
         (tagText) => updateJobCodeField(tagText),
         (tagText) => updateJobCodeField(tagText), false);
 
+    // 추가 질병: 단일 선택
+    console.log('Setting up additional disease autocomplete...');
+    setupAutocomplete('additional_disease_input', 'additional_disease_suggestions', 'additional_disease_tags', 'additional_disease_hidden',
+        null, null, false);
+
     // 유해인자: 다중 선택 (기본값)
     console.log('Setting up exposure autocomplete...');
     setupAutocomplete('exposure_input', 'exposure_suggestions', 'exposure_tags', 'exposure_hidden');
 
+    // 초기 질병 코드 설정
     const diseaseHiddenInput = document.getElementById('disease_hidden');
     if (diseaseHiddenInput && diseaseHiddenInput.value) {
         const initialDiseaseName = diseaseHiddenInput.value.split(',').filter(v => v.trim() !== '')[0];
@@ -293,6 +307,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // 초기 직종 코드 설정
     const jobHiddenInput = document.getElementById('job_hidden');
     if (jobHiddenInput && jobHiddenInput.value) {
         const initialJobName = jobHiddenInput.value.split(',').filter(v => v.trim() !== '')[0];
@@ -300,6 +315,11 @@ document.addEventListener('DOMContentLoaded', function () {
             updateJobCodeField(initialJobName);
         }
     }
+
+    // 초기 추가 질병 코드 설정 (이미 current_data에서 가져온 값이 있으면 표시)
+    const additionalDiseaseCodeDisplay = document.getElementById('additional_disease_code_display');
+    const additionalDiseaseCodeHidden = document.getElementById('additional_disease_code_hidden_form');
+    // 코드 필드는 이미 템플릿에서 current_data로 설정되어 있으므로 추가 처리 불필요
 
     // --- RAG 검색 기능 추가 (간소화) ---
     async function runRagSearch() {

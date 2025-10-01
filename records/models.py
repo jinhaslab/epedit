@@ -37,6 +37,8 @@ class DiseaseRecord(models.Model):
     
     # 기록 값
     disease_code = models.CharField(max_length=255, verbose_name="질병 코드", null=True, blank=True)
+    additional_disease_name = models.CharField(max_length=255, verbose_name="추가 질병명", null=True, blank=True)
+    additional_disease_code = models.CharField(max_length=255, verbose_name="추가 질병 코드", null=True, blank=True)
     job_code = models.CharField(max_length=50, verbose_name="직종 코드", null=True, blank=True)
     decision = models.TextField(max_length=100, verbose_name="결정 사항", null=True, blank=True)
     smry = models.TextField(verbose_name="고찰", null=True, blank=True)
@@ -50,6 +52,8 @@ class DiseaseRecord(models.Model):
     original_ids = models.CharField(max_length=255, verbose_name="최초 IDS", null=True, blank=True)
     original_disease_name = models.CharField(max_length=255, verbose_name="최초 질병명", null=True, blank=True)
     original_disease_code = models.CharField(max_length=255, verbose_name="최초 질병 코드", null=True, blank=True)
+    original_additional_disease_name = models.CharField(max_length=255, verbose_name="최초 추가 질병명", null=True, blank=True)
+    original_additional_disease_code = models.CharField(max_length=255, verbose_name="최초 추가 질병 코드", null=True, blank=True)
     # 📝 original_occupation -> original_job으로 변경
     original_job = models.CharField(max_length=255, verbose_name="최초 직종", null=True, blank=True)
     original_job_code = models.CharField(max_length=50, verbose_name="최초 직종 코드", null=True, blank=True)
@@ -85,7 +89,7 @@ class DiseaseRecord(models.Model):
             if self.job:
                 # 📝 original_occupation -> original_job으로 변경
                 self.original_job = self.job.occupation
-            
+
             self.original_ids = self.ids
             self.original_disease_code = self.disease_code
             self.original_job_code = self.job_code
@@ -96,7 +100,27 @@ class DiseaseRecord(models.Model):
             self.original_exp_period = self.exp_period
             self.original_process_link = self.process_link
             self.original_pop_link = self.pop_link
-            
+            self.original_additional_disease_name = self.additional_disease_name
+            self.original_additional_disease_code = self.additional_disease_code
+
+            # 처음 생성 시 original 값을 현재 필드에도 복사 (최초 = 최종)
+            if not self.disease_code and self.original_disease_code:
+                self.disease_code = self.original_disease_code
+            if not self.job_code and self.original_job_code:
+                self.job_code = self.original_job_code
+            if not self.decision and self.original_decision:
+                self.decision = self.original_decision
+            if not self.smry and self.original_smry:
+                self.smry = self.original_smry
+            if not self.exp_start and self.original_exp_start:
+                self.exp_start = self.original_exp_start
+            if not self.exp_period and self.original_exp_period:
+                self.exp_period = self.original_exp_period
+            if not self.additional_disease_name and self.original_additional_disease_name:
+                self.additional_disease_name = self.original_additional_disease_name
+            if not self.additional_disease_code and self.original_additional_disease_code:
+                self.additional_disease_code = self.original_additional_disease_code
+
         super().save(*args, **kwargs)
 
         if is_new and not self.original_exposure:

@@ -20,15 +20,15 @@
         <div class="autocomplete-wrapper">
           <div id="disease_tags" class="selected-tags-container"></div>
           <div class="input-with-ai-button">
-            <input type="text" id="disease_input" class="autocomplete-input" data-field-name="disease_name" placeholder="질병명 입력" />
+            <input type="text" id="disease_input" class="autocomplete-input" data-field-name="disease_name" placeholder="질병명 입력" value="{{ current_data.disease_name|default:'' }}" />
             <button type="button" class="ai-search-btn" id="disease-ai-btn" data-target="disease">D-ai</button>
           </div>
           <div id="disease_suggestions" class="autocomplete-suggestions"></div>
         </div>
         <input type="hidden" name="disease" id="disease_hidden"
-               value="{{ original_data.disease_name|default:'' }}"
+               value="{{ current_data.disease_name|default:'' }}"
                data-initial-name="{{ original_data.disease_name|default:'' }}"
-               data-current-value="{% if record.disease %}{{ record.disease.disease_name }}{% endif %}" />
+               data-current-value="{{ current_data.disease_name|default:'' }}" />
       </td>
     </tr>
     <tr>
@@ -36,27 +36,9 @@
       <td class="initial-value">{{ original_data.disease_code|default:"-" }}</td>
       <td>
         <input type="text" id="disease_code_display" name="disease_code_display"
-               value="{{ original_data.disease_code|default:'' }}" readonly />
+               value="{{ current_data.disease_code|default:'' }}" readonly />
         <input type="hidden" name="disease_code" id="disease_code_hidden_form"
-               value="{% if record.disease_code %}{{ record.disease_code }}{% else %}{{ original_data.disease_code|default:'' }}{% endif %}" />
-      </td>
-    </tr>
-    <tr>
-      <th>세부 질병명</th>
-      <td class="initial-value">{{ original_data.sub_disease_name|default:"-" }}</td>
-      <td>
-        <input type="text" name="sub_disease_name" class="form-control"
-               value="{{ original_data.sub_disease_name|default:'' }}"
-               placeholder="세부 질병명 입력" />
-      </td>
-    </tr>
-    <tr>
-      <th>세부 질병 코드</th>
-      <td class="initial-value">{{ original_data.sub_disease_code|default:"-" }}</td>
-      <td>
-        <input type="text" name="sub_disease_code" class="form-control"
-               value="{{ original_data.sub_disease_code|default:'' }}"
-               placeholder="세부 질병 코드 입력" />
+               value="{{ current_data.disease_code|default:'' }}" />
       </td>
     </tr>
     <tr>
@@ -66,15 +48,15 @@
         <div class="autocomplete-wrapper">
           <div id="job_tags" class="selected-tags-container"></div>
           <div class="input-with-ai-button">
-            <input type="text" id="job_input" class="autocomplete-input" data-field-name="job" placeholder="직종명 입력" />
+            <input type="text" id="job_input" class="autocomplete-input" data-field-name="job" placeholder="직종명 입력" value="{{ current_data.job|default:'' }}" />
             <button type="button" class="ai-search-btn" id="job-ai-btn" data-target="job">J-ai</button>
           </div>
           <div id="job_suggestions" class="autocomplete-suggestions"></div>
         </div>
         <input type="hidden" name="job" id="job_hidden"
-               value="{{ original_data.job|default:'' }}"
+               value="{{ current_data.job|default:'' }}"
                data-initial-name="{{ original_data.job|default:'' }}"
-               data-current-value="{% if record.job %}{{ record.job.occupation }}{% endif %}" />
+               data-current-value="{{ current_data.job|default:'' }}" />
       </td>
     </tr>
     <tr>
@@ -82,9 +64,9 @@
       <td class="initial-value">{{ original_data.job_code|default:"-" }}</td>
       <td>
         <input type="text" id="job_code_display" name="job_code_display"
-               value="{{ original_data.job_code|default:'' }}" readonly />
+               value="{{ current_data.job_code|default:'' }}" readonly />
         <input type="hidden" name="job_code" id="job_code_hidden_form"
-               value="{% if record.job_code %}{{ record.job_code }}{% else %}{{ original_data.job_code|default:'' }}{% endif %}" />
+               value="{{ current_data.job_code|default:'' }}" />
       </td>
     </tr>
     <tr>
@@ -93,13 +75,13 @@
       <td>
         <div class="autocomplete-wrapper">
           <div id="exposure_tags" class="selected-tags-container"></div>
-          <input type="text" id="exposure_input" class="autocomplete-input" data-field-name="exposure" placeholder="유해인자 입력" />
+          <input type="text" id="exposure_input" class="autocomplete-input" data-field-name="exposure" placeholder="유해인자 입력" value="" />
           <div id="exposure_suggestions" class="autocomplete-suggestions"></div>
         </div>
         <input type="hidden" name="exposure" id="exposure_hidden"
-               value="{{ original_data.exposure|default:'' }}"
+               value="{{ current_data.exposure|default:'' }}"
                data-initial-exposure="{{ original_data.exposure|default:'' }}"
-               data-current-value="{% for exp in record.exposure.all %}{{ exp.name }}{% if not forloop.last %},{% endif %}{% endfor %}" />
+               data-current-value="{{ current_data.exposure|default:'' }}" />
       </td>
     </tr>
     <tr>
@@ -107,7 +89,7 @@
       <td class="initial-value">{{ original_data.exp_start|default:"-" }}</td>
       <td>
         <input type="number" name="exp_start" class="form-control"
-               value="{{ original_data.exp_start|default:'' }}"
+               value="{{ current_data.exp_start|default:'' }}"
                placeholder="노출 시작 연도" />
       </td>
     </tr>
@@ -116,7 +98,7 @@
       <td class="initial-value">{{ original_data.exp_period|default:"-" }}</td>
       <td>
         <input type="number" name="exp_period" class="form-control"
-               value="{{ original_data.exp_period|default:'' }}"
+               value="{{ current_data.exp_period|default:'' }}"
                placeholder="노출 기간" />
       </td>
     </tr>
@@ -124,14 +106,14 @@
       <th>결정 사항</th>
       <td class="initial-value">{{ original_data.decision|default:"-" }}</td>
       <td>
-        <textarea name="decision" class="form-control" rows="2" placeholder="결정 사항">{{ original_data.decision|default:'' }}</textarea>
+        <textarea name="decision" class="form-control" rows="2" placeholder="결정 사항">{{ current_data.decision|default:'' }}</textarea>
       </td>
     </tr>
     <tr>
       <th>고찰</th>
       <td class="initial-value">{{ original_data.smry|default:"-" }}</td>
       <td>
-        <textarea name="smry" class="form-control" rows="5" placeholder="고찰">{{ original_data.smry|default:'' }}</textarea>
+        <textarea name="smry" class="form-control" rows="5" placeholder="고찰">{{ current_data.smry|default:'' }}</textarea>
       </td>
     </tr>
   </tbody>

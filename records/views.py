@@ -15,6 +15,10 @@ import requests
 from dictionaries.models import DiseaseDictionaryEntry, JobCodeOccupation, ExposureDictionary
 from .models import DiseaseRecord, Case
 from .forms import DiseaseRecordForm
+from .utils.disease_field_handler import (
+    get_additional_disease_context,
+    save_additional_disease_fields
+)
 
 # -----------------------------------------------------------
 # API 엔드포인트 뷰
@@ -25,7 +29,7 @@ def get_unique_field_values(request):
     query = request.GET.get('q', '')
     suggestions = []
 
-    if field_name == 'disease_name':
+    if field_name == 'disease_name' or field_name == 'additional_disease_name':
         results = DiseaseDictionaryEntry.objects.filter(disease_name__icontains=query)[:20]
         suggestions = [{'id': r.id, 'name': r.disease_name} for r in results]
 
@@ -205,32 +209,40 @@ class RecordDetailView(LoginRequiredMixin, DetailView):
         query_params = self.request.GET.copy()
         context['other_params'] = query_params.urlencode()
 
+        # ✅ original_data는 "최초" 열에 표시되는 값 (original_* 필드)
         context['original_data'] = {
-            'disease_name': record.original_disease_name,
-            'disease_code': record.original_disease_code,
+            'disease_name': record.original_disease_name or '',
+            'disease_code': record.original_disease_code or '',
+            'additional_disease_name': record.original_additional_disease_name or '',
+            'additional_disease_code': record.original_additional_disease_code or '',
             # 📝 'occupation' -> 'job'으로 변경
-            'job': record.original_job,
-            'job_code': record.original_job_code,
-            'exposure': record.original_exposure,
-            'decision': record.original_decision,
-            'smry': record.original_smry,
-            'exp_start': record.original_exp_start,
-            'exp_period': record.original_exp_period,
+            'job': record.original_job or '',
+            'job_code': record.original_job_code or '',
+            'exposure': record.original_exposure or '',
+            'decision': record.original_decision or '',
+            'smry': record.original_smry or '',
+            'exp_start': record.original_exp_start or '',
+            'exp_period': record.original_exp_period or '',
             'pdf_link': record.original_pdf_link,
             'pop_link': record.original_pop_link,
             'process_link': record.original_process_link
         }
+
+        # ✅ current_data는 "최종(수정)" 열의 초기값으로 사용되는 값 (현재 저장된 값 또는 original 값)
+        # 현재 저장된 값이 없으면 original 값을 기본값으로 사용 (RecordUpdateView와 동일한 로직)
         context['current_data'] = {
-            'disease_name': record.disease.disease_name if record.disease else (record.original_disease_name if record.original_disease_name else "-"),
-            'disease_code': record.disease.disease_code if record.disease else (record.disease_code if record.disease_code else (record.original_disease_code if record.original_disease_code else "-")),
+            'disease_name': record.disease.disease_name if record.disease else (record.original_disease_name or ''),
+            'disease_code': record.disease_code or record.original_disease_code or '',
+            'additional_disease_name': record.additional_disease_name or record.original_additional_disease_name or '',
+            'additional_disease_code': record.additional_disease_code or record.original_additional_disease_code or '',
             # 📝 'occupation' -> 'job'으로 변경
-            'job': record.job.occupation if record.job else (record.original_job if record.original_job else "-"),
-            'job_code': record.job.job_code if record.job else (record.job_code if record.job_code else (record.original_job_code if record.original_job_code else "-")),
-            'exposure': ", ".join([e.name for e in record.exposure.all()]) if record.exposure.exists() else (record.original_exposure if record.original_exposure else "-"),
-            'decision': record.decision if record.decision else (record.original_decision if record.original_decision else "-"),
-            'smry': record.smry if record.smry else (record.original_smry if record.original_smry else "-"),
-            'exp_start': record.exp_start if record.exp_start else (record.original_exp_start if record.original_exp_start else "-"),
-            'exp_period': record.exp_period if record.exp_period else (record.original_exp_period if record.original_exp_period else "-"),
+            'job': record.job.occupation if record.job else (record.original_job or ''),
+            'job_code': record.job_code or record.original_job_code or '',
+            'exposure': ', '.join([e.name for e in record.exposure.all()]) if record.exposure.exists() else (record.original_exposure or ''),
+            'decision': record.decision or record.original_decision or '',
+            'smry': record.smry or record.original_smry or '',
+            'exp_start': record.exp_start if record.exp_start is not None else (record.original_exp_start if record.original_exp_start is not None else ''),
+            'exp_period': record.exp_period if record.exp_period is not None else (record.original_exp_period if record.original_exp_period is not None else ''),
             'pdf_link': record.pdf_link,
             'pop_link': record.pop_link,
             'process_link': record.process_link
@@ -261,24 +273,60 @@ class RecordUpdateView(LoginRequiredMixin, UpdateView):
         query_params = self.request.GET.copy()
         context['other_params'] = query_params.urlencode()
 
+        # ✅ original_data는 "최초" 열에 표시되는 값 (original_* 필드)
         context['original_data'] = {
-            'disease_name': record.original_disease_name,
-            'disease_code': record.original_disease_code,
-            'job': record.original_job,
-            'job_code': record.original_job_code,
-            'exposure': record.original_exposure,
-            'decision': record.original_decision,
-            'smry': record.original_smry,
-            'exp_start': record.original_exp_start,
-            'exp_period': record.original_exp_period,
+            'disease_name': record.original_disease_name or '',
+            'disease_code': record.original_disease_code or '',
+            'job': record.original_job or '',
+            'job_code': record.original_job_code or '',
+            'exposure': record.original_exposure or '',
+            'decision': record.original_decision or '',
+            'smry': record.original_smry or '',
+            'exp_start': record.original_exp_start or '',
+            'exp_period': record.original_exp_period or '',
+            'additional_disease_name': record.original_additional_disease_name or '',
+            'additional_disease_code': record.original_additional_disease_code or '',
         }
+
+        # ✅ current_data는 "최종(수정)" 열의 초기값으로 사용되는 값 (현재 저장된 값 또는 original 값)
+        # 현재 저장된 값이 없으면 original 값을 기본값으로 사용
+        context['current_data'] = {
+            'disease_name': record.disease.disease_name if record.disease else (record.original_disease_name or ''),
+            'disease_code': record.disease_code or record.original_disease_code or '',
+            'job': record.job.occupation if record.job else (record.original_job or ''),
+            'job_code': record.job_code or record.original_job_code or '',
+            'exposure': ', '.join([e.name for e in record.exposure.all()]) if record.exposure.exists() else (record.original_exposure or ''),
+            'decision': record.decision or record.original_decision or '',
+            'smry': record.smry or record.original_smry or '',
+            'exp_start': record.exp_start if record.exp_start is not None else (record.original_exp_start if record.original_exp_start is not None else ''),
+            'exp_period': record.exp_period if record.exp_period is not None else (record.original_exp_period if record.original_exp_period is not None else ''),
+            'additional_disease_name': record.additional_disease_name or record.original_additional_disease_name or '',
+            'additional_disease_code': record.additional_disease_code or record.original_additional_disease_code or '',
+        }
+
+        # ✅ 추가 context 데이터
+        if record.disease:
+            context['initial_disease'] = [{'id': record.disease.id, 'name': record.disease.disease_name}]
+        if record.job:
+            context['initial_job'] = [{'id': record.job.id, 'name': record.job.occupation}]
+
+        context['initial_exposures'] = list(record.exposure.all().values('id', 'name'))
+        context['initial_disease_names'] = [name.strip() for name in (record.original_disease_name or "").split(',') if name.strip()]
+        context['initial_jobs'] = [name.strip() for name in (record.original_job or "").split(',') if name.strip()]
+        context['exposure_dictionary'] = list(ExposureDictionary.objects.values_list('name', flat=True))
+
         return context
 
     def get_success_url(self):
         query_params = self.request.GET.urlencode()
         base_detail_url = reverse('record_detail', kwargs={'pk': self.object.pk})
         return f"{base_detail_url}?{query_params}" if query_params else base_detail_url
-    
+
+    def form_invalid(self, form):
+        """폼이 유효하지 않을 때 호출되며, context를 다시 생성하여 템플릿에 전달"""
+        context = self.get_context_data(form=form)
+        return self.render_to_response(context)
+
     def form_valid(self, form):
         record_to_save = form.save(commit=False)
         record_from_db = get_object_or_404(DiseaseRecord, pk=self.object.pk)
@@ -315,6 +363,20 @@ class RecordUpdateView(LoginRequiredMixin, UpdateView):
         # 코드 필드 처리
         record_to_save.disease_code = self.request.POST.get('disease_code_display', '')
         record_to_save.job_code = self.request.POST.get('job_code_display', '')
+
+        # 추가 질병 필드 처리 (모듈화된 함수 사용)
+        additional_disease_name, additional_disease_code, has_additional_changes = save_additional_disease_fields(
+            record_to_save, self.request.POST
+        )
+        if has_additional_changes:
+            if additional_disease_name != (record_from_db.additional_disease_name or ''):
+                changed_fields.append('additional_disease_name')
+                before_values['additional_disease_name'] = record_from_db.additional_disease_name or ''
+                after_values['additional_disease_name'] = additional_disease_name
+            if additional_disease_code != (record_from_db.additional_disease_code or ''):
+                changed_fields.append('additional_disease_code')
+                before_values['additional_disease_code'] = record_from_db.additional_disease_code or ''
+                after_values['additional_disease_code'] = additional_disease_code
 
         # 핵심 필드들 보존 (수정되지 않도록)
         record_to_save.ids = record_from_db.ids
@@ -409,6 +471,9 @@ class RecordUpdateView(LoginRequiredMixin, UpdateView):
         else:
             record_to_save.exposure.clear()
 
+        # ✅ original 필드는 최초 임포트 시에만 설정되며, 이후 수정 시에는 절대 변경되지 않습니다.
+        # 이 로직은 제거되었습니다.
+
         # 변경사항이 있으면 revision history 생성
         if changed_fields:
             from .models import RecordRevision
@@ -419,6 +484,8 @@ class RecordUpdateView(LoginRequiredMixin, UpdateView):
 
             if changed_set.intersection({'disease_name', 'disease_code'}):
                 summary_categories.append('질병')
+            if changed_set.intersection({'additional_disease_name', 'additional_disease_code'}):
+                summary_categories.append('추가질병')
             if changed_set.intersection({'job', 'job_code'}):
                 summary_categories.append('직종')
             if changed_set.intersection({'exposure', 'exp_start', 'exp_period'}):
@@ -441,41 +508,6 @@ class RecordUpdateView(LoginRequiredMixin, UpdateView):
 
         self.object = record_to_save
         return redirect(self.get_success_url())
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        record = self.object
-
-        if record.disease:
-            context['initial_disease'] = [{'id': record.disease.id, 'name': record.original_disease_name}]
-        # 📝 record.occupation -> record.job으로 변경
-        if record.job:
-            # 📝 'initial_occupation' -> 'initial_job'으로 변경
-            context['initial_job'] = [{'id': record.job.id, 'name': record.job.occupation}]
-        
-        context['initial_exposures'] = list(record.exposure.all().values('id', 'name'))
-
-        query_params = self.request.GET.copy()
-        context['other_params'] = query_params.urlencode()
-        context['initial_disease_names'] = [name.strip() for name in (self.object.original_disease_name or "").split(',') if name.strip()]
-        # 📝 'initial_occupations' -> 'initial_jobs'으로 변경
-        # 📝 self.object.occupation -> self.object.job으로 변경
-        context['initial_jobs'] = [name.strip() for name in (self.object.original_job or "").split(',') if name.strip()]
-        context['exposure_dictionary'] = list(ExposureDictionary.objects.values_list('name', flat=True))
-
-        context['original_data'] = {
-            'disease_name': record.original_disease_name,
-            'disease_code': record.original_disease_code,
-            # 📝 'occupation' -> 'job'으로 변경
-            'job': record.original_job,
-            'job_code': record.original_job_code,
-            'exposure': record.original_exposure,
-            'decision': record.original_decision,
-            'smry': record.original_smry,
-            'exp_start': record.original_exp_start,
-            'exp_period': record.original_exp_period,
-        }
-        return context
 
 # -----------------------------------------------------------
 # 사전(Dictionary) 목록 뷰
