@@ -1,716 +1,366 @@
-{% load online_users %} 
+{% load online_users %}
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>역학조사 DB 대시보드</title>
+    <title>연세대학교 역학조사 DB 대시보드</title>
     <style>
         @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap");
         
         :root {
-            --sidebar-width: 260px;
+            --yonsei-blue: #003876;
+            --primary-color: var(--yonsei-blue);
+            --background-color: #f8f9fa;
+            --card-background: #ffffff;
+            --text-color: #212529;
+            --text-secondary-color: #6c757d;
+            --border-color: #e9ecef;
+            --sidebar-width: 280px;
             --sidebar-collapsed-width: 80px;
-            --primary-color: #0d6efd;
-            --border-color: #dee2e6;
             --pdf-red-color: #E53E3E;
+            --success-color: #28a745;
         }
 
-        /* --- Responsive Design --- */
-        @media (max-width: 1200px) {
-            :root {
-                --sidebar-width: 320px;
-            }
-            .main-content {
-                padding: 20px;
-            }
-            .sidebar-header h1 {
-                font-size: 16px;
-                white-space: normal;
-                word-break: keep-all;
-                line-height: 1.3;
-            }
-        }
-
-        @media (max-width: 992px) {
-            :root {
-                --sidebar-width: 360px;
-            }
-            .filter-row {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .filter-actions {
-                margin-left: 0;
-                margin-top: 15px;
-            }
-            .sidebar-header h1 {
-                font-size: 15px;
-                white-space: normal;
-                word-break: keep-all;
-                line-height: 1.2;
-            }
-            .sidebar-user {
-                font-size: 13px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            :root {
-                --sidebar-width: 400px;
-            }
-            .sidebar {
-                width: var(--sidebar-width) !important;
-                min-width: var(--sidebar-width);
-                position: relative;
-            }
-            .sidebar.collapsed {
-                width: var(--sidebar-width) !important;
-            }
-            .sidebar.collapsed .sidebar-header h1,
-            .sidebar.collapsed .sidebar-user {
-                display: block !important;
-            }
-            .sidebar.collapsed .sidebar-header {
-                justify-content: flex-start !important;
-            }
-            .sidebar-header h1 {
-                font-size: 14px;
-                white-space: normal;
-                word-break: keep-all;
-                line-height: 1.2;
-            }
-            .sidebar-user {
-                font-size: 12px;
-            }
-            .main-content {
-                padding: 15px;
-                flex: 1;
-                min-width: 0;
-            }
-            .record-item {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 15px;
-            }
-            .record-actions {
-                justify-content: space-between;
-            }
-        }
-
-        @media (max-width: 576px) {
-            :root {
-                --sidebar-width: 380px;
-            }
-            .sidebar {
-                width: var(--sidebar-width) !important;
-                min-width: var(--sidebar-width);
-            }
-            .sidebar.collapsed {
-                width: var(--sidebar-width) !important;
-            }
-            .sidebar-header h1 {
-                font-size: 13px !important;
-                white-space: normal !important;
-                word-break: keep-all !important;
-                line-height: 1.1;
-            }
-            .sidebar-user {
-                padding: 15px !important;
-                font-size: 11px;
-            }
-            .main-content {
-                flex: 1;
-                min-width: 150px;
-            }
-            .filter-item {
-                width: 100%;
-            }
-            .autocomplete-input-wrapper,
-            .filter-select {
-                width: 100%;
-            }
-            .details {
-                flex-direction: column;
-                gap: 8px;
-            }
-            .pagination {
-                flex-wrap: wrap;
-                gap: 5px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            :root {
-                --sidebar-width: 360px;
-            }
-            .sidebar {
-                width: var(--sidebar-width) !important;
-                min-width: var(--sidebar-width);
-            }
-            .sidebar.collapsed {
-                width: var(--sidebar-width) !important;
-            }
-            .sidebar-header h1 {
-                font-size: 12px !important;
-                white-space: normal !important;
-                word-break: keep-all !important;
-                line-height: 1.0;
-            }
-            .sidebar-user {
-                padding: 12px !important;
-                font-size: 10px;
-            }
-            .menu-item {
-                padding: 8px !important;
-                font-size: 12px;
-            }
-            .main-content {
-                flex: 1;
-                min-width: 100px;
-            }
-        }
-
+        /* --- Base & Layout --- */
         body {
             font-family: "Noto Sans KR", sans-serif;
             margin: 0;
-            background-color: #f4f7fc;
-            color: #333;
-        }
-
-        /* --- Dashboard Layout --- */
-        .dashboard-layout { display: flex; }
-        .sidebar {
-            width: var(--sidebar-width);
-            height: 100vh;
-            background-color: #fff;
-            border-right: 1px solid var(--border-color);
-            position: sticky;
-            top: 0;
-            transition: width 0.3s ease;
+            background-color: var(--background-color);
+            color: var(--text-color);
             display: flex;
             flex-direction: column;
+            height: 100vh;
             overflow: hidden;
         }
-        .sidebar-menu {
-    padding: 15px;
-    border-bottom: 1px solid var(--border-color);
-}
-.menu-item {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    padding: 12px;
-    border-radius: 6px;
-    text-decoration: none;
-    color: #343a40;
-    font-weight: 500;
-    transition: background-color 0.2s;
-}
-.menu-item:hover {
-    background-color: #f1f3f5;
-}
-.menu-item svg {
-    width: 20px;
-    height: 20px;
-}
+
+        .yonsei-header {
+            background: linear-gradient(135deg, #002c5f 0%, #004ea2 100%);
+            color: white;
+            padding: 16px 30px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1001;
+            flex-shrink: 0;
+        }
+
+        .yonsei-header h1 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .dashboard-layout {
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100%;
+            background-color: var(--card-background);
+            border-right: 1px solid var(--border-color);
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
         .main-content {
             flex-grow: 1;
-            padding: 30px;
+            padding: 40px;
             overflow-y: auto;
         }
 
-        /* --- Sidebar Styles --- */
-        .sidebar-header {
-            padding: 22px; display: flex; align-items: center;
-            gap: 15px; border-bottom: 1px solid var(--border-color);
-        }
-        .sidebar-header h1 { font-size: 20px; margin: 0; white-space: nowrap; }
-        #sidebar-toggle {
-            background: none; border: none; cursor: pointer;
-            font-size: 24px; padding: 5px; line-height: 1;
-        }
-        .sidebar-user {
-            padding: 20px; border-bottom: 1px solid var(--border-color);
-            white-space: nowrap;
-        }
+        /* --- Sidebar --- */
+        .sidebar-header { padding: 22px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
+        .sidebar-header h1 { font-size: 18px; margin: 0; white-space: nowrap; font-weight: 700; }
+        #sidebar-toggle { background: none; border: none; cursor: pointer; font-size: 24px; padding: 5px; line-height: 1; color: var(--text-secondary-color); }
+        .sidebar-user { padding: 20px; border-bottom: 1px solid var(--border-color); white-space: nowrap; font-size: 14px; flex-shrink: 0; }
+        .sidebar-user p { margin: 0 0 8px 0; }
+        .sidebar-user strong { color: var(--primary-color); }
+        .sidebar-user button { font-size: 14px; }
         .sidebar-user a { color: var(--primary-color); text-decoration: none; }
-
+        .sidebar-menu { padding: 15px; border-bottom: 1px solid var(--border-color); }
+        .menu-item { display: flex; align-items: center; gap: 15px; padding: 14px; border-radius: 8px; text-decoration: none; color: #343a40; font-weight: 500; transition: background-color 0.2s, color 0.2s; }
+        .menu-item:hover { background-color: #eef2ff; color: var(--primary-color); }
+        .menu-item svg { width: 22px; height: 22px; }
+        .sidebar-status { padding: 20px 15px; }
+        .status-title { font-size: 16px; font-weight: 700; margin: 0 0 15px 0; padding-left: 5px; }
         .sidebar.collapsed { width: var(--sidebar-collapsed-width); }
-        .sidebar.collapsed .sidebar-header h1, .sidebar.collapsed .sidebar-user { display: none; }
-        .sidebar.collapsed .sidebar-header { justify-content: center; }
+        .sidebar.collapsed .sidebar-header h1, .sidebar.collapsed .sidebar-user, .sidebar.collapsed .menu-item span, .sidebar.collapsed .status-title, .sidebar.collapsed .sidebar-status div { display: none; }
+        .sidebar.collapsed .sidebar-header, .sidebar.collapsed .menu-item { justify-content: center; }
+
+        .main-content h2 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #343a40;
+        }
 
         /* --- Filter Form --- */
-        .filter-form {
-            background-color: #fff; padding: 20px; border-radius: 8px;
-            margin-bottom: 30px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-        .filter-form form { display: flex; flex-direction: column; gap: 15px; }
-        .filter-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 20px; }
-        .filter-item { display: flex; flex-direction: column; gap: 8px; position: relative; flex: 1; min-width: 200px; }
-        .filter-item label, .filter-group label { font-size: 13px; font-weight: 500; }
-        .filter-actions { margin-left: auto; }
-        .filter-actions button, .filter-actions a {
-            padding: 8px 16px; font-size: 13px; border-radius: 5px; cursor: pointer;
-            font-weight: 500; border: none; color: white; text-decoration: none; display: inline-block;
-        }
-        .filter-group { display: flex; align-items: center; gap: 15px; }
-        .checkbox-group { display: flex; align-items: center; gap: 10px; }
-        .checkbox-group label { font-weight: 400; }
-        .checkbox-group input { vertical-align: middle; margin-right: 4px; }
+        .filter-form { background-color: var(--card-background); padding: 24px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 40px; box-shadow: 0 4px 16px rgba(0,0,0,0.05); }
+        .filter-form form { display: flex; flex-direction: column; gap: 20px; }
+        .filter-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 24px; }
+        .filter-item { display: flex; flex-direction: column; gap: 8px; position: relative; flex: 1; min-width: 180px; }
+        .filter-item label, .filter-group > label { font-size: 14px; font-weight: 500; color: #495057; }
+        .filter-group { display: flex; flex-direction: column; gap: 8px; }
+        .filter-group--ids { flex: 1; }
+        .range-filter { display: flex; align-items: center; gap: 8px; }
+        .range-filter input { flex: 1; } /* IDS 범위 입력 상자 길이 수정 */
+        .filter-actions { margin-left: auto; display: flex; gap: 10px; }
+        .filter-actions button, .filter-actions a { padding: 10px 20px; font-size: 14px; border-radius: 6px; cursor: pointer; font-weight: 500; border: none; color: white; text-decoration: none; display: inline-block; transition: all 0.2s ease; }
+        .filter-actions button:hover, .filter-actions a:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .filter-actions button { background-color: var(--primary-color); }
+        .filter-actions a { background-color: var(--text-secondary-color); }
+        .filter-select, .autocomplete-input-wrapper, .filter-input { width: 100%; padding: 8px 12px; font-size: 14px; border: 1px solid #ced4da; border-radius: 6px; height: 40px; box-sizing: border-box; background-color: #fff; transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out; }
+        .filter-select:focus, .autocomplete-input-wrapper:focus-within, .filter-input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 0.2rem rgba(0, 56, 118, 0.25); outline: none; }
+        .autocomplete-input-wrapper { display: flex; flex-wrap: wrap; align-items: center; padding: 2px 5px; }
+        .autocomplete-input { flex-grow: 1; min-width: 80px; border: none; padding: 5px; outline: none; font-size: 14px; background: transparent; }
+        .checkbox-group { display: flex; align-items: center; flex-wrap: wrap; }
+        .checkbox-group label { margin-right: 24px; } 
+        .checkbox-group input { margin-right: 5px; }
 
-        /* --- Autocomplete & Tag Styles --- */
-        .autocomplete-input-wrapper {
-            display: flex; flex-wrap: wrap; align-items: center;
-            width: 100%; max-width: 240px; box-sizing: border-box; min-height: 38px;
-            border: 1px solid #ced4da; border-radius: 4px; padding: 2px 5px;
-            background-color: #fff; transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
-        }
-        .autocomplete-input-wrapper:focus-within {
-            border-color: #86b7fe; box-shadow: 0 0 0 0.2rem rgba(13,110,253,.25);
-        }
-        .autocomplete-input {
-            flex-grow: 1; min-width: 80px; border: none; padding: 5px;
-            outline: none; font-size: 13px;
-        }
+        /* --- Record List --- */
+        .record-list { display: grid; gap: 20px; }
+        .record-item { background-color: var(--card-background); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .record-item:hover { transform: translateY(-4px); box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
+        .record-main { display: flex; flex-direction: column; gap: 12px; flex-grow: 1; min-width: 0; }
+        .record-item .file-name { font-size: 20px; font-weight: 700; color: #2c3e50; word-break: break-all; }
+        .record-item .file-name a { text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px; }
+        .record-item .details { display: flex; flex-wrap: wrap; gap: 12px 24px; font-size: 14px; color: #555; }
+        .details span { cursor: pointer; }
+        .record-actions { display: flex; align-items: center; gap: 20px; white-space: nowrap; flex-shrink: 0; padding-left: 20px; }
+        .confirmation-status { font-size: 24px; }
+        .detail-link { background-color: var(--primary-color); color: #fff; padding: 10px 24px; border-radius: 6px; text-decoration: none; font-weight: 500; transition: background-color 0.2s, transform 0.2s; }
+        .detail-link:hover { background-color: #002c5c; transform: scale(1.05); }
+        
+        /* --- Popup & Pagination --- */
+        .summary-popup { display: none; position: absolute; background-color: #fff; border: 1px solid #ccc; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); padding: 15px; max-width: 400px; z-index: 1000; border-radius: 8px; font-size: 14px; line-height: 1.6; word-wrap: break-word; white-space: normal; }
+        .pagination { margin-top: 40px; display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .pagination a, .pagination .current { color: var(--text-secondary-color); padding: 8px 16px; text-decoration: none; border: 1px solid var(--border-color); border-radius: 6px; transition: all 0.2s ease; }
+        .pagination a:hover { background-color: #e9ecef; border-color: #ced4da; }
+        .pagination .current { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
+        .page-input-group { margin: 0 10px; display: flex; align-items: center; }
+        .page-input-group input[type="number"] { width: 60px; text-align: center; border: 1px solid #ccc; border-radius: 4px; padding: 6px; margin-right: 5px; }
+        .page-input-group button { padding: 6px 12px; border: 1px solid #ccc; background-color: #f0f0f0; cursor: pointer; border-radius: 4px; margin-left: 12px; }
         .selected-tags-container { display: flex; flex-wrap: wrap; gap: 4px; }
-        .tag-item {
-            background-color: #e9ecef; color: #495057; padding: 4px 10px; border-radius: 12px;
-            display: flex; align-items: center; font-size: 13px; white-space: nowrap;
-        }
+        .tag-item { background-color: #e9ecef; color: #495057; padding: 4px 10px; border-radius: 12px; display: flex; align-items: center; font-size: 13px; white-space: nowrap; }
         .tag-close { margin-left: 6px; cursor: pointer; font-weight: bold; }
-        .autocomplete-suggestions {
-            border: 1px solid #ddd; max-height: 180px; overflow-y: auto;
-            position: absolute; background-color: white; z-index: 1000; width: 100%;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: none; left: 0;
-            top: 100%; margin-top: 4px; border-radius: 4px;
-        }
+        .autocomplete-suggestions { border: 1px solid #ddd; max-height: 180px; overflow-y: auto; position: absolute; background-color: white; z-index: 1000; width: 100%; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: none; left: 0; top: 100%; margin-top: 4px; border-radius: 4px; }
         .autocomplete-suggestions.active { display: block; }
         .suggestion-item { padding: 8px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid #eee; }
         .suggestion-item:last-child { border-bottom: none; }
         .suggestion-item:hover { background-color: #f0f0f0; }
-        
-        .filter-select {
-            width: 100%; max-width: 240px; padding: 8px 10px; font-size: 13px;
-            border: 1px solid #ced4da; border-radius: 4px; height: 38px; box-sizing: border-box;
+
+        /* --- Mobile Sidebar Toggle --- */
+        .mobile-sidebar-toggle {
+            display: none;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-bottom: 20px;
+            width: 100%;
+            text-align: left;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        /* --- Record List (Card View) & Popup --- */
-        .record-list { display: grid; gap: 15px; }
-        .record-item {
-            background-color: #fff; border-radius: 8px; padding: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex;
-            justify-content: space-between; align-items: center; transition: box-shadow 0.2s;
+        .mobile-sidebar-toggle:hover {
+            background-color: #002c5c;
         }
-        .record-item:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .record-main { display: flex; flex-direction: column; gap: 10px; }
-        .record-item .file-name { font-size: 20px; font-weight: 700; color: #2c3e50; }
-        .record-item .file-name a { text-decoration: none; color: inherit; display: flex; align-items: center; gap: 8px; }
-        .record-item .details { display: flex; flex-wrap: wrap; gap: 12px 20px; font-size: 14px; color: #555; }
-        .details span { display: flex; align-items: center; gap: 6px; cursor: pointer; }
-        .record-actions { display: flex; align-items: center; gap: 20px; white-space: nowrap; }
-        .confirmation-status { font-size: 24px; }
-        .detail-link {
-            background-color: var(--primary-color); color: #fff; padding: 8px 20px; border-radius: 5px;
-            text-decoration: none; font-weight: 500; transition: background-color 0.2s;
-        }
-        .detail-link:hover { background-color: #0b5ed7; }
-        .summary-popup {
-            display: none; position: absolute; background-color: #fff; border: 1px solid #ccc;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); padding: 15px; max-width: 400px; z-index: 1000;
-            border-radius: 8px; font-size: 14px; line-height: 1.6; word-wrap: break-word; white-space: normal;
-        }
-        .summary-popup-content { max-height: 300px; overflow-y: auto; }
 
-        /* --- Pagination --- */
-        .pagination { margin-top: 30px; display: flex; justify-content: center; gap: 8px; }
-        .pagination a, .pagination .current {
-            color: #6c757d; padding: 8px 16px; text-decoration: none;
-            border: 1px solid var(--border-color); border-radius: 5px;
+        .mobile-sidebar-toggle .toggle-icon {
+            display: inline-block;
+            margin-right: 8px;
+            transition: transform 0.3s ease;
         }
-        .pagination a:hover { background-color: #e9ecef; }
-        .pagination .current { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
-.pagination {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .page-input-group {
-        margin: 0 10px;
-        display: flex;
-        align-items: center;
-    }
-    .page-input-group input[type="number"] {
-        width: 60px;
-        text-align: center;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        padding: 5px;
-    }
-    .page-input-group button {
-        margin-left: 5px;
-        padding: 5px 10px;
-        border: 1px solid #ccc;
-        background-color: #f0f0f0;
-        cursor: pointer;
-        border-radius: 4px;
-    }    
+
+        .mobile-sidebar-toggle.collapsed .toggle-icon {
+            transform: rotate(-90deg);
+        }
+
+        /* --- Responsive Design --- */
+        @media (max-width: 992px) { .filter-row { flex-direction: column; align-items: stretch; } .filter-actions { margin-left: 0; margin-top: 15px; } .record-item { flex-direction: column; align-items: flex-start; gap: 15px; } .record-actions { padding-left: 0; width: 100%; justify-content: space-between; } }
+        @media (max-width: 768px) {
+            .mobile-sidebar-toggle { display: block; }
+            .main-content { padding: 20px; }
+            .yonsei-header h1 { font-size: 18px; }
+            .dashboard-layout { flex-direction: column; }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+                max-height: 1000px;
+                overflow: hidden;
+                transition: max-height 0.4s ease, opacity 0.4s ease, margin-bottom 0.4s ease;
+                opacity: 1;
+                margin-bottom: 0;
+            }
+            .sidebar.mobile-collapsed {
+                max-height: 0;
+                opacity: 0;
+                margin-bottom: -1px;
+                border-bottom: none;
+            }
+        }
+        @media (max-width: 576px) { .filter-group { align-items: stretch; } .range-filter { flex-direction: column; align-items: stretch; gap: 10px; } .range-filter input { max-width: none; } }
     </style>
 </head>
 <body>
+    <header class="yonsei-header">
+        <h1>연세대학교 역학조사 DB 대시보드</h1>
+    </header>
 
-<div class="dashboard-layout">
-    <aside class="sidebar" id="sidebar">       
-      <div class="sidebar-user">
-            </div>
+    <div class="dashboard-layout">
+        <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-            <button id="sidebar-toggle">☰</button>
-            <h1>DB 수정 작업 검수</h1>
-        </div> 
-        <div class="sidebar-user">
-        {% if user.is_authenticated %}
-            <p>안녕하세요, <strong>{{ user.username }}</strong>님!</p>
-            <form action="{% url 'logout' %}" method="post" style="display: inline">
-                {% csrf_token %}
-                <button type="submit" style="background:none; border:none; padding:0; color:var(--primary-color); cursor:pointer; text-decoration:underline;">로그아웃</button>
-            </form>
-        {% else %}
-            <a href="{% url 'login' %}">로그인</a>
-        {% endif %}
-        </div>
-        <div class="sidebar-menu">
-            <a href="{% url 'record_list' %}" class="menu-item">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 6a2 2 0 012 2v10a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2h8zm0-2H8a4 4 0 00-4 4v10a4 4 0 004 4h8a4 4 0 004-4V8a4 4 0 00-4-4z" fill="currentColor"/><path d="M17 17H7v-2h10v2zm-3-4H7v-2h7v2zm-5-4H7V7h5v2z" fill="currentColor"/></svg>
-                <span>사건 목록</span>
-            </a>
-        </div>     
-
-       
-
-        <div class="sidebar-status">
-            <h3 class="status-title" style="padding-left: 15px;">로그인 상태</h3>
-            <div style="padding-left: 15px;">
-                {% online_user_list %}
+                <button id="sidebar-toggle">☰</button>
+                <h1>DB 수정 작업 검수</h1>
             </div>
-        </div>
-
-    </aside>
-
-    <main class="main-content">
-        <div class="filter-form">
-            <form method="get" id="filterForm">
-                <div class="filter-row">
-                    <div class="filter-item">
-                        <label for="fname_input">파일명:</label>
-                        <input type="text"
-                               name="fname"
-                               id="fname_input"
-                               class="filter-select"
-                               placeholder="파일명 검색"
-                               value="{{ request.GET.fname }}" />
-                    </div>
-                    <div class="filter-item">
-                        <label for="disease_name_input">질병명:</label>
-                        <div class="autocomplete-input-wrapper">
-                            <div id="disease_name_tags" class="selected-tags-container"></div>
-                            <input type="text" id="disease_name_input" class="autocomplete-input" data-field-name="disease_name" placeholder="질병명 검색/선택" />
-                        </div>
-                        <div id="disease_name_suggestions" class="autocomplete-suggestions"></div>
-                        <input type="hidden" name="disease_name" id="disease_name_hidden" value="{{ request.GET.disease_name }}" />
-                    </div>
-                    <div class="filter-item">
-                        <label for="job_input">직종:</label>
-                        <div class="autocomplete-input-wrapper">
-                            <div id="job_tags" class="selected-tags-container"></div>
-                            <input type="text" id="job_input" class="autocomplete-input" data-field-name="job" placeholder="직종 검색/선택" />
-                        </div>
-                        <div id="job_suggestions" class="autocomplete-suggestions"></div>
-                        <input type="hidden" name="job" id="job_hidden" value="{{ request.GET.job }}" />
-                    </div>
-                    <div class="filter-item">
-                        <label for="decision_select">결정사항:</label>
-                        <select name="decision" id="decision_select" class="filter-select">
-                            <option value="" {% if not request.GET.decision %}selected{% endif %}>전체</option>
-                            <option value="높음" {% if request.GET.decision == "높음" %}selected{% endif %}>높음</option>
-                            <option value="낮음" {% if request.GET.decision == "낮음" %}selected{% endif %}>낮음</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="filter-row">
-                    <div class="filter-group">
-                         <label>변경 항목:</label>
-                         <div class="checkbox-group">
-                             <input type="checkbox" id="changed_disease" name="changed_fields" value="disease_name" {% if 'disease_name' in selected_changed_fields %}checked{% endif %}>
-                             <label for="changed_disease">질병</label>
-                             <input type="checkbox" id="changed_job" name="changed_fields" value="job" {% if 'job' in selected_changed_fields %}checked{% endif %}>
-                             <label for="changed_job">직종</label>
-                             <input type="checkbox" id="changed_decision" name="changed_fields" value="decision" {% if 'decision' in selected_changed_fields %}checked{% endif %}>
-                             <label for="changed_decision">결정</label>
-                             <input type="checkbox" id="changed_smry" name="changed_fields" value="smry" {% if 'smry' in selected_changed_fields %}checked{% endif %}>
-                             <label for="changed_smry">논리</label>
-                         </div>
-                    </div>
-                    <div class="filter-group">
-                        <label>IDS 범위</label>
-                        <div class="range-filter">
-                            <input type="text" 
-                                name="ids_from" 
-                                placeholder="시작 번호" 
-                                value="{{ ids_from|default:'' }}"
-                                class="filter-input">
-                            <span>~</span>
-                            <input type="text" 
-                                name="ids_to" 
-                                placeholder="끝 번호" 
-                                value="{{ ids_to|default:'' }}"
-                                class="filter-input">
-                        </div>
-                    </div>
-                    <div class="filter-actions">
-                        <button type="submit" style="background-color: #28a745;">필터 적용</button>
-                        <a href="{% url 'record_list' %}" style="background-color: #6c757d;">초기화</a>
-                    </div>
-                </div>
+            <div class="sidebar-user">
+                {% if user.is_authenticated %}
+                <p>안녕하세요, <strong>{{ user.username }}</strong>님!</p>
+                <form action="{% url 'logout' %}" method="post" style="display: inline">
+                    {% csrf_token %}
+                    <button type="submit" style="background:none; border:none; padding:0; color:var(--primary-color); cursor:pointer; text-decoration:underline;">로그아웃</button>
                 </form>
-        </div>
-
-        {% if records %}
-        <div class="record-list">
-            {% for record in records %}
-            <div class="record-item">
-                <div class="record-main">
-                    <div class="details">
-                    <span class="summary-trigger" data-full-text="{{ record.ids|default:'-' }}">
-                             {{ record.ids|default:"-"|truncatechars:20 }}
-                        </span>
-                        <span class="summary-trigger" data-full-text="{{ record.case|default:'-' }}">
-                             {{ record.case|default:"-"|truncatechars:20 }}
-                        </span>
-                    </div>
-                    <div class="file-name">
-                        <a href="{{ record.get_pdf_url }}" target="_blank">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="min-width: 24px;">
-                                <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" fill="var(--pdf-red-color)"/>
-                                <path d="M14 2V8H20L14 2Z" fill="#F5B9B9"/>
-                                <g fill="white">
-                                    <path d="M8.5 15.5H7V18H8.5V17.25H9.5V16.25H8.5V15.5Z"/>
-                                    <path d="M13 18H11.5V15.5H13C13.8284 15.5 14.5 16.1716 14.5 17C14.5 17.8284 13.8284 18.5 13 18.5H12V18H13C13.5523 18 14 17.5523 14 17C14 16.4477 13.5523 16 13 16H12V18H11.5L12 18H11.5V15.5L12 15.5L13 15.5"/>
-                                    <path d="M17.5 15.5H16V18H17.5V15.5Z"/>
-                                </g>
-                            </svg>
-                            
-                            <span class="summary-trigger" data-full-text="{{ record.fnames|default:'파일 이름 없음' }}">
-                                {{ record.fnames|default:"파일 이름 없음"|truncatechars:60 }}
-                            </span>
-                        </a>
-                    </div>
-                    
-                    <div class="details">
-                        <span class="summary-trigger" data-full-text="{% if record.disease %}{{ record.disease.disease_name }}{% else %}{{ record.original_disease_name|default:'-' }}{% endif %}">
-                            <strong>질병명:</strong> {% if record.disease %}{{ record.disease.disease_name|truncatechars:20 }}{% else %}{{ record.original_disease_name|default:"-"|truncatechars:20 }}{% endif %}
-                        </span>
-                        <span class="summary-trigger" data-full-text="{% if record.job %}{{ record.job.occupation }}{% else %}{{ record.original_job|default:'-' }}{% endif %}">
-                            <strong>직종:</strong> {% if record.job %}{{ record.job.occupation|truncatechars:20 }}{% else %}{{ record.original_job|default:"-"|truncatechars:20 }}{% endif %}
-                        </span>
-                        <span class="summary-trigger" data-full-text="{{ record.decision|default:'-' }}">
-                            <strong>결정사항:</strong> {{ record.decision|default:"-"|truncatechars:20 }}
-                        </span>
-                        <span class="summary-trigger" data-full-text="{{ record.changed_fields_str|default:'-' }}">
-                            <strong>변경 항목:</strong> {{ record.changed_fields_str|default:"-"|truncatechars:20 }}
-                        </span>
-                    </div>
-                    </div>
-                <div class="record-actions">
-                    <span class="confirmation-status">
-                        {% if record.disease_confirmed and record.job_confirmed and record.exposure_confirmed and record.decision_confirmed and record.smry_confirmed %} ✔️ {% else %} ➖ {% endif %}
-                    </span>
-                    <a href="{% url 'record_detail' record.pk %}?{{ all_params }}" class="detail-link">상세</a>
+                {% else %}
+                <a href="{% url 'login' %}">로그인</a>
+                {% endif %}
+            </div>
+            <div class="sidebar-menu">
+                <a href="{% url 'record_list' %}" class="menu-item">
+                    <svg fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zM3 10a7 7 0 1114 0 7 7 0 01-14 0z"></path><path d="M10 4a1 1 0 011 1v4a1 1 0 11-2 0V5a1 1 0 011-1zM9 11a1 1 0 102 0v3a1 1 0 10-2 0v-3z"></path></svg>
+                    <span>사건 목록</span>
+                </a>
+            </div>
+            <div class="sidebar-status">
+                <h3 class="status-title">로그인 상태</h3>
+                <div>
+                    {% online_user_list %}
                 </div>
             </div>
-            {% endfor %}
-        </div>
+        </aside>
 
-<div class="pagination">
-            {% if page_obj.has_previous %}
-                <a href="?page={{ page_obj.previous_page_number }}{% if other_params %}&{{ other_params }}{% endif %}">이전</a>
+        <main class="main-content">
+            <button class="mobile-sidebar-toggle" id="mobile-sidebar-toggle">
+                <span class="toggle-icon">▼</span>
+                <span class="toggle-text">사이드바 숨기기</span>
+            </button>
+            <h2>사건 기록 필터</h2>
+            <div class="filter-form">
+                <form method="get" id="filterForm">
+                    <div class="filter-row">
+                        <div class="filter-item"><label for="fname_input">파일명:</label><input type="text" name="fname" id="fname_input" class="filter-input" placeholder="파일명 검색" value="{{ request.GET.fname }}"/></div>
+                        <div class="filter-item"><label for="disease_name_input">질병명:</label><div class="autocomplete-input-wrapper"><div id="disease_name_tags" class="selected-tags-container"></div><input type="text" id="disease_name_input" class="autocomplete-input" data-field-name="disease_name" placeholder="질병명 검색/선택"/></div><div id="disease_name_suggestions" class="autocomplete-suggestions"></div><input type="hidden" name="disease_name" id="disease_name_hidden" value="{{ request.GET.disease_name }}"/></div>
+                        <div class="filter-item"><label for="job_input">직종:</label><div class="autocomplete-input-wrapper"><div id="job_tags" class="selected-tags-container"></div><input type="text" id="job_input" class="autocomplete-input" data-field-name="job" placeholder="직종 검색/선택"/></div><div id="job_suggestions" class="autocomplete-suggestions"></div><input type="hidden" name="job" id="job_hidden" value="{{ request.GET.job }}"/></div>
+                        <div class="filter-item"><label for="decision_select">결정사항:</label><select name="decision" id="decision_select" class="filter-select"><option value="" {% if not request.GET.decision %}selected{% endif %}>전체</option><option value="높음" {% if request.GET.decision == "높음" %}selected{% endif %}>높음</option><option value="낮음" {% if request.GET.decision == "낮음" %}selected{% endif %}>낮음</option></select></div>
+                    </div>
+                    <div class="filter-row">
+                        <div class="filter-group"><label>변경 항목:</label><div class="checkbox-group"><input type="checkbox" id="changed_disease" name="changed_fields" value="disease_name" {% if 'disease_name' in selected_changed_fields %}checked{% endif %}/><label for="changed_disease">질병</label><input type="checkbox" id="changed_job" name="changed_fields" value="job" {% if 'job' in selected_changed_fields %}checked{% endif %}/><label for="changed_job">직종</label><input type="checkbox" id="changed_decision" name="changed_fields" value="decision" {% if 'decision' in selected_changed_fields %}checked{% endif %}/><label for="changed_decision">결정</label><input type="checkbox" id="changed_smry" name="changed_fields" value="smry" {% if 'smry' in selected_changed_fields %}checked{% endif %}/><label for="changed_smry">논리</label></div></div>
+                        <div class="filter-group filter-group--ids"><label>파일번호 IDS 범위</label><div class="range-filter"><input type="text" name="ids_from" placeholder="시작 번호" value="{{ ids_from|default:'' }}" class="filter-input"/><span>-</span><input type="text" name="ids_to" placeholder="끝 번호" value="{{ ids_to|default:'' }}" class="filter-input"/></div></div>
+                        <div class="filter-actions"><button type="submit">필터 적용</button><a href="{% url 'record_list' %}">초기화</a></div>
+                    </div>
+                </form>
+            </div>
+
+            {% if records %}
+            <div class="record-list">
+                {% for record in records %}
+                <div class="record-item">
+                    <div class="record-main">
+                        <div class="details"><span class="summary-trigger" data-full-text="{{ record.ids|default:'-' }}"><strong>ID:</strong> {{ record.ids|default:"-"|truncatechars:20 }}</span><span class="summary-trigger" data-full-text="{{ record.case|default:'-' }}"><strong>Case:</strong> {{ record.case|default:"-"|truncatechars:20 }}</span></div>
+                        <div class="file-name"><a href="{{ record.get_pdf_url }}" target="_blank"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="min-width: 24px;"><path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" fill="var(--pdf-red-color)"/><path d="M14 2V8H20L14 2Z" fill="#F5B9B9"/><g fill="white"><path d="M8.5 15.5H7V18H8.5V17.25H9.5V16.25H8.5V15.5Z"/><path d="M13 18H11.5V15.5H13C13.8284 15.5 14.5 16.1716 14.5 17C14.5 17.8284 13.8284 18.5 13 18.5H12V18H13C13.5523 18 14 17.5523 14 17C14 16.4477 13.5523 16 13 16H12V18H11.5L12 18H11.5V15.5L12 15.5L13 15.5"/><path d="M17.5 15.5H16V18H17.5V15.5Z"/></g></svg><span class="summary-trigger" data-full-text="{{ record.fnames|default:'파일 이름 없음' }}">{{ record.fnames|default:"파일 이름 없음"|truncatechars:60 }}</span></a></div>
+                        <div class="details"><span class="summary-trigger" data-full-text="{% if record.disease %}{{ record.disease.disease_name }}{% else %}{{ record.original_disease_name|default:'-' }}{% endif %}"><strong>질병명:</strong> {% if record.disease %}{{ record.disease.disease_name|truncatechars:20 }}{% else %}{{ record.original_disease_name|default:"-"|truncatechars:20 }}{% endif %}</span><span class="summary-trigger" data-full-text="{% if record.job %}{{ record.job.occupation }}{% else %}{{ record.original_job|default:'-' }}{% endif %}"><strong>직종:</strong> {% if record.job %}{{ record.job.occupation|truncatechars:20 }}{% else %}{{ record.original_job|default:"-"|truncatechars:20 }}{% endif %}</span><span class="summary-trigger" data-full-text="{{ record.decision|default:'-' }}"><strong>결정사항:</strong> {{ record.decision|default:"-" }}</span><span class="summary-trigger" data-full-text="{{ record.changed_fields_str|default:'-' }}"><strong>변경 항목:</strong> {{ record.changed_fields_str|default:"-" }}</span></div>
+                    </div>
+                    <div class="record-actions"><span class="confirmation-status">{% if record.disease_confirmed and record.job_confirmed and record.exposure_confirmed and record.decision_confirmed and record.smry_confirmed %} ✔️ {% else %} ➖ {% endif %}</span><a href="{% url 'record_detail' record.pk %}?{{ all_params }}" class="detail-link">상세</a></div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="pagination">
+                {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}{% if other_params %}&{{ other_params }}{% endif %}">이전</a>{% endif %}
+                <span class="page-input-group"><input type="number" id="page-input" value="{{ page_obj.number }}" min="1" max="{{ page_obj.paginator.num_pages }}"><span class="page-total"> / {{ page_obj.paginator.num_pages }}</span><button type="button" id="page-go-btn">이동</button></span>
+                {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% if other_params %}&{{ other_params }}{% endif %}">다음</a>{% endif %}
+            </div>
+            {% else %}
+            <p>표시할 기록이 없습니다.</p>
             {% endif %}
+        </main>
+    </div>
 
-            <span class="page-input-group">
-                <input type="number" 
-                       id="page-input" 
-                       value="{{ page_obj.number }}" 
-                       min="1" 
-                       max="{{ page_obj.paginator.num_pages }}">
-                <span class="page-total"> / {{ page_obj.paginator.num_pages }}</span>
-                <button type="button" id="page-go-btn">이동</button>
-            </span>
-            
-            {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}{% if other_params %}&{{ other_params }}{% endif %}">다음</a>
-            {% endif %}
-        </div>
-        {% else %}
-        <p>표시할 기록이 없습니다.</p>
-    {% endif %}
-</main>
-</div>
+    <div id="summaryPopup" class="summary-popup"><div class="summary-popup-content"></div></div>
 
-<div id="summaryPopup" class="summary-popup">
-    <div class="summary-popup-content"></div>
-</div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // ▼▼▼▼▼ 기존 script 태그 내용을 아래 코드로 교체하세요 ▼▼▼▼▼
-        
-        // --- 페이지 이동 기능 ---
-        const goBtn = document.getElementById('page-go-btn');
-        const pageInput = document.getElementById('page-input');
-
-        function goToPage() {
-            const pageNum = parseInt(pageInput.value, 10);
-            if (!pageInput.value || isNaN(pageNum)) return;
-            const maxPage = {{ page_obj.paginator.num_pages }};
-
-            if (pageNum < 1 || pageNum > maxPage) {
-                alert(`1부터 ${maxPage} 사이의 페이지 번호를 입력해주세요.`);
-                return;
-            }
-            const otherParams = "{{ other_params|escapejs }}";
-            const separator = otherParams ? '&' : '';
-            window.location.href = `?page=${pageNum}${separator}${otherParams}`;
-        }
-
-        if (goBtn && pageInput) {
-            goBtn.addEventListener('click', goToPage);
-            pageInput.addEventListener('keypress', function(event) {
-                if (event.key === 'Enter') {
-                    event.preventDefault();
-                    goToPage();
-                }
-            });
-        }
-
-        // --- 사이드바 토글 기능 ---
-        const sidebar = document.getElementById('sidebar');
-        const toggleButton = document.getElementById('sidebar-toggle');
-        if(toggleButton) {
-            toggleButton.addEventListener('click', () => sidebar.classList.toggle('collapsed'));
-        }
-
-        // --- 단어 요약 팝업 기능 ---
-        const summaryPopup = document.getElementById("summaryPopup");
-        if (summaryPopup) {
-            const summaryPopupContent = summaryPopup.querySelector(".summary-popup-content");
-            document.querySelectorAll(".summary-trigger").forEach(trigger => {
-                trigger.addEventListener("mouseenter", function(event) {
-                    summaryPopupContent.textContent = this.dataset.fullText;
-                    const rect = this.getBoundingClientRect();
-                    summaryPopup.style.left = `${rect.left + window.scrollX}px`;
-                    summaryPopup.style.top = `${rect.bottom + window.scrollY + 5}px`;
-                    summaryPopup.style.display = "block";
-                });
-                trigger.addEventListener("mouseleave", function() {
-                    summaryPopup.style.display = "none";
-                });
-            });
-        }
-
-        // --- 자동완성 필터 기능 ---
-        const autocompleteUrl = "{% url 'autocomplete_suggestions' %}";
-        
-        function debounce(func, delay) {
-            let timeout;
-            return function(...args) {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(this, args), delay);
-            };
-        }
-
-        function setupAutocomplete(inputId, suggestionsId, tagsId, hiddenInputId) {
-            const inputEl = document.getElementById(inputId);
-            const suggestionsEl = document.getElementById(suggestionsId);
-            const tagsEl = document.getElementById(tagsId);
-            const hiddenInputEl = document.getElementById(hiddenInputId);
-            if (!inputEl) return;
-
-            let selectedTags = new Set(hiddenInputEl.value.split(',').filter(Boolean));
-
-            const updateHiddenInput = () => {
-                hiddenInputEl.value = Array.from(selectedTags).join(',');
-            };
-
-            const renderTags = () => {
-                tagsEl.innerHTML = '';
-                selectedTags.forEach(tagText => {
-                    const tagItem = document.createElement("div");
-                    tagItem.className = "tag-item";
-                    tagItem.textContent = tagText;
-                    const closeButton = document.createElement("span");
-                    closeButton.className = "tag-close";
-                    closeButton.textContent = "×";
-                    closeButton.onclick = (e) => {
-                        e.stopPropagation();
-                        selectedTags.delete(tagText);
-                        renderTags();
-                        updateHiddenInput();
-                    };
-                    tagItem.appendChild(closeButton);
-                    tagsEl.appendChild(tagItem);
-                });
-            };
-            
-            const addTag = (suggestion) => {
-                if (!selectedTags.has(suggestion)) {
-                    selectedTags.add(suggestion);
-                    renderTags();
-                    updateHiddenInput();
-                }
-                inputEl.value = '';
-                suggestionsEl.classList.remove("active");
-            };
-
-            const fetchSuggestions = async (query) => {
-                const fieldName = inputEl.dataset.fieldName;
-                try {
-                    const response = await fetch(`${autocompleteUrl}?field_name=${fieldName}&q=${encodeURIComponent(query)}`);
-                    const data = await response.json();
-                    suggestionsEl.innerHTML = "";
-                    if (data.suggestions.length > 0) {
-                        data.suggestions.forEach((suggestion) => {
-                            const item = document.createElement("div");
-                            item.className = "suggestion-item";
-                            item.textContent = suggestion.name;
-                            item.addEventListener('mousedown', () => addTag(suggestion.name));
-                            suggestionsEl.appendChild(item);
-                        });
-                        suggestionsEl.classList.add("active");
-                    } else {
-                        suggestionsEl.classList.remove("active");
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 페이지 이동 기능
+            const goBtn = document.getElementById('page-go-btn'), pageInput = document.getElementById('page-input');
+            function goToPage() {
+                const pageNum = parseInt(pageInput.value, 10);
+                if (pageInput.value&&!isNaN(pageNum)) {
+                    const maxPage={{ page_obj.paginator.num_pages|default:1 }};
+                    if(pageNum<1||pageNum>maxPage) {
+                        alert(`1부터 ${maxPage} 사이의 페이지 번호를 입력해주세요.`);
+                        return;
                     }
-                } catch (error) {
-                    console.error("Error fetching suggestions:", error);
+                    const otherParams="{{ other_params|escapejs }}", separator=otherParams?'&':'';
+                    window.location.href=`?page=${pageNum}${separator}${otherParams}`;
                 }
-            };
-            
-            const debouncedFetch = debounce(fetchSuggestions, 300);
+            }
+            if (goBtn && pageInput) {
+                goBtn.addEventListener('click',goToPage);
+                pageInput.addEventListener('keypress',function(e){
+                    if(e.key==='Enter') {
+                        e.preventDefault();
+                        goToPage();
+                    }
+                });
+            }
 
-            inputEl.addEventListener('input', () => debouncedFetch(inputEl.value));
-            inputEl.addEventListener('focus', () => fetchSuggestions(inputEl.value));
-            inputEl.addEventListener('blur', () => {
-                setTimeout(() => suggestionsEl.classList.remove("active"), 150);
-            });
+            // 데스크탑 사이드바 토글
+            const sidebar = document.getElementById('sidebar'), toggleButton = document.getElementById('sidebar-toggle');
+            if (toggleButton) {
+                toggleButton.addEventListener('click',()=>sidebar.classList.toggle('collapsed'));
+            }
 
-            renderTags();
-        }
+            // 모바일 사이드바 토글
+            const mobileSidebarToggle = document.getElementById('mobile-sidebar-toggle');
+            if (mobileSidebarToggle) {
+                // localStorage에서 상태 불러오기
+                const savedState = localStorage.getItem('mobileSidebarCollapsed');
+                if (savedState === 'true') {
+                    sidebar.classList.add('mobile-collapsed');
+                    mobileSidebarToggle.classList.add('collapsed');
+                    mobileSidebarToggle.querySelector('.toggle-text').textContent = '사이드바 보기';
+                }
 
-        // 각 필터에 자동완성 기능 적용
-        setupAutocomplete("disease_name_input", "disease_name_suggestions", "disease_name_tags", "disease_name_hidden");
-        setupAutocomplete("job_input", "job_suggestions", "job_tags", "job_hidden");
-        
-        // ▲▲▲▲▲ 교체 완료 ▲▲▲▲▲
-    });
-</script>
+                mobileSidebarToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('mobile-collapsed');
+                    this.classList.toggle('collapsed');
 
+                    const isCollapsed = sidebar.classList.contains('mobile-collapsed');
+                    this.querySelector('.toggle-text').textContent = isCollapsed ? '사이드바 보기' : '사이드바 숨기기';
+
+                    // localStorage에 상태 저장
+                    localStorage.setItem('mobileSidebarCollapsed', isCollapsed);
+                });
+            }
+
+            // 요약 팝업
+            const summaryPopup = document.getElementById("summaryPopup"); if (summaryPopup) { const summaryPopupContent = summaryPopup.querySelector(".summary-popup-content"); document.querySelectorAll(".summary-trigger").forEach(trigger => { trigger.addEventListener("mouseenter", function(event) { summaryPopupContent.textContent = this.dataset.fullText; const rect = this.getBoundingClientRect(); summaryPopup.style.left = `${rect.left + window.scrollX}px`; summaryPopup.style.top = `${rect.bottom + window.scrollY + 5}px`; summaryPopup.style.display = "block"; }); trigger.addEventListener("mouseleave", function() { summaryPopup.style.display = "none"; }); }); } function debounce(func, delay) { let timeout; return function(...args) { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), delay); }; } function setupAutocomplete(inputId, suggestionsId, tagsId, hiddenInputId) { const inputEl = document.getElementById(inputId), suggestionsEl = document.getElementById(suggestionsId), tagsEl = document.getElementById(tagsId), hiddenInputEl = document.getElementById(hiddenInputId); if (!inputEl) return; let selectedTags = new Set(hiddenInputEl.value.split(',').filter(Boolean)); const updateHiddenInput = () => { hiddenInputEl.value = Array.from(selectedTags).join(','); }; const renderTags = () => { tagsEl.innerHTML = ''; selectedTags.forEach(tagText => { const tagItem = document.createElement("div"); tagItem.className = "tag-item"; tagItem.textContent = tagText; const closeButton = document.createElement("span"); closeButton.className = "tag-close"; closeButton.textContent = "×"; closeButton.onclick = (e) => { e.stopPropagation(); selectedTags.delete(tagText); renderTags(); updateHiddenInput(); }; tagItem.appendChild(closeButton); tagsEl.appendChild(tagItem); }); }; const addTag = (suggestion) => { if (!selectedTags.has(suggestion)) { selectedTags.add(suggestion); renderTags(); updateHiddenInput(); } inputEl.value = ''; suggestionsEl.classList.remove("active"); }; const fetchSuggestions = async (query) => { const fieldName = inputEl.dataset.fieldName; try { const response = await fetch(`{% url 'autocomplete_suggestions' %}?field_name=${fieldName}&q=${encodeURIComponent(query)}`), data = await response.json(); suggestionsEl.innerHTML = ""; if (data.suggestions.length > 0) { data.suggestions.forEach((suggestion) => { const item = document.createElement("div"); item.className = "suggestion-item"; item.textContent = suggestion.name; item.addEventListener('mousedown', () => addTag(suggestion.name)); suggestionsEl.appendChild(item); }); suggestionsEl.classList.add("active"); } else { suggestionsEl.classList.remove("active"); } } catch (error) { console.error("Error fetching suggestions:", error); } }; const debouncedFetch = debounce(fetchSuggestions, 300); inputEl.addEventListener('input', () => debouncedFetch(inputEl.value)); inputEl.addEventListener('focus', () => fetchSuggestions(inputEl.value)); inputEl.addEventListener('blur', () => { setTimeout(() => suggestionsEl.classList.remove("active"), 150); }); renderTags(); } setupAutocomplete("disease_name_input", "disease_name_suggestions", "disease_name_tags", "disease_name_hidden"); setupAutocomplete("job_input", "job_suggestions", "job_tags", "job_hidden");
+        });
+    </script>
 </body>
 </html>
+

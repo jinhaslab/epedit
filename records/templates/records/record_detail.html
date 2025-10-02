@@ -314,7 +314,6 @@
       <div class="content-container">
         <div class="page-header">
           <h1>상세 정보: {{ record.case.fid }}</h1>
-          <a href="{% url 'record_list' %}?{{ other_params }}" class="btn btn-list">목록</a>
         </div>
 
         {% if revision_history %}
@@ -427,7 +426,6 @@
           <div class="actions">
             <a href="{% url 'record_list' %}?{{ other_params }}" class="btn btn-list">목록으로</a>
             <a href="{% url 'record_edit' record.pk %}?{{ other_params }}" class="btn btn-edit">수정하기</a>
-            <button type="button" class="btn btn-reset" onclick="resetRecord({{ record.pk }})">원본으로 복원</button>
           </div>
         </div>
 

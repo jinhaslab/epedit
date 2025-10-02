@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.postgres',  # PostgreSQL 기능 지원
     'records',
     'dictionaries', #
     'django_extensions',

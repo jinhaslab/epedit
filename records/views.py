@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models.functions import Substr, Cast
 from django.db.models import IntegerField
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.postgres.search import TrigramSimilarity
 import json
 import requests
 
@@ -137,10 +138,17 @@ class RecordListView(LoginRequiredMixin, ListView):
         if fid_query:
             queryset = queryset.filter(case__fid__icontains=fid_query)
 
-        # fname 필터 추가
+        # fname 필터 추가 - Trigram 유사도 검색 지원
         fname = self.request.GET.get('fname', '').strip()
         if fname:
-            queryset = queryset.filter(fnames__icontains=fname)
+            # Trigram 유사도를 계산하고 유사도가 0.03 이상인 결과만 필터링
+            # (한글 특성상 전체 문자열 비교시 유사도가 낮게 나옴)
+            queryset = queryset.annotate(
+                similarity=TrigramSimilarity('fnames', fname)
+            ).filter(
+                Q(fnames__icontains=fname) |  # 정확한 부분 일치
+                Q(similarity__gt=0.03)         # 유사도 0.03 이상 (오타/유사어 허용)
+            ).order_by('-similarity', 'fnames')  # 유사도 높은 순으로 정렬
 
         filter_configs = {
             'disease_name': self.request.GET.get('disease_name'),
