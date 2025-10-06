@@ -34,19 +34,74 @@
 
         .main-container {
             display: grid;
-            grid-template-columns: 900px 1fr; /* PDF section increased by 1.5x */
+            grid-template-columns: 1fr 400px; /* Content first, PDF 400px */
             height: 100%;
             gap: 24px;
             padding: 24px;
             box-sizing: border-box;
         }
 
-        .pdf-section, .content-container {
+        .content-container {
             height: 100%;
             display: flex;
             flex-direction: column;
+            overflow-y: auto;
+            order: 1; /* Content first */
         }
-        
+
+        .pdf-section {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            order: 2; /* PDF second */
+        }
+
+        /* PDF Size Controls */
+        .pdf-size-controls {
+            display: flex;
+            gap: 8px;
+            padding: 12px;
+            background: var(--background-color);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .pdf-size-controls button {
+            padding: 6px 12px;
+            border: 1px solid var(--border-color);
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+
+        .pdf-size-controls button:hover {
+            background: var(--yonsei-blue);
+            color: white;
+            border-color: var(--yonsei-blue);
+        }
+
+        .pdf-size-controls button.active {
+            background: var(--accent-green);
+            color: white;
+            border-color: var(--accent-green);
+        }
+
+        .pdf-size-slider {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .pdf-size-display {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary-color);
+            min-width: 60px;
+        }
+
         .pdf-viewer {
             flex-grow: 1;
             width: 100%;
@@ -61,10 +116,6 @@
             width: 100%;
             height: 100%;
             border: none;
-        }
-
-        .content-container {
-            overflow-y: auto;
         }
 
         .container {
@@ -214,33 +265,37 @@
         @media (max-width: 1200px) {
             .main-container {
                 grid-template-columns: 1fr;
-                grid-template-rows: auto 1fr;
+                grid-template-rows: 1fr auto;
                 height: auto;
                 min-height: 100vh;
                 padding: 16px;
                 box-sizing: border-box;
             }
 
+            .content-container {
+                order: 1; /* Content first on mobile */
+                height: auto;
+                overflow-y: visible;
+            }
+
             .pdf-section {
                 position: relative;
-                height: 60vh;
-                min-height: 400px;
-                margin-bottom: 24px;
-                order: 1;
+                height: 400px; /* Default height on mobile */
+                margin-top: 24px;
+                order: 2; /* PDF below content */
             }
 
             .pdf-section.hidden {
                 display: none;
             }
 
-            .content-container {
-                order: 2;
-                height: auto;
-                overflow-y: visible;
-            }
-
             .pdf-toggle-btn {
                 display: block;
+            }
+
+            /* Mobile PDF size controls - height instead of width */
+            .pdf-size-controls button[data-size] {
+                display: inline-block;
             }
 
             body {
@@ -258,25 +313,17 @@
             .data-table tbody th { width: 25%; }
             .actions { display: flex; flex-direction: column; gap: 10px; }
             .btn { width: 100%; margin: 0; box-sizing: border-box; }
-            .pdf-section { height: 50vh; min-height: 300px; }
+            .pdf-section { height: 350px; }
+            .pdf-size-controls { padding: 8px; gap: 6px; }
+            .pdf-size-controls button { padding: 5px 10px; font-size: 12px; }
         }
 
     </style>
 </head>
 <body>
     <div class="main-container">
-        <div class="pdf-section">
-            <div class="pdf-viewer">
-                {% if record.pdf_link %}
-                <iframe src="{{ record.pdf_link }}" title="PDF 뷰어"></iframe>
-                {% else %}
-                <p style="text-align: center; padding-top: 40px">표시할 PDF가 없습니다.</p>
-                {% endif %}
-            </div>
-        </div>
+        <!-- Content First -->
         <div class="content-container">
-            <button class="pdf-toggle-btn" id="pdfToggleBtn">📄 PDF 보기/숨기기</button>
-
             <div class="page-header">
                 <h1>상세 정보: {{ record.case.fid }}</h1>
             </div>
@@ -406,36 +453,122 @@
             </div>
             {% endif %}
         </div>
+
+        <!-- PDF Section (Second) -->
+        <div class="pdf-section" id="pdfSection">
+            <!-- PDF Size Controls -->
+            <div class="pdf-size-controls">
+                <button data-size="300" onclick="setPdfSize(300)">300px</button>
+                <button data-size="400" onclick="setPdfSize(400)" class="active" id="size400">400px</button>
+                <button data-size="500" onclick="setPdfSize(500)">500px</button>
+                <button data-size="600" onclick="setPdfSize(600)">600px</button>
+                <input type="range" min="200" max="900" value="400" class="pdf-size-slider" id="pdfSizeSlider">
+                <span class="pdf-size-display" id="pdfSizeDisplay">400px</span>
+                <button onclick="togglePdfSection()" style="margin-left: auto;">숨기기</button>
+            </div>
+
+            <div class="pdf-viewer">
+                {% if record.pdf_link %}
+                <iframe src="{{ record.pdf_link }}" title="PDF 뷰어"></iframe>
+                {% else %}
+                <p style="text-align: center; padding-top: 40px">표시할 PDF가 없습니다.</p>
+                {% endif %}
+            </div>
+        </div>
     </div>
-    
+
     {% csrf_token %}
 
     <script>
+    // PDF Size Control Functions
+    function setPdfSize(size) {
+        const pdfSection = document.getElementById('pdfSection');
+        const slider = document.getElementById('pdfSizeSlider');
+        const display = document.getElementById('pdfSizeDisplay');
+        const mainContainer = document.querySelector('.main-container');
+
+        // Remove active class from all buttons
+        document.querySelectorAll('.pdf-size-controls button[data-size]').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        // Add active class to clicked button
+        const clickedBtn = document.querySelector(`button[data-size="${size}"]`);
+        if (clickedBtn) clickedBtn.classList.add('active');
+
+        // Update display
+        display.textContent = size + 'px';
+        slider.value = size;
+
+        // Apply size based on screen width
+        if (window.innerWidth > 1200) {
+            // Desktop: change width
+            mainContainer.style.gridTemplateColumns = `1fr ${size}px`;
+        } else {
+            // Mobile: change height
+            pdfSection.style.height = size + 'px';
+        }
+
+        // Save to localStorage
+        localStorage.setItem('pdfSize', size);
+    }
+
+    function togglePdfSection() {
+        const pdfSection = document.getElementById('pdfSection');
+        pdfSection.classList.toggle('hidden');
+
+        const isHidden = pdfSection.classList.contains('hidden');
+        localStorage.setItem('pdfHidden', isHidden);
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
-        const pdfToggleBtn = document.getElementById('pdfToggleBtn');
-        const pdfSection = document.querySelector('.pdf-section');
+        const slider = document.getElementById('pdfSizeSlider');
+        const display = document.getElementById('pdfSizeDisplay');
+        const pdfSection = document.getElementById('pdfSection');
 
-        if (pdfToggleBtn && pdfSection) {
-            // Load saved state from localStorage
-            const pdfHidden = localStorage.getItem('pdfHidden') === 'true';
-            if (pdfHidden) {
-                pdfSection.classList.add('hidden');
-                pdfToggleBtn.textContent = '📄 PDF 보기';
-            }
+        // Load saved size
+        const savedSize = localStorage.getItem('pdfSize') || '400';
+        setPdfSize(parseInt(savedSize));
 
-            pdfToggleBtn.addEventListener('click', function() {
-                pdfSection.classList.toggle('hidden');
-                const isHidden = pdfSection.classList.contains('hidden');
+        // Load saved visibility
+        const pdfHidden = localStorage.getItem('pdfHidden') === 'true';
+        if (pdfHidden) {
+            pdfSection.classList.add('hidden');
+        }
 
-                if (isHidden) {
-                    pdfToggleBtn.textContent = '📄 PDF 보기';
-                    localStorage.setItem('pdfHidden', 'true');
+        // Slider input handler
+        if (slider) {
+            slider.addEventListener('input', function() {
+                const size = this.value;
+                display.textContent = size + 'px';
+
+                const mainContainer = document.querySelector('.main-container');
+                if (window.innerWidth > 1200) {
+                    mainContainer.style.gridTemplateColumns = `1fr ${size}px`;
                 } else {
-                    pdfToggleBtn.textContent = '📄 PDF 숨기기';
-                    localStorage.setItem('pdfHidden', 'false');
+                    pdfSection.style.height = size + 'px';
                 }
             });
+
+            // Save on slider change end
+            slider.addEventListener('change', function() {
+                localStorage.setItem('pdfSize', this.value);
+
+                // Update active button if matches preset
+                document.querySelectorAll('.pdf-size-controls button[data-size]').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.size === this.value) {
+                        btn.classList.add('active');
+                    }
+                });
+            });
         }
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            const savedSize = localStorage.getItem('pdfSize') || '400';
+            setPdfSize(parseInt(savedSize));
+        });
     });
     </script>
 </body>
