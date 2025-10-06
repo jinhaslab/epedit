@@ -354,36 +354,50 @@
         /* --- Responsive Design --- */
         @media (max-width: 1200px) {
             html, body {
-                height: auto;
-                overflow-x: hidden;
-                overflow-y: auto;
+                height: 100vh;
+                overflow: hidden;
             }
 
             .main-container {
-                grid-template-columns: 1fr;
-                grid-template-rows: auto auto;
-                min-height: 100vh;
-                height: auto;
-                padding: 16px;
-                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                height: 100vh;
+                padding: 0;
+                gap: 0;
             }
 
             .content-container {
-                order: 1; /* Content first on mobile */
-                height: auto;
-                min-height: auto;
+                order: 1;
+                flex: 1;
+                overflow-y: auto;
+                padding: 16px;
+                padding-bottom: 0;
             }
 
             .pdf-section {
-                position: relative;
-                top: auto;
-                height: 50vh; /* 50% of viewport height */
-                margin-top: 24px;
-                order: 2; /* PDF below content */
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+                height: 50vh; /* 50% of viewport - fixed at bottom */
+                order: 2;
+                z-index: 1000;
+                margin: 0;
+                box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
             }
 
             .pdf-section.hidden {
                 display: none;
+            }
+
+            /* Adjust content padding when PDF is visible */
+            .content-container {
+                padding-bottom: calc(50vh + 16px); /* Space for fixed PDF */
+            }
+
+            body:has(.pdf-section.hidden) .content-container {
+                padding-bottom: 16px; /* Normal padding when PDF hidden */
             }
 
             .pdf-toggle-btn {
@@ -402,7 +416,7 @@
         }
 
         @media (max-width: 576px) {
-            .main-container { padding: 12px; }
+            .content-container { padding: 12px; }
             .container { padding: 16px; margin-bottom: 16px; }
             .page-header h1 { font-size: 20px; padding: 6px 12px; }
             .data-table { font-size: 13px; }
@@ -639,10 +653,20 @@
 
     function togglePdfSection() {
         const pdfSection = document.getElementById('pdfSection');
+        const contentContainer = document.querySelector('.content-container');
         pdfSection.classList.toggle('hidden');
 
         const isHidden = pdfSection.classList.contains('hidden');
         localStorage.setItem('pdfHidden', isHidden);
+
+        // Adjust content padding on mobile when PDF is hidden/shown
+        if (window.innerWidth <= 1200) {
+            if (isHidden) {
+                contentContainer.style.paddingBottom = '16px';
+            } else {
+                contentContainer.style.paddingBottom = 'calc(50vh + 16px)';
+            }
+        }
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -654,10 +678,19 @@
         const savedSize = localStorage.getItem('pdfSize') || '400';
         setPdfSize(parseInt(savedSize));
 
-        // Load saved visibility
+        // Load saved visibility and adjust padding
         const pdfHidden = localStorage.getItem('pdfHidden') === 'true';
+        const contentContainer = document.querySelector('.content-container');
+
         if (pdfHidden) {
             pdfSection.classList.add('hidden');
+            if (window.innerWidth <= 1200) {
+                contentContainer.style.paddingBottom = '16px';
+            }
+        } else {
+            if (window.innerWidth <= 1200) {
+                contentContainer.style.paddingBottom = 'calc(50vh + 16px)';
+            }
         }
 
         // Slider input handler
