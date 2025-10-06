@@ -497,6 +497,58 @@
             color: #ddd;
         }
 
+        /* job 타겟일 때: disease와 동일한 레이아웃, 녹색 테마 */
+        body.job-target .header-section {
+            background: linear-gradient(110deg, #2e7d32 60%, #43a047 60%);
+        }
+
+        body.job-target .search-btn {
+            color: #2e7d32;
+        }
+
+        body.job-target .menu-level-1 > li > .menu-item:hover {
+            background: #e8f5e9;
+            border-left-color: #43a047;
+        }
+
+        body.job-target .menu-level-1 > li > .menu-item.active {
+            background: #e8f5e9;
+            border-left-color: #2e7d32;
+            color: #2e7d32;
+        }
+
+        body.job-target .score-badge {
+            background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
+        }
+
+        body.job-target .code-badge {
+            background: #f1f8e9;
+            color: #2e7d32;
+            border: 1px solid #c5e1a5;
+        }
+
+        body.job-target .result-card:hover {
+            border-color: #43a047;
+        }
+
+        body.job-target .result-card.selected {
+            border-color: #2e7d32;
+            background: #f1f8e9;
+            box-shadow: 0 4px 15px rgba(46, 125, 50, 0.2);
+        }
+
+        body.job-target .result-path {
+            border-left: 3px solid #43a047;
+        }
+
+        body.job-target .detail-panel h2 {
+            color: #2e7d32;
+        }
+
+        body.job-target .detail-panel .code {
+            color: #f57c00;
+        }
+
         /* 반응형 */
         @media (max-width: 1024px) {
             .bottom-panel {
@@ -515,25 +567,30 @@
         }
     </style>
 </head>
-<body>
+<body class="{% if target == 'job' %}job-target{% else %}disease-target{% endif %}">
     <!-- 헤더 + 검색 통합 -->
     <div class="header-section">
         <h1><i class="fas fa-search-plus"></i> {{ title }}</h1>
         <form id="search-form" class="search-form">
             <input type="text" id="query" name="query" class="search-input"
-                   placeholder="질병명 또는 코드를 입력하세요 (중분류 검색) - 예: 폐암, 당뇨병"
-                   value="{{ query|default:'' }}" />
-            <button type="submit" class="search-btn"><i class="fas fa-search"></i> AI 검색 (중분류)</button>
+                   placeholder="{% if target == 'job' %}직종명을 입력하세요 - 예: 용접원, 건설노무자{% else %}질병명 또는 코드를 입력하세요 (중분류 검색) - 예: 폐암, 당뇨병{% endif %}"
+                   value="{{ initial_query|default:'' }}" />
+            <button type="submit" class="search-btn"><i class="fas fa-search"></i> AI 검색 {% if target == 'job' %}(직종){% else %}(중분류){% endif %}</button>
         </form>
     </div>
 
     <!-- 메인 컨테이너: 세로 배치 -->
     <div class="main-container">
-        <!-- 상단: 계층형 메뉴 사이드바 (disease 타겟일 때만 표시) -->
-        <div class="sidebar" id="sidebar" style="display: {% if target == 'disease' %}block{% else %}none{% endif %};">
+        <!-- 상단: 계층형 메뉴 사이드바 -->
+        <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <h2><i class="fas fa-sitemap"></i> 질병 분류 계층 메뉴</h2>
-                <p>대분류 22개 | 중분류 229개 | 소분류 1,692개 | 세분류 9,267개</p>
+                {% if target == 'job' %}
+                    <h2><i class="fas fa-sitemap"></i> 직업 분류 계층 메뉴</h2>
+                    <p>중분류 50개 | 소분류 153개 | 세분류 446개 | 세세분류 1,227개</p>
+                {% else %}
+                    <h2><i class="fas fa-sitemap"></i> 질병 분류 계층 메뉴</h2>
+                    <p>대분류 22개 | 중분류 229개 | 소분류 1,692개 | 세분류 9,267개</p>
+                {% endif %}
             </div>
             <ul class="menu-level-1" id="mainMenu">
                 <!-- JavaScript로 동적 생성 -->
@@ -561,9 +618,14 @@
             <!-- 우측: AI 검색 결과 -->
             <div class="search-results-section" id="searchResultsSection">
                 <div class="detail-panel">
-                    <h2>🔍 AI 검색 결과 (중분류)</h2>
+                    <h2>🔍 AI 검색 결과 {% if target == 'job' %}(직종){% else %}(중분류){% endif %}</h2>
+                    {% if target == 'job' %}
+                    <p style="color: #666; margin: 10px 0; font-size: 13px;">위 검색창에 키워드를 입력하면 AI가 <strong>직종</strong>을 유사도 기반으로 검색합니다.</p>
+                    <p style="color: #999; font-size: 12px; margin-top: 10px;">💡 검색 결과 카드를 클릭하면 해당 직종이 자동으로 입력됩니다!</p>
+                    {% else %}
                     <p style="color: #666; margin: 10px 0; font-size: 13px;">위 검색창에 키워드를 입력하면 AI가 <strong>중분류(level 2)</strong> 질병 코드를 유사도 기반으로 검색합니다.</p>
-                    <p style="color: #999; font-size: 12px; margin-top: 10px;">💡 검색 결과 카드를 클릭하면 {% if target == 'disease' %}위쪽 메뉴가 해당 중분류로 펼쳐지고{% endif %}, 좌측에 하위 소분류/세분류 항목이 표시됩니다!</p>
+                    <p style="color: #999; font-size: 12px; margin-top: 10px;">💡 검색 결과 카드를 클릭하면 위쪽 메뉴가 해당 중분류로 펼쳐지고, 좌측에 하위 소분류/세분류 항목이 표시됩니다!</p>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -577,10 +639,17 @@
 
         // disease 타겟일 때만 계층형 데이터 로드
         async function loadHierarchicalData() {
-            if (target !== 'disease') return;
-
             try {
-                const response = await fetch('https://sehnr.org/ohsearch/kcdsearch/api/hierarchical/');
+                let apiUrl;
+                if (target === 'disease') {
+                    apiUrl = 'https://sehnr.org/ohsearch/kcdsearch/api/hierarchical/';
+                } else if (target === 'job') {
+                    apiUrl = 'https://sehnr.org/ohsearch/job7thsearch/api/hierarchical/';
+                } else {
+                    return; // 다른 target은 hierarchical 사용 안함
+                }
+
+                const response = await fetch(apiUrl);
                 if (!response.ok) {
                     throw new Error('계층형 데이터를 불러올 수 없습니다');
                 }
@@ -826,6 +895,39 @@
                 `;
             }
 
+            // 설명 섹션 (직무개요)
+            let descriptionHtml = '';
+            if (current.description && current.description !== 'nan' && current.description.trim()) {
+                descriptionHtml = `
+                    <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 8px; border-left: 4px solid #4caf50;">
+                        <h3 style="font-size: 15px; color: #333; margin-bottom: 10px;"><i class="fas fa-file-alt"></i> ${target === 'job' ? '직무개요' : '설명'}</h3>
+                        <p style="color: #555; font-size: 13px; line-height: 1.7;">${current.description}</p>
+                    </div>
+                `;
+            }
+
+            // 주요업무 섹션
+            let tasksHtml = '';
+            if (current.major_tasks && current.major_tasks !== 'nan' && current.major_tasks.trim()) {
+                tasksHtml = `
+                    <div style="margin-top: 15px; padding: 15px; background: white; border-radius: 8px; border-left: 4px solid #2196f3;">
+                        <h3 style="font-size: 15px; color: #333; margin-bottom: 10px;"><i class="fas fa-tasks"></i> 주요 업무</h3>
+                        <p style="color: #555; font-size: 13px; line-height: 1.7; white-space: pre-wrap;">${current.major_tasks}</p>
+                    </div>
+                `;
+            }
+
+            // 직업예시 섹션 (job만)
+            let examplesHtml = '';
+            if (target === 'job' && current.job_examples && current.job_examples !== 'nan' && current.job_examples.trim()) {
+                examplesHtml = `
+                    <div style="margin-top: 15px; padding: 15px; background: white; border-radius: 8px; border-left: 4px solid #ff9800;">
+                        <h3 style="font-size: 15px; color: #333; margin-bottom: 10px;"><i class="fas fa-briefcase"></i> 직업 예시</h3>
+                        <p style="color: #555; font-size: 13px; line-height: 1.7;">${current.job_examples}</p>
+                    </div>
+                `;
+            }
+
             container.innerHTML = `
                 <div class="detail-panel">
                     <div class="breadcrumb"><i class="fas fa-folder-tree"></i> ${breadcrumb}</div>
@@ -836,6 +938,9 @@
                         <p><strong>코드:</strong> ${current.id}</p>
                         ${current.children ? `<p><strong>하위 항목:</strong> ${current.children.length}개</p>` : ''}
                     </div>
+                    ${descriptionHtml}
+                    ${tasksHtml}
+                    ${examplesHtml}
                     <button class="select-btn" onclick="selectResult({code: '${current.id}', name: '${current.name.replace(/'/g, "\\'")}', path: '${breadcrumb.replace(/'/g, "\\'")}', score: 100})">
                         <i class="fas fa-check-circle"></i> 이 항목 선택
                     </button>
@@ -846,8 +951,6 @@
 
         // 코드로 메뉴 탐색 (AI 검색 결과 클릭 시 호출)
         function navigateToCode(code) {
-            if (target !== 'disease') return;
-
             console.log('Navigating to code:', code);
 
             // 코드 경로 찾기
@@ -962,8 +1065,11 @@
 
             let apiUrl;
             if (target === 'disease') {
-                // 중분류(level 2)만 검색
-                apiUrl = `https://sehnr.org/ohsearch/kcdsearch/api/search/?query=${encodeURIComponent(query)}&level=2`;
+                // 중분류(level 2)만 검색 - 프록시 사용
+                apiUrl = `/epedit/proxy/rag_search/?query=${encodeURIComponent(query)}`;
+            } else if (target === 'job') {
+                // 직종 검색 - 프록시 사용
+                apiUrl = `/epedit/proxy/job_rag_search/?query=${encodeURIComponent(query)}`;
             } else {
                 apiUrl = `https://sehnr.org/ohsearch/jobsearch/api/search/?query=${encodeURIComponent(query)}`;
             }
@@ -1001,8 +1107,8 @@
             if (data.results && Array.isArray(data.results) && data.results.length > 0) {
                 let html = `
                     <div class="results-header">
-                        <h2><i class="fas fa-search"></i> "${query}" 검색 결과</h2>
-                        <p class="results-count">총 ${data.results.length}개 항목 발견 (카드를 클릭하면 좌측에 상세 정보 표시)</p>
+                        <h2><i class="fas fa-search"></i> "${query}" 검색 결과 ${target === 'job' ? '(4자리 세분류)' : ''}</h2>
+                        <p class="results-count">총 ${data.results.length}개 ${target === 'job' ? '세분류' : '항목'} 발견 (카드를 클릭하면 왼쪽에 상세 정보 및 하위 항목 표시)</p>
                     </div>
                     <div class="results-grid">
                 `;
@@ -1028,7 +1134,7 @@
                                 <i class="fas fa-folder-tree"></i> ${path}
                             </div>
                             <div class="click-hint">
-                                <i class="fas fa-hand-pointer"></i> 클릭 시 왼쪽에 하위 소분류/세분류 목록 표시
+                                <i class="fas fa-hand-pointer"></i> ${target === 'disease' ? '클릭 시 왼쪽에 하위 소분류/세분류 목록 표시' : '클릭하면 위쪽 메뉴가 펼쳐지고 왼쪽에 하위 항목(세세분류)이 표시됩니다'}
                             </div>
                         </div>
                     `;
@@ -1044,28 +1150,8 @@
         }
 
         function handleResultClick(code, name, path, score) {
-            // 메뉴 펼치기 (disease 타겟일 때만)
-            if (target === 'disease') {
-                navigateToCode(code);
-            } else {
-                // job 타겟일 때는 좌측에만 상세 정보 표시
-                const container = document.getElementById('detailSection');
-                container.innerHTML = `
-                    <div class="detail-panel">
-                        <div class="code">${code}</div>
-                        <h2>${name}</h2>
-                        <div style="margin-top: 15px; color: #666; font-size: 14px;">
-                            <p><strong>직종 코드:</strong> ${code}</p>
-                            <p><strong>경로:</strong> ${path}</p>
-                            <p><strong>유사도:</strong> ${score}%</p>
-                        </div>
-                        <button class="select-btn" onclick="selectResult({code: '${code}', name: '${name.replace(/'/g, "\\'")}', path: '${path.replace(/'/g, "\\'")}', score: ${score}})">
-                            <i class="fas fa-check-circle"></i> 이 항목 선택
-                        </button>
-                    </div>
-                `;
-            }
-
+            // 메뉴 펼치기 (disease와 job 모두 동일하게 hierarchical navigation 사용)
+            navigateToCode(code);
             // 선택된 카드 강조
             document.querySelectorAll('.result-card').forEach(card => {
                 card.classList.remove('selected');
@@ -1074,6 +1160,8 @@
         }
 
         function selectResult(result) {
+            console.log('selectResult called with:', result);
+
             const resultData = {
                 score: result.score || 0,
                 code: result.code || '',
@@ -1082,6 +1170,9 @@
                 name: result.name || result.disease_name || result.job_name || '',
                 description: result.path || result.description || ''
             };
+
+            console.log('resultData to send:', resultData);
+            console.log('target:', target);
 
             if (window.opener && !window.opener.closed && window.opener.handleAiSearchResult) {
                 window.opener.handleAiSearchResult(resultData, target);

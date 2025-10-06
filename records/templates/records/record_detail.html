@@ -34,7 +34,7 @@
 
         .main-container {
             display: grid;
-            grid-template-columns: 1fr 400px; /* Content first, PDF 400px */
+            grid-template-columns: 1fr 1600px; /* Content first, PDF 1600px */
             min-height: 100vh;
             gap: 24px;
             padding: 24px;
@@ -89,55 +89,160 @@
             display: flex;
             gap: 8px;
             padding: 12px;
-            background: var(--background-color);
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
             border-radius: 8px;
             margin-bottom: 12px;
             flex-wrap: wrap;
             align-items: center;
-            flex-shrink: 0; /* Don't shrink controls */
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
 
         .pdf-size-controls button {
-            padding: 6px 12px;
-            border: 1px solid var(--border-color);
+            padding: 7px 14px;
+            border: 2px solid transparent;
             background: white;
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 13px;
-            transition: all 0.2s ease;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .pdf-size-controls button:hover {
             background: var(--yonsei-blue);
             color: white;
             border-color: var(--yonsei-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 56, 118, 0.25);
+        }
+
+        .pdf-size-controls button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .pdf-size-controls button.active {
-            background: var(--accent-green);
+            background: linear-gradient(135deg, var(--accent-green) 0%, #1B5E20 100%);
             color: white;
             border-color: var(--accent-green);
+            box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
         }
 
         .pdf-size-slider {
             flex: 1;
             min-width: 120px;
+            height: 6px;
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            background: linear-gradient(to right, var(--accent-green) 0%, var(--accent-green) 50%, #ddd 50%, #ddd 100%);
+            cursor: pointer;
+        }
+
+        .pdf-size-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--yonsei-blue);
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+        }
+
+        .pdf-size-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 3px 10px rgba(0, 56, 118, 0.4);
+        }
+
+        .pdf-size-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--yonsei-blue);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+        }
+
+        .pdf-size-slider::-moz-range-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 3px 10px rgba(0, 56, 118, 0.4);
         }
 
         .pdf-size-display {
             font-size: 13px;
-            font-weight: 500;
-            color: var(--text-secondary-color);
+            font-weight: 600;
+            color: var(--yonsei-blue);
             min-width: 60px;
+            padding: 6px 10px;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.06);
         }
 
         .container {
             background: var(--card-background);
             padding: 24px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
             margin-bottom: 24px;
             border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .container:hover {
+            box-shadow: 0 6px 28px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .page-header {
+            animation: slideIn 0.6s ease-out;
+        }
+
+        .mobile-quick-actions {
+            animation: slideDown 0.4s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .page-header {
@@ -325,51 +430,94 @@
             position: sticky;
             top: 0;
             z-index: 100;
-            background: white;
-            padding: 12px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            padding: 10px 12px;
             gap: 8px;
-            border-radius: 8px;
+            border-radius: 0 0 16px 16px;
             margin-bottom: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            flex-wrap: wrap;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            flex-wrap: nowrap;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.5);
         }
 
         .btn-quick-action {
             flex: 1;
-            min-width: 100px;
-            padding: 10px 16px;
-            border: 1px solid var(--border-color);
+            min-width: 80px;
+            padding: 12px 8px;
+            border: 2px solid var(--border-color);
             background: white;
-            border-radius: 6px;
+            border-radius: 12px;
             cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
+            font-size: 13px;
+            font-weight: 600;
             text-align: center;
             text-decoration: none;
             color: var(--text-color);
-            transition: all 0.2s ease;
-            display: inline-block;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            position: relative;
+            overflow: hidden;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .btn-quick-action:hover {
-            background: var(--yonsei-blue);
-            color: white;
-            border-color: var(--yonsei-blue);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        .btn-quick-action::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(0, 56, 118, 0.1);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn-quick-action:active::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-quick-action:active {
+            transform: scale(0.96);
+        }
+
+        .btn-quick-action .icon {
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .btn-quick-action .label {
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        @media (hover: hover) {
+            .btn-quick-action:hover {
+                background: var(--yonsei-blue);
+                color: white;
+                border-color: var(--yonsei-blue);
+                transform: translateY(-3px);
+                box-shadow: 0 6px 20px rgba(0, 56, 118, 0.3);
+            }
         }
 
         /* --- Responsive Design --- */
         @media (max-width: 1200px) {
             html, body {
-                height: 100vh;
-                overflow: hidden;
+                min-height: 100vh;
+                overflow-x: hidden;
             }
 
             .main-container {
                 display: flex;
                 flex-direction: column;
-                height: 100vh;
+                min-height: 100vh;
                 padding: 0;
                 gap: 0;
             }
@@ -377,9 +525,8 @@
             .content-container {
                 order: 1;
                 flex: 1;
-                overflow-y: auto;
                 padding: 16px;
-                padding-bottom: 0;
+                padding-bottom: calc(50vh + 16px);
             }
 
             .pdf-section {
@@ -440,17 +587,124 @@
         }
 
         @media (max-width: 576px) {
-            .content-container { padding: 12px; }
-            .container { padding: 16px; margin-bottom: 16px; }
-            .page-header h1 { font-size: 20px; padding: 6px 12px; }
-            .data-table { font-size: 13px; }
-            .data-table th, .data-table td { padding: 10px 8px; }
-            .data-table tbody th { width: 25%; }
-            .actions { display: flex; flex-direction: column; gap: 10px; }
-            .btn { width: 100%; margin: 0; box-sizing: border-box; }
-            .pdf-section { height: 50vh; } /* Keep 50% on small screens */
-            .pdf-size-controls { padding: 8px; gap: 6px; }
-            .pdf-size-controls button { padding: 5px 10px; font-size: 12px; }
+            .content-container { padding: 8px; }
+            .container { padding: 14px; margin-bottom: 12px; }
+            .page-header {
+                margin-bottom: 16px;
+                padding-bottom: 12px;
+            }
+            .page-header h1 {
+                font-size: 18px;
+                padding: 6px 10px;
+            }
+
+            h2 {
+                font-size: 17px;
+                margin-bottom: 16px;
+            }
+
+            /* Card-style table for mobile */
+            .data-table {
+                font-size: 13px;
+                border: none;
+            }
+
+            .data-table thead {
+                display: none; /* Hide table headers on mobile */
+            }
+
+            .data-table tbody tr {
+                display: block;
+                margin-bottom: 12px;
+                background: white;
+                border: 1px solid var(--border-color);
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            }
+
+            .data-table tbody th,
+            .data-table tbody td {
+                display: block;
+                width: 100% !important;
+                border: none;
+                padding: 12px 14px;
+                text-align: left;
+            }
+
+            .data-table tbody th {
+                background: var(--pastel-blue);
+                color: var(--yonsei-blue);
+                font-weight: 600;
+                font-size: 13px;
+                padding: 10px 14px;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .data-table tbody td {
+                background: white;
+                padding: 14px;
+                min-height: 44px;
+                line-height: 1.5;
+            }
+
+            .data-table tbody tr:not(:has(+ tr)) th,
+            .data-table tbody tr:not(:has(+ tr)) td {
+                border-bottom: none;
+            }
+
+            .actions {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                margin-top: 20px;
+                padding-top: 16px;
+            }
+
+            .btn {
+                width: 100%;
+                margin: 0;
+                box-sizing: border-box;
+                padding: 14px 24px;
+                font-size: 15px;
+                border-radius: 12px;
+            }
+
+            .pdf-section { height: 50vh; }
+            .pdf-size-controls {
+                padding: 8px;
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+            .pdf-size-controls button {
+                padding: 6px 12px;
+                font-size: 12px;
+                border-radius: 8px;
+            }
+
+            .pdf-size-slider {
+                width: 100%;
+                flex: none;
+            }
+
+            .mobile-quick-actions {
+                padding: 8px;
+                gap: 6px;
+                margin-bottom: 12px;
+            }
+
+            .btn-quick-action {
+                min-width: 70px;
+                padding: 10px 6px;
+            }
+
+            .btn-quick-action .icon {
+                font-size: 16px;
+            }
+
+            .btn-quick-action .label {
+                font-size: 10px;
+            }
         }
 
     </style>
@@ -461,9 +715,18 @@
         <div class="content-container">
             <!-- Mobile Quick Actions -->
             <div class="mobile-quick-actions">
-                <button class="btn-quick-action" onclick="scrollToPdf()">📄 PDF 보기</button>
-                <a href="{% url 'record_list' %}?{{ other_params }}" class="btn-quick-action">📋 목록</a>
-                <a href="{% url 'record_edit' record.pk %}?{{ other_params }}" class="btn-quick-action">✏️ 수정</a>
+                <button class="btn-quick-action" onclick="scrollToPdf()">
+                    <span class="icon">📄</span>
+                    <span class="label">PDF</span>
+                </button>
+                <a href="{% url 'record_list' %}?{{ other_params }}" class="btn-quick-action">
+                    <span class="icon">📋</span>
+                    <span class="label">목록</span>
+                </a>
+                <a href="{% url 'record_edit' record.pk %}?{{ other_params }}" class="btn-quick-action">
+                    <span class="icon">✏️</span>
+                    <span class="label">수정</span>
+                </a>
             </div>
 
             <div class="page-header">
@@ -607,24 +870,44 @@
         <div class="pdf-section" id="pdfSection">
             <!-- PDF Size Controls -->
             <div class="pdf-size-controls">
-                <button data-size="300" onclick="setPdfSize(300)">300px</button>
-                <button data-size="400" onclick="setPdfSize(400)" class="active" id="size400">400px</button>
                 <button data-size="500" onclick="setPdfSize(500)">500px</button>
-                <button data-size="600" onclick="setPdfSize(600)">600px</button>
-                <input type="range" min="200" max="900" value="400" class="pdf-size-slider" id="pdfSizeSlider">
-                <span class="pdf-size-display" id="pdfSizeDisplay">400px</span>
+                <button data-size="800" onclick="setPdfSize(800)">800px</button>
+                <button data-size="1200" onclick="setPdfSize(1200)">1200px</button>
+                <button data-size="1600" onclick="setPdfSize(1600)" class="active" id="size1600">1600px</button>
+                <button data-size="2000" onclick="setPdfSize(2000)">2000px</button>
+                <input type="range" min="500" max="2000" value="1600" class="pdf-size-slider" id="pdfSizeSlider">
+                <span class="pdf-size-display" id="pdfSizeDisplay">1600px</span>
                 <button onclick="togglePdfSection()" style="margin-left: auto;">숨기기</button>
             </div>
 
-            <div class="pdf-viewer">
+            <div class="pdf-viewer" id="pdfViewer">
                 {% if record.pdf_link %}
+                <!-- Desktop: Use iframe -->
                 <iframe
+                    id="desktopPdfFrame"
                     src="{{ record.pdf_link }}#toolbar=0&navpanes=0&scrollbar=1"
                     title="PDF 뷰어"
                     frameborder="0"
                     scrolling="auto"
                     allowfullscreen
                     style="width: 100%; height: 100%; border: none;"></iframe>
+
+                <!-- Mobile: Use PDF.js or Google Docs viewer -->
+                <iframe
+                    id="mobilePdfFrame"
+                    src="https://docs.google.com/viewer?url={{ record.pdf_link|urlencode }}&embedded=true"
+                    title="PDF 뷰어"
+                    frameborder="0"
+                    scrolling="auto"
+                    style="width: 100%; height: 100%; border: none; display: none;"></iframe>
+
+                <!-- Fallback for both -->
+                <div id="pdfFallback" style="display: none; padding: 20px; text-align: center;">
+                    <p style="margin-bottom: 15px; color: #6c757d;">모바일에서는 PDF를 직접 표시할 수 없습니다.</p>
+                    <a href="{{ record.pdf_link }}" target="_blank" class="btn btn-edit" style="display: inline-block; text-decoration: none;">
+                        📄 새 탭에서 PDF 열기
+                    </a>
+                </div>
                 {% else %}
                 <p style="text-align: center; padding-top: 40px">표시할 PDF가 없습니다.</p>
                 {% endif %}
@@ -635,6 +918,33 @@
     {% csrf_token %}
 
     <script>
+    // Detect mobile and show appropriate PDF viewer
+    function initPdfViewer() {
+        const isMobile = window.innerWidth <= 1200;
+        const desktopFrame = document.getElementById('desktopPdfFrame');
+        const mobileFrame = document.getElementById('mobilePdfFrame');
+        const pdfFallback = document.getElementById('pdfFallback');
+
+        if (isMobile) {
+            // Mobile: use Google Docs viewer
+            if (desktopFrame) desktopFrame.style.display = 'none';
+            if (mobileFrame) {
+                mobileFrame.style.display = 'block';
+
+                // Check if iframe loads successfully
+                mobileFrame.onerror = function() {
+                    mobileFrame.style.display = 'none';
+                    if (pdfFallback) pdfFallback.style.display = 'block';
+                };
+            }
+        } else {
+            // Desktop: show native iframe
+            if (desktopFrame) desktopFrame.style.display = 'block';
+            if (mobileFrame) mobileFrame.style.display = 'none';
+            if (pdfFallback) pdfFallback.style.display = 'none';
+        }
+    }
+
     // Scroll to PDF function (for mobile quick action)
     function scrollToPdf() {
         const pdfSection = document.getElementById('pdfSection');
@@ -683,20 +993,10 @@
 
     function togglePdfSection() {
         const pdfSection = document.getElementById('pdfSection');
-        const contentContainer = document.querySelector('.content-container');
         pdfSection.classList.toggle('hidden');
 
         const isHidden = pdfSection.classList.contains('hidden');
         localStorage.setItem('pdfHidden', isHidden);
-
-        // Adjust content padding on mobile when PDF is hidden/shown
-        if (window.innerWidth <= 1200) {
-            if (isHidden) {
-                contentContainer.style.paddingBottom = '16px';
-            } else {
-                contentContainer.style.paddingBottom = 'calc(50vh + 16px)';
-            }
-        }
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -704,23 +1004,18 @@
         const display = document.getElementById('pdfSizeDisplay');
         const pdfSection = document.getElementById('pdfSection');
 
+        // Initialize PDF viewer for mobile/desktop
+        initPdfViewer();
+
         // Load saved size
-        const savedSize = localStorage.getItem('pdfSize') || '400';
+        const savedSize = localStorage.getItem('pdfSize') || '1600';
         setPdfSize(parseInt(savedSize));
 
-        // Load saved visibility and adjust padding
+        // Load saved visibility
         const pdfHidden = localStorage.getItem('pdfHidden') === 'true';
-        const contentContainer = document.querySelector('.content-container');
 
         if (pdfHidden) {
             pdfSection.classList.add('hidden');
-            if (window.innerWidth <= 1200) {
-                contentContainer.style.paddingBottom = '16px';
-            }
-        } else {
-            if (window.innerWidth <= 1200) {
-                contentContainer.style.paddingBottom = 'calc(50vh + 16px)';
-            }
         }
 
         // Slider input handler
@@ -753,8 +1048,10 @@
 
         // Handle window resize
         window.addEventListener('resize', function() {
-            const savedSize = localStorage.getItem('pdfSize') || '400';
+            const savedSize = localStorage.getItem('pdfSize') || '1600';
             setPdfSize(parseInt(savedSize));
+            // Re-initialize PDF viewer on resize (mobile/desktop switch)
+            initPdfViewer();
         });
 
         // Revision History Toggle

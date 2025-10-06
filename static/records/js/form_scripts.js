@@ -403,13 +403,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // AI 검색 버튼 이벤트 리스너
     document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('ai-search-btn')) {
-            const target = e.target.dataset.target;
+        // SVG 내부를 클릭해도 버튼을 찾을 수 있도록 closest 사용
+        const button = e.target.closest('.ai-search-btn');
+        if (button) {
+            const target = button.dataset.target;
             currentAiSearchTarget = target;
 
-            // 검색어 준비 (고찰 내용 사용)
-            const smryField = document.getElementById('id_smry');
-            const searchQuery = smryField && smryField.value.trim() ? smryField.value.trim() : '';
+            console.log('AI 검색 버튼 클릭됨:', target); // 디버그 로그
+
+            // 검색어 준비
+            let searchQuery = '';
+            if (target === 'disease') {
+                // 질병: 고찰 내용 사용
+                const smryField = document.getElementById('id_smry');
+                searchQuery = smryField && smryField.value.trim() ? smryField.value.trim() : '';
+            } else if (target === 'job') {
+                // 직종: 현재 입력된 직종명 사용
+                const jobInput = document.getElementById('job_input');
+                searchQuery = jobInput && jobInput.value.trim() ? jobInput.value.trim() : '';
+            }
+
+            console.log('검색어:', searchQuery); // 디버그 로그
 
             // 팝업 창 열기
             let popupTitle = target === 'disease' ? 'D-ai: 질병 AI 검색' : 'J-ai: 직종 AI 검색';
@@ -423,13 +437,15 @@ document.addEventListener('DOMContentLoaded', function () {
         const params = new URLSearchParams({
             target: target,
             title: title,
-            query: initialQuery || ''
+            initial_query: initialQuery || ''
         });
         const popupUrl = `/epedit/ai-search-popup/?${params.toString()}`;
+        // job 타겟은 작은 창, disease는 큰 창
+        const windowSize = target === 'job' ? 'width=1000,height=800' : 'width=1400,height=900';
         const popup = window.open(
             popupUrl,
             'aiSearchPopup',
-            'width=900,height=700,scrollbars=yes,resizable=yes,menubar=no,toolbar=no,location=no,status=no'
+            `${windowSize},scrollbars=yes,resizable=yes,menubar=no,toolbar=no,location=no,status=no`
         );
 
         // 팝업에서 결과 선택시 처리할 함수를 전역으로 등록
@@ -508,8 +524,13 @@ document.addEventListener('DOMContentLoaded', function () {
             if (jobHidden) jobHidden.value = jobName;
 
             // 직종 코드 직접 설정 (AI 검색 결과의 코드 사용)
-            if (jobCodeDisplay) jobCodeDisplay.value = jobCode;
-            if (jobCodeHidden) jobCodeHidden.value = jobCode;
+            if (jobCodeDisplay) {
+                jobCodeDisplay.value = jobCode;
+                console.log('Job code set to:', jobCode);
+            }
+            if (jobCodeHidden) {
+                jobCodeHidden.value = jobCode;
+            }
 
             // 직종 태그 추가
             const jobTagsContainer = document.getElementById('job_tags');
@@ -530,8 +551,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 jobTagsContainer.appendChild(tagItem);
             }
 
-            // Dictionary에서 직종 코드도 함께 업데이트 (보조적으로)
-            updateJobCodeField(jobName);
+            // AI 검색에서 코드가 없을 때만 Dictionary 조회
+            if (!jobCode) {
+                updateJobCodeField(jobName);
+            }
         }
     }
 

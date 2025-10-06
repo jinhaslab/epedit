@@ -408,19 +408,30 @@ class RecordUpdateView(LoginRequiredMixin, UpdateView):
 
         # Job 처리
         job_name = self.request.POST.get('job', '').strip()
+        job_code = self.request.POST.get('job_code_display', '').strip()
+
         if job_name:
             from dictionaries.models import JobCodeOccupation
             try:
-                job_entry = JobCodeOccupation.objects.get(occupation=job_name)
+                # 코드가 있으면 코드와 이름으로 찾기 (더 정확함)
+                if job_code:
+                    job_entry = JobCodeOccupation.objects.get(job_code=job_code, occupation=job_name)
+                else:
+                    # 코드가 없으면 이름으로만 찾되, 가장 긴 코드 선택 (가장 구체적)
+                    job_entry = JobCodeOccupation.objects.filter(occupation=job_name).order_by('-job_code').first()
                 record_to_save.job = job_entry
             except JobCodeOccupation.DoesNotExist:
                 record_to_save.job = None
+            except JobCodeOccupation.MultipleObjectsReturned:
+                # 중복이 있으면 가장 긴 코드 선택
+                job_entry = JobCodeOccupation.objects.filter(occupation=job_name).order_by('-job_code').first()
+                record_to_save.job = job_entry
         else:
             record_to_save.job = None
 
         # 코드 필드 처리
         record_to_save.disease_code = self.request.POST.get('disease_code_display', '')
-        record_to_save.job_code = self.request.POST.get('job_code_display', '')
+        record_to_save.job_code = job_code
 
         # 추가 질병 필드 처리 (모듈화된 함수 사용)
         additional_disease_name, additional_disease_code, has_additional_changes = save_additional_disease_fields(
@@ -615,13 +626,32 @@ class DiseaseDictionaryListView(LoginRequiredMixin, ListView):
 @login_required
 def proxy_rag_search(request):
     """
-    RAG 검색 API 요청을 서버 측에서 처리하는 프록시 뷰
+    질병 RAG 검색 API 요청을 서버 측에서 처리하는 프록시 뷰
     """
     query = request.GET.get('query', '')
     if not query:
         return JsonResponse({'error': '쿼리가 제공되지 않았습니다.'}, status=400)
-    
-    rag_api_url = "https://sehnr.org/jobsearch/api/search/"
+
+    rag_api_url = "https://sehnr.org/ohsearch/kcdsearch/api/search/"
+    try:
+        # 서버에서 직접 외부 API 호출 (중분류 level=2만 검색)
+        response = requests.get(rag_api_url, params={'query': query, 'level': 2})
+        response.raise_for_status() # HTTP 오류가 발생하면 예외를 발생시킵니다.
+        data = response.json()
+        return JsonResponse(data)
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({'error': f"프록시 검색 중 오류 발생: {str(e)}"}, status=500)
+
+@login_required
+def proxy_job_rag_search(request):
+    """
+    직종 RAG 검색 API 요청을 서버 측에서 처리하는 프록시 뷰
+    """
+    query = request.GET.get('query', '')
+    if not query:
+        return JsonResponse({'error': '쿼리가 제공되지 않았습니다.'}, status=400)
+
+    rag_api_url = "https://sehnr.org/ohsearch/job7thsearch/api/search/"
     try:
         # 서버에서 직접 외부 API 호출
         response = requests.get(rag_api_url, params={'query': query})
@@ -635,12 +665,12 @@ def ai_search_popup(request):
     """AI 검색 팝업 페이지 (로그인 불필요)"""
     target = request.GET.get('target', 'disease')
     title = request.GET.get('title', 'AI 검색')
-    query = request.GET.get('query', '')
+    initial_query = request.GET.get('initial_query', '')
 
     context = {
         'target': target,
         'title': title,
-        'initial_query': query
+        'initial_query': initial_query
     }
     return render(request, 'records/ai_search_popup.html', context)
 
