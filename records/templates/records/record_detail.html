@@ -185,29 +185,80 @@
         .revision-summary { font-size: 14px; font-weight: 500; margin-bottom: 5px; }
         .revision-fields { font-size: 13px; color: var(--text-secondary-color); }
 
+        /* PDF Toggle Button for Mobile */
+        .pdf-toggle-btn {
+            display: none;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background-color: var(--yonsei-blue);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-bottom: 16px;
+            width: 100%;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .pdf-toggle-btn:hover {
+            background-color: #002c5f;
+        }
+
         /* --- Responsive Design --- */
         @media (max-width: 1200px) {
             .main-container {
                 grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr;
                 height: auto;
+                min-height: 100vh;
                 padding: 16px;
+                box-sizing: border-box;
             }
+
             .pdf-section {
-                height: 70vh; /* Give PDF viewer a fixed height on smaller screens */
+                position: relative;
+                height: 60vh;
+                min-height: 400px;
                 margin-bottom: 24px;
+                order: 1;
             }
+
+            .pdf-section.hidden {
+                display: none;
+            }
+
             .content-container {
+                order: 2;
+                height: auto;
                 overflow-y: visible;
             }
+
+            .pdf-toggle-btn {
+                display: block;
+            }
+
+            body {
+                height: auto;
+                overflow: auto;
+            }
         }
+
         @media (max-width: 576px) {
-            .content-container { padding: 0; }
-            .container { padding: 16px; }
-            .page-header h1 { font-size: 22px; }
+            .main-container { padding: 12px; }
+            .container { padding: 16px; margin-bottom: 16px; }
+            .page-header h1 { font-size: 20px; padding: 6px 12px; }
             .data-table { font-size: 13px; }
             .data-table th, .data-table td { padding: 10px 8px; }
+            .data-table tbody th { width: 25%; }
             .actions { display: flex; flex-direction: column; gap: 10px; }
             .btn { width: 100%; margin: 0; box-sizing: border-box; }
+            .pdf-section { height: 50vh; min-height: 300px; }
         }
 
     </style>
@@ -224,6 +275,8 @@
             </div>
         </div>
         <div class="content-container">
+            <button class="pdf-toggle-btn" id="pdfToggleBtn">📄 PDF 보기/숨기기</button>
+
             <div class="page-header">
                 <h1>상세 정보: {{ record.case.fid }}</h1>
             </div>
@@ -358,7 +411,32 @@
     {% csrf_token %}
 
     <script>
-    // All reset-related JavaScript has been removed.
+    document.addEventListener('DOMContentLoaded', function() {
+        const pdfToggleBtn = document.getElementById('pdfToggleBtn');
+        const pdfSection = document.querySelector('.pdf-section');
+
+        if (pdfToggleBtn && pdfSection) {
+            // Load saved state from localStorage
+            const pdfHidden = localStorage.getItem('pdfHidden') === 'true';
+            if (pdfHidden) {
+                pdfSection.classList.add('hidden');
+                pdfToggleBtn.textContent = '📄 PDF 보기';
+            }
+
+            pdfToggleBtn.addEventListener('click', function() {
+                pdfSection.classList.toggle('hidden');
+                const isHidden = pdfSection.classList.contains('hidden');
+
+                if (isHidden) {
+                    pdfToggleBtn.textContent = '📄 PDF 보기';
+                    localStorage.setItem('pdfHidden', 'true');
+                } else {
+                    pdfToggleBtn.textContent = '📄 PDF 숨기기';
+                    localStorage.setItem('pdfHidden', 'false');
+                }
+            });
+        }
+    });
     </script>
 </body>
 </html>

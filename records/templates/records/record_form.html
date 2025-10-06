@@ -103,7 +103,79 @@
         .modal-header .close { color: white; opacity: 0.9; }
         .modal-body { max-height: 60vh; overflow-y: auto; }
 
-        @media (max-width: 1200px) { .main-wrapper { grid-template-columns: 1fr; } .pdf-section { display: none; } .form-content { height: auto; } }
+        /* PDF Toggle Button for Mobile */
+        .pdf-toggle-btn {
+            display: none;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background-color: var(--yonsei-blue);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-bottom: 16px;
+            width: 100%;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .pdf-toggle-btn:hover {
+            background-color: #002c5f;
+        }
+
+        @media (max-width: 1200px) {
+            .main-wrapper {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr;
+            }
+
+            .pdf-section {
+                position: relative;
+                height: 60vh;
+                min-height: 400px;
+                margin-bottom: 24px;
+                order: 1;
+            }
+
+            .pdf-section.hidden {
+                display: none;
+            }
+
+            .form-content {
+                order: 2;
+                height: auto;
+                overflow-y: visible;
+            }
+
+            .pdf-toggle-btn {
+                display: block;
+            }
+
+            body {
+                height: auto;
+                overflow: auto;
+            }
+
+            .resizer {
+                display: none;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .form-content { padding: 16px; }
+            .form-section { padding: 16px; margin-bottom: 16px; }
+            .form-content h1 { font-size: 20px; padding: 6px 12px; }
+            .comparison-table { font-size: 13px; }
+            .comparison-table th, .comparison-table td { padding: 10px 8px; }
+            .action-buttons { display: flex; flex-direction: column-reverse; gap: 10px; }
+            .btn { width: 100%; margin: 0; box-sizing: border-box; }
+            .pdf-section { height: 50vh; min-height: 300px; }
+        }
     </style>
 </head>
 <body>
@@ -120,6 +192,8 @@
         </div>
 
         <div class="form-content">
+            <button class="pdf-toggle-btn" id="pdfToggleBtn" type="button">📄 PDF 보기/숨기기</button>
+
             <h1>기록 수정: {{ record.case.fid }}</h1>
             <form method="post" action="{% url 'record_edit' record.pk %}?{{ other_params }}">
                 {% csrf_token %}
@@ -170,34 +244,63 @@
     
     <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Resizer Logic
+        // PDF Toggle for Mobile
+        const pdfToggleBtn = document.getElementById('pdfToggleBtn');
+        const pdfSection = document.querySelector('.pdf-section');
+
+        if (pdfToggleBtn && pdfSection) {
+            // Load saved state from localStorage
+            const pdfHidden = localStorage.getItem('pdfHidden') === 'true';
+            if (pdfHidden) {
+                pdfSection.classList.add('hidden');
+                pdfToggleBtn.textContent = '📄 PDF 보기';
+            }
+
+            pdfToggleBtn.addEventListener('click', function() {
+                pdfSection.classList.toggle('hidden');
+                const isHidden = pdfSection.classList.contains('hidden');
+
+                if (isHidden) {
+                    pdfToggleBtn.textContent = '📄 PDF 보기';
+                    localStorage.setItem('pdfHidden', 'true');
+                } else {
+                    pdfToggleBtn.textContent = '📄 PDF 숨기기';
+                    localStorage.setItem('pdfHidden', 'false');
+                }
+            });
+        }
+
+        // Resizer Logic (Desktop only)
         const resizer = document.getElementById('resizer');
         const mainWrapper = document.querySelector('.main-wrapper');
-        let isResizing = false;
 
-        resizer.addEventListener('mousedown', function (e) {
-            isResizing = true;
-            resizer.classList.add('active');
-            document.addEventListener('mousemove', handleMouseMove);
-            document.addEventListener('mouseup', function () {
-                isResizing = false;
-                resizer.classList.remove('active');
-                document.removeEventListener('mousemove', handleMouseMove);
+        if (resizer && window.innerWidth > 1200) {
+            let isResizing = false;
+
+            resizer.addEventListener('mousedown', function (e) {
+                isResizing = true;
+                resizer.classList.add('active');
+                document.addEventListener('mousemove', handleMouseMove);
+                document.addEventListener('mouseup', function () {
+                    isResizing = false;
+                    resizer.classList.remove('active');
+                    document.removeEventListener('mousemove', handleMouseMove);
+                });
             });
-        });
 
-        function handleMouseMove(e) {
-            if (!isResizing) return;
-            const containerRect = mainWrapper.getBoundingClientRect();
-            let newPdfWidth = e.clientX - containerRect.left;
-            
-            const minPdfWidth = 300;
-            const minContentWidth = 400;
-            if (newPdfWidth < minPdfWidth) newPdfWidth = minPdfWidth;
-            if (newPdfWidth > containerRect.width - minContentWidth) {
-                newPdfWidth = containerRect.width - minContentWidth;
+            function handleMouseMove(e) {
+                if (!isResizing) return;
+                const containerRect = mainWrapper.getBoundingClientRect();
+                let newPdfWidth = e.clientX - containerRect.left;
+
+                const minPdfWidth = 300;
+                const minContentWidth = 400;
+                if (newPdfWidth < minPdfWidth) newPdfWidth = minPdfWidth;
+                if (newPdfWidth > containerRect.width - minContentWidth) {
+                    newPdfWidth = containerRect.width - minContentWidth;
+                }
+                mainWrapper.style.gridTemplateColumns = `${newPdfWidth}px 1fr`;
             }
-            mainWrapper.style.gridTemplateColumns = `${newPdfWidth}px 1fr`;
         }
     });
     </script>

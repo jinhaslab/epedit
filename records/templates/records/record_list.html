@@ -69,24 +69,84 @@
             display: flex;
             flex-grow: 1;
             overflow: hidden;
+            position: relative;
         }
 
         .sidebar {
+            position: fixed;
+            left: 0;
+            top: 58px; /* Below header */
             width: var(--sidebar-width);
-            height: 100%;
+            height: calc(100vh - 58px);
             background-color: var(--card-background);
-            border-right: 1px solid var(--border-color);
-            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 4px 0 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
             overflow-y: auto;
-            flex-shrink: 0;
+            z-index: 1000;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
         }
 
         .main-content {
             flex-grow: 1;
             padding: 20px 40px 40px 40px;
             overflow-y: auto;
+            width: 100%;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Floating toggle button */
+        .floating-menu-toggle {
+            position: fixed;
+            left: 20px;
+            bottom: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--yonsei-blue) 0%, var(--header-gradient-end) 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 6px 20px rgba(0,56,118,0.3);
+            cursor: pointer;
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .floating-menu-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(0,56,118,0.4);
+        }
+
+        .floating-menu-toggle:active {
+            transform: scale(0.95);
+        }
+
+        /* Overlay for mobile */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 999;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
         }
 
         /* --- Sidebar --- */
@@ -170,67 +230,65 @@
         .suggestion-item:last-child { border-bottom: none; }
         .suggestion-item:hover { background-color: #f0f0f0; }
 
-        /* --- Mobile Sidebar Toggle --- */
-        .mobile-sidebar-toggle {
-            display: none;
-            background-color: var(--accent-green);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: 500;
-            cursor: pointer;
-            margin-bottom: 20px;
-            width: 100%;
-            text-align: left;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .mobile-sidebar-toggle:hover {
-            background-color: #1B5E20;
-        }
-
-        .mobile-sidebar-toggle .toggle-icon {
-            display: inline-block;
-            margin-right: 8px;
-            transition: transform 0.3s ease;
-        }
-
-        .mobile-sidebar-toggle.collapsed .toggle-icon {
-            transform: rotate(-90deg);
-        }
-
         /* --- Responsive Design --- */
-        @media (max-width: 992px) { .filter-row { flex-direction: column; align-items: stretch; } .filter-actions { margin-left: 0; margin-top: 15px; } .record-item { flex-direction: column; align-items: flex-start; gap: 15px; } .record-actions { padding-left: 0; width: 100%; justify-content: space-between; } }
+        @media (max-width: 992px) {
+            .filter-row { flex-direction: column; align-items: stretch; }
+            .filter-actions { margin-left: 0; margin-top: 15px; }
+            .record-item { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .record-actions { padding-left: 0; width: 100%; justify-content: space-between; }
+
+            /* Start collapsed on medium screens */
+            .sidebar { transform: translateX(-100%); }
+            .floating-menu-toggle { display: flex; }
+        }
         @media (max-width: 768px) {
-            .mobile-sidebar-toggle { display: block; }
             .main-content { padding: 20px; }
             .yonsei-header h1 { font-size: 18px; }
-            .dashboard-layout { flex-direction: column; }
+
+            /* Mobile adjustments */
             .sidebar {
-                width: 100%;
-                height: auto;
-                border-right: none;
-                border-bottom: 1px solid var(--border-color);
-                max-height: 1000px;
-                overflow: hidden;
-                transition: max-height 0.4s ease, opacity 0.4s ease, margin-bottom 0.4s ease;
-                opacity: 1;
-                margin-bottom: 0;
+                width: 85%;
+                max-width: 320px;
             }
-            .sidebar.mobile-collapsed {
-                max-height: 0;
-                opacity: 0;
-                margin-bottom: -1px;
-                border-bottom: none;
+
+            .floating-menu-toggle {
+                width: 56px;
+                height: 56px;
+                font-size: 22px;
+                left: 16px;
+                bottom: 24px;
             }
         }
-        @media (max-width: 576px) { .filter-group { align-items: stretch; } .range-filter { flex-direction: column; align-items: stretch; gap: 10px; } .range-filter input { max-width: none; } }
+        @media (max-width: 576px) {
+            .filter-group { align-items: stretch; }
+            .range-filter { flex-direction: column; align-items: stretch; gap: 10px; }
+            .range-filter input { max-width: none; }
+
+            .floating-menu-toggle {
+                width: 52px;
+                height: 52px;
+                font-size: 20px;
+                left: 12px;
+                bottom: 20px;
+            }
+        }
+
+        /* Desktop: hide floating button, show sidebar by default */
+        @media (min-width: 993px) {
+            .floating-menu-toggle { display: none; }
+            .sidebar-overlay { display: none !important; }
+        }
     </style>
 </head>
 <body>
+    <!-- Sidebar overlay (for mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Floating menu toggle button -->
+    <button class="floating-menu-toggle" id="floatingMenuToggle" title="메뉴 열기/닫기">
+        ☰
+    </button>
+
     <header class="yonsei-header">
         <h1><a href="{% url 'record_list' %}">연세대학교 역학조사 DB 대시보드</a></h1>
     </header>
@@ -267,10 +325,6 @@
         </aside>
 
         <main class="main-content">
-            <button class="mobile-sidebar-toggle" id="mobile-sidebar-toggle">
-                <span class="toggle-icon">▼</span>
-                <span class="toggle-text">사이드바 숨기기</span>
-            </button>
             <h2>사건 기록 필터</h2>
             <div class="filter-form">
                 <form method="get" id="filterForm">
@@ -341,34 +395,75 @@
                 });
             }
 
-            // 데스크탑 사이드바 토글
-            const sidebar = document.getElementById('sidebar'), toggleButton = document.getElementById('sidebar-toggle');
-            if (toggleButton) {
-                toggleButton.addEventListener('click',()=>sidebar.classList.toggle('collapsed'));
+            // 떠다니는 고정 메뉴 (Floating Fixed Menu)
+            const sidebar = document.getElementById('sidebar');
+            const floatingToggle = document.getElementById('floatingMenuToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            const sidebarToggleBtn = document.getElementById('sidebar-toggle');
+
+            // Load saved state from localStorage
+            const savedSidebarState = localStorage.getItem('sidebarCollapsed');
+            if (savedSidebarState === 'true' && window.innerWidth > 992) {
+                sidebar.classList.add('collapsed');
             }
 
-            // 모바일 사이드바 토글
-            const mobileSidebarToggle = document.getElementById('mobile-sidebar-toggle');
-            if (mobileSidebarToggle) {
-                // localStorage에서 상태 불러오기
-                const savedState = localStorage.getItem('mobileSidebarCollapsed');
-                if (savedState === 'true') {
-                    sidebar.classList.add('mobile-collapsed');
-                    mobileSidebarToggle.classList.add('collapsed');
-                    mobileSidebarToggle.querySelector('.toggle-text').textContent = '사이드바 보기';
-                }
+            // Floating toggle button click
+            if (floatingToggle) {
+                floatingToggle.addEventListener('click', function() {
+                    const isCollapsed = sidebar.classList.contains('collapsed');
 
-                mobileSidebarToggle.addEventListener('click', function() {
-                    sidebar.classList.toggle('mobile-collapsed');
-                    this.classList.toggle('collapsed');
+                    if (isCollapsed) {
+                        sidebar.classList.remove('collapsed');
+                        sidebarOverlay.classList.add('active');
+                    } else {
+                        sidebar.classList.add('collapsed');
+                        sidebarOverlay.classList.remove('active');
+                    }
 
-                    const isCollapsed = sidebar.classList.contains('mobile-collapsed');
-                    this.querySelector('.toggle-text').textContent = isCollapsed ? '사이드바 보기' : '사이드바 숨기기';
-
-                    // localStorage에 상태 저장
-                    localStorage.setItem('mobileSidebarCollapsed', isCollapsed);
+                    // Save state to localStorage
+                    localStorage.setItem('sidebarCollapsed', !isCollapsed);
                 });
             }
+
+            // Sidebar header toggle button (inside sidebar)
+            if (sidebarToggleBtn) {
+                sidebarToggleBtn.addEventListener('click', function() {
+                    sidebar.classList.add('collapsed');
+                    sidebarOverlay.classList.remove('active');
+                    localStorage.setItem('sidebarCollapsed', 'true');
+                });
+            }
+
+            // Overlay click to close sidebar
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', function() {
+                    sidebar.classList.add('collapsed');
+                    sidebarOverlay.classList.remove('active');
+                    localStorage.setItem('sidebarCollapsed', 'true');
+                });
+            }
+
+            // Handle window resize
+            let resizeTimer;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(function() {
+                    if (window.innerWidth > 992) {
+                        // Desktop: restore saved state
+                        const saved = localStorage.getItem('sidebarCollapsed');
+                        if (saved === 'true') {
+                            sidebar.classList.add('collapsed');
+                        } else {
+                            sidebar.classList.remove('collapsed');
+                        }
+                        sidebarOverlay.classList.remove('active');
+                    } else {
+                        // Mobile/tablet: start collapsed
+                        sidebar.classList.add('collapsed');
+                        sidebarOverlay.classList.remove('active');
+                    }
+                }, 250);
+            });
 
             // 요약 팝업
             const summaryPopup = document.getElementById("summaryPopup"); if (summaryPopup) { const summaryPopupContent = summaryPopup.querySelector(".summary-popup-content"); document.querySelectorAll(".summary-trigger").forEach(trigger => { trigger.addEventListener("mouseenter", function(event) { summaryPopupContent.textContent = this.dataset.fullText; const rect = this.getBoundingClientRect(); summaryPopup.style.left = `${rect.left + window.scrollX}px`; summaryPopup.style.top = `${rect.bottom + window.scrollY + 5}px`; summaryPopup.style.display = "block"; }); trigger.addEventListener("mouseleave", function() { summaryPopup.style.display = "none"; }); }); } function debounce(func, delay) { let timeout; return function(...args) { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), delay); }; } function setupAutocomplete(inputId, suggestionsId, tagsId, hiddenInputId) { const inputEl = document.getElementById(inputId), suggestionsEl = document.getElementById(suggestionsId), tagsEl = document.getElementById(tagsId), hiddenInputEl = document.getElementById(hiddenInputId); if (!inputEl) return; let selectedTags = new Set(hiddenInputEl.value.split(',').filter(Boolean)); const updateHiddenInput = () => { hiddenInputEl.value = Array.from(selectedTags).join(','); }; const renderTags = () => { tagsEl.innerHTML = ''; selectedTags.forEach(tagText => { const tagItem = document.createElement("div"); tagItem.className = "tag-item"; tagItem.textContent = tagText; const closeButton = document.createElement("span"); closeButton.className = "tag-close"; closeButton.textContent = "×"; closeButton.onclick = (e) => { e.stopPropagation(); selectedTags.delete(tagText); renderTags(); updateHiddenInput(); }; tagItem.appendChild(closeButton); tagsEl.appendChild(tagItem); }); }; const addTag = (suggestion) => { if (!selectedTags.has(suggestion)) { selectedTags.add(suggestion); renderTags(); updateHiddenInput(); } inputEl.value = ''; suggestionsEl.classList.remove("active"); }; const fetchSuggestions = async (query) => { const fieldName = inputEl.dataset.fieldName; try { const response = await fetch(`{% url 'autocomplete_suggestions' %}?field_name=${fieldName}&q=${encodeURIComponent(query)}`), data = await response.json(); suggestionsEl.innerHTML = ""; if (data.suggestions.length > 0) { data.suggestions.forEach((suggestion) => { const item = document.createElement("div"); item.className = "suggestion-item"; item.textContent = suggestion.name; item.addEventListener('mousedown', () => addTag(suggestion.name)); suggestionsEl.appendChild(item); }); suggestionsEl.classList.add("active"); } else { suggestionsEl.classList.remove("active"); } } catch (error) { console.error("Error fetching suggestions:", error); } }; const debouncedFetch = debounce(fetchSuggestions, 300); inputEl.addEventListener('input', () => debouncedFetch(inputEl.value)); inputEl.addEventListener('focus', () => fetchSuggestions(inputEl.value)); inputEl.addEventListener('blur', () => { setTimeout(() => suggestionsEl.classList.remove("active"), 150); }); renderTags(); } setupAutocomplete("disease_name_input", "disease_name_suggestions", "disease_name_tags", "disease_name_hidden"); setupAutocomplete("job_input", "job_suggestions", "job_tags", "job_hidden");
