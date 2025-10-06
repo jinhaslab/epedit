@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy, reverse
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.db.models.functions import Substr, Cast
@@ -14,7 +14,7 @@ import requests
 
 # 👇 필요한 모델들을 import 합니다.
 from dictionaries.models import DiseaseDictionaryEntry, JobCodeOccupation, ExposureDictionary
-from .models import DiseaseRecord, Case
+from .models import DiseaseRecord, Case, Assignee
 from .forms import DiseaseRecordForm
 from .utils.disease_field_handler import (
     get_additional_disease_context,
@@ -76,6 +76,22 @@ def get_unique_field_values(request):
         # 4. 합치기 + 중복 제거 + 정렬
         all_jobs = sorted(set(dict_results) | set(modified_results) | set(unmodified_results))[:20]
         suggestions = [{'id': idx, 'name': name} for idx, name in enumerate(all_jobs)]
+
+    elif field_name == 'disease_code':
+        # 질병 코드로 검색 (코드로 시작하는 것 우선)
+        dict_results = DiseaseDictionaryEntry.objects.filter(
+            disease_code__istartswith=query
+        ).values('disease_code', 'disease_name')[:20]
+        suggestions = [{'id': idx, 'code': r['disease_code'], 'name': r['disease_name']}
+                      for idx, r in enumerate(dict_results)]
+
+    elif field_name == 'job_code':
+        # 직종 코드로 검색 (코드로 시작하는 것 우선)
+        dict_results = JobCodeOccupation.objects.filter(
+            job_code__istartswith=query
+        ).values('job_code', 'occupation')[:20]
+        suggestions = [{'id': idx, 'code': r['job_code'], 'name': r['occupation']}
+                      for idx, r in enumerate(dict_results)]
 
     elif field_name == 'exposure':
         results = ExposureDictionary.objects.filter(name__icontains=query)[:20]
@@ -215,6 +231,34 @@ class RecordListView(LoginRequiredMixin, ListView):
             for field in selected_changed_fields:
                 queryset = queryset.filter(changed_fields__icontains=field)
 
+        # 📊 사전 매칭 필터 추가
+        show_unmapped_disease = self.request.GET.get('unmapped_disease') == 'on'
+        show_unmapped_job = self.request.GET.get('unmapped_job') == 'on'
+        show_unmapped_exposure = self.request.GET.get('unmapped_exposure') == 'on'
+
+        if show_unmapped_disease:
+            queryset = queryset.filter(
+                Q(original_disease_name__isnull=False) &
+                ~Q(original_disease_name='') &
+                Q(disease__isnull=True)
+            )
+
+        if show_unmapped_job:
+            queryset = queryset.filter(
+                Q(original_job__isnull=False) &
+                ~Q(original_job='') &
+                Q(job__isnull=True)
+            )
+
+        if show_unmapped_exposure:
+            # ManyToMany 필드는 별도 처리
+            queryset = queryset.filter(
+                Q(original_exposure__isnull=False) &
+                ~Q(original_exposure='')
+            ).annotate(
+                exposure_count=Count('exposure')
+            ).filter(exposure_count=0)
+
         sort_by = self.request.GET.get('sort', '-created_at')
         order = self.request.GET.get('order', 'desc')
         
@@ -248,6 +292,30 @@ class RecordListView(LoginRequiredMixin, ListView):
         context['ids_to'] = self.request.GET.get('ids_to', '')
         context['selected_changed_fields'] = self.request.GET.getlist('changed_fields')
         context['fname'] = self.request.GET.get('fname', '')
+
+        # 📊 사전 매칭 통계 추가
+        context['total_records'] = DiseaseRecord.objects.count()
+        context['unmapped_disease_count'] = DiseaseRecord.objects.filter(
+            Q(original_disease_name__isnull=False) &
+            ~Q(original_disease_name='') &
+            Q(disease__isnull=True)
+        ).count()
+        context['unmapped_job_count'] = DiseaseRecord.objects.filter(
+            Q(original_job__isnull=False) &
+            ~Q(original_job='') &
+            Q(job__isnull=True)
+        ).count()
+        context['unmapped_exposure_count'] = DiseaseRecord.objects.filter(
+            Q(original_exposure__isnull=False) &
+            ~Q(original_exposure='')
+        ).annotate(
+            exposure_count=Count('exposure')
+        ).filter(exposure_count=0).count()
+
+        # 필터 체크 상태
+        context['show_unmapped_disease'] = self.request.GET.get('unmapped_disease') == 'on'
+        context['show_unmapped_job'] = self.request.GET.get('unmapped_job') == 'on'
+        context['show_unmapped_exposure'] = self.request.GET.get('unmapped_exposure') == 'on'
 
         return context
 
@@ -394,15 +462,23 @@ class RecordUpdateView(LoginRequiredMixin, UpdateView):
         before_values = {}
         after_values = {}
 
-        # Disease 처리
+        # Disease 처리 - disease_code로 검색
         disease_name = self.request.POST.get('disease', '').strip()
-        if disease_name:
+        disease_code_from_form = self.request.POST.get('disease_code_display', '').strip()
+
+        if disease_code_from_form:
+            # 코드가 있으면 코드로 찾기 (가장 정확함)
             from dictionaries.models import DiseaseDictionaryEntry
-            try:
-                disease_entry = DiseaseDictionaryEntry.objects.get(disease_name=disease_name)
-                record_to_save.disease = disease_entry
-            except DiseaseDictionaryEntry.DoesNotExist:
-                record_to_save.disease = None
+            disease_entry = DiseaseDictionaryEntry.objects.filter(disease_code=disease_code_from_form).first()
+            record_to_save.disease = disease_entry
+        elif disease_name:
+            # 코드가 없으면 이름으로 찾기 (backward compatibility)
+            from dictionaries.models import DiseaseDictionaryEntry
+            # [코드] 형식의 이름도 검색 - exact match 우선, 없으면 contains
+            disease_entry = DiseaseDictionaryEntry.objects.filter(disease_name=disease_name).first()
+            if not disease_entry:
+                disease_entry = DiseaseDictionaryEntry.objects.filter(disease_name__contains=disease_name).first()
+            record_to_save.disease = disease_entry
         else:
             record_to_save.disease = None
 
@@ -430,7 +506,7 @@ class RecordUpdateView(LoginRequiredMixin, UpdateView):
             record_to_save.job = None
 
         # 코드 필드 처리
-        record_to_save.disease_code = self.request.POST.get('disease_code_display', '')
+        record_to_save.disease_code = disease_code_from_form
         record_to_save.job_code = job_code
 
         # 추가 질병 필드 처리 (모듈화된 함수 사용)
@@ -634,8 +710,8 @@ def proxy_rag_search(request):
 
     rag_api_url = "https://sehnr.org/ohsearch/kcdsearch/api/search/"
     try:
-        # 서버에서 직접 외부 API 호출 (중분류 level=2만 검색)
-        response = requests.get(rag_api_url, params={'query': query, 'level': 2})
+        # 서버에서 직접 외부 API 호출 (전체 17,395개 코드 검색)
+        response = requests.get(rag_api_url, params={'query': query})
         response.raise_for_status() # HTTP 오류가 발생하면 예외를 발생시킵니다.
         data = response.json()
         return JsonResponse(data)
@@ -716,3 +792,289 @@ def reset_record(request, pk):
 
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+# -----------------------------------------------------------
+# 🤖 자동 적용 (RAG 매칭) API
+# -----------------------------------------------------------
+@login_required
+def auto_apply_disease(request, pk):
+    """RAG API로 질병 자동 매칭"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'POST 메서드만 허용됩니다.'}, status=405)
+
+    try:
+        record = get_object_or_404(DiseaseRecord, pk=pk)
+        data = json.loads(request.body)
+        disease_name = data.get('disease_name', '').strip()
+
+        if not disease_name:
+            return JsonResponse({'success': False, 'error': '질병명이 없습니다'})
+
+        # RAG API 호출 (전체 17,395개 코드 검색)
+        rag_response = requests.get(
+            'https://sehnr.org/ohsearch/kcdsearch/api/search/',
+            params={'query': disease_name},
+            timeout=10
+        )
+        rag_response.raise_for_status()
+        results = rag_response.json().get('results', [])
+
+        if not results or len(results) == 0:
+            return JsonResponse({'success': False, 'error': '검색 결과 없음'})
+
+        # 가장 높은 score 결과
+        best_match = results[0]
+        matched_code = best_match['code']
+        matched_name = best_match['name']
+        matched_score = best_match['score']
+
+        # DiseaseDictionaryEntry 찾기
+        disease_entry = DiseaseDictionaryEntry.objects.filter(disease_code=matched_code).first()
+
+        if not disease_entry:
+            return JsonResponse({
+                'success': False,
+                'error': f'코드 {matched_code}가 사전에 없습니다'
+            })
+
+        # 레코드 업데이트
+        record.disease = disease_entry
+        record.disease_code = matched_code
+        record.last_modified_by = request.user
+        record.save()
+
+        return JsonResponse({
+            'success': True,
+            'matched_code': matched_code,
+            'matched_name': matched_name,
+            'score': matched_score
+        })
+
+    except DiseaseRecord.DoesNotExist:
+        return JsonResponse({'success': False, 'error': '레코드를 찾을 수 없습니다'}, status=404)
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({'success': False, 'error': f'API 호출 오류: {str(e)}'}, status=500)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+def auto_apply_job(request, pk):
+    """RAG API로 직종 자동 매칭"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'POST 메서드만 허용됩니다.'}, status=405)
+
+    try:
+        record = get_object_or_404(DiseaseRecord, pk=pk)
+        data = json.loads(request.body)
+        job_name = data.get('job_name', '').strip()
+
+        if not job_name:
+            return JsonResponse({'success': False, 'error': '직종명이 없습니다'})
+
+        # RAG API 호출
+        rag_response = requests.get(
+            'https://sehnr.org/ohsearch/job7thsearch/api/search/',
+            params={'query': job_name},
+            timeout=10
+        )
+        rag_response.raise_for_status()
+        results = rag_response.json().get('results', [])
+
+        if not results or len(results) == 0:
+            return JsonResponse({'success': False, 'error': '검색 결과 없음'})
+
+        # 가장 높은 score 결과
+        best_match = results[0]
+        matched_code = best_match['code']
+        matched_name = best_match['name']
+        matched_score = best_match['score']
+
+        # JobCodeOccupation 찾기
+        job_entry = JobCodeOccupation.objects.filter(
+            job_code=matched_code,
+            occupation=matched_name
+        ).first()
+
+        if not job_entry:
+            return JsonResponse({
+                'success': False,
+                'error': f'코드 {matched_code} ({matched_name})가 사전에 없습니다'
+            })
+
+        # 레코드 업데이트
+        record.job = job_entry
+        record.job_code = matched_code
+        record.last_modified_by = request.user
+        record.save()
+
+        return JsonResponse({
+            'success': True,
+            'matched_code': matched_code,
+            'matched_name': matched_name,
+            'score': matched_score
+        })
+
+    except DiseaseRecord.DoesNotExist:
+        return JsonResponse({'success': False, 'error': '레코드를 찾을 수 없습니다'}, status=404)
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({'success': False, 'error': f'API 호출 오류: {str(e)}'}, status=500)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+# -----------------------------------------------------------
+# 담당자 관리 뷰
+# -----------------------------------------------------------
+@login_required
+def assignee_list(request):
+    """담당자 목록 및 설정 페이지"""
+    assignees = Assignee.objects.all().order_by('ids_from')
+    return render(request, 'records/assignee_settings.html', {'assignees': assignees})
+
+
+@login_required
+def assignee_create(request):
+    """담당자 생성"""
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        ids_from = request.POST.get('ids_from')
+        ids_to = request.POST.get('ids_to')
+        color = request.POST.get('color', '#2196F3')
+
+        Assignee.objects.create(
+            name=name,
+            ids_from=int(ids_from),
+            ids_to=int(ids_to),
+            color=color
+        )
+        return redirect('assignee_list')
+    return redirect('assignee_list')
+
+
+@login_required
+def assignee_update(request, pk):
+    """담당자 수정"""
+    assignee = get_object_or_404(Assignee, pk=pk)
+
+    if request.method == 'POST':
+        assignee.name = request.POST.get('name')
+        assignee.ids_from = int(request.POST.get('ids_from'))
+        assignee.ids_to = int(request.POST.get('ids_to'))
+        assignee.color = request.POST.get('color')
+        assignee.is_active = request.POST.get('is_active') == 'on'
+        assignee.save()
+        return redirect('assignee_list')
+
+    return redirect('assignee_list')
+
+
+@login_required
+def assignee_delete(request, pk):
+    """담당자 삭제"""
+    assignee = get_object_or_404(Assignee, pk=pk)
+    if request.method == 'POST':
+        assignee.delete()
+    return redirect('assignee_list')
+
+
+@login_required
+def assignee_records(request, pk):
+    """특정 담당자의 레코드 목록"""
+    assignee = get_object_or_404(Assignee, pk=pk)
+
+    # IDS 범위로 필터링
+    records = DiseaseRecord.objects.annotate(
+        ids_as_int=Cast('ids', output_field=IntegerField())
+    ).filter(
+        ids_as_int__gte=assignee.ids_from,
+        ids_as_int__lte=assignee.ids_to
+    ).select_related('disease', 'job', 'case').prefetch_related('exposure')
+
+    # 기존 필터링 로직 적용
+    fname = request.GET.get('fname', '').strip()
+    if fname:
+        records = records.filter(fname__icontains=fname)
+
+    search_query = request.GET.get('search', '').strip()
+    if search_query:
+        records = records.filter(
+            Q(ids__icontains=search_query) |
+            Q(fname__icontains=search_query) |
+            Q(disease__disease_name__icontains=search_query) |
+            Q(original_disease_name__icontains=search_query)
+        )
+
+    disease_filter = request.GET.get('disease_name', '').strip()
+    if disease_filter:
+        records = records.filter(
+            Q(disease__disease_name__icontains=disease_filter) |
+            Q(original_disease_name__icontains=disease_filter)
+        )
+
+    job_filter = request.GET.get('job_name', '').strip()
+    if job_filter:
+        records = records.filter(
+            Q(job__occupation_name__icontains=job_filter) |
+            Q(original_job_name__icontains=job_filter)
+        )
+
+    exposure_filter = request.GET.get('exposure_name', '').strip()
+    if exposure_filter:
+        records = records.filter(
+            Q(exposure__name__icontains=exposure_filter) |
+            Q(original_exposure__icontains=exposure_filter)
+        )
+
+    # 확인 상태 필터
+    confirmed_only = request.GET.get('confirmed_only', '')
+    if confirmed_only == 'true':
+        records = records.filter(
+            disease_confirmed=True,
+            job_confirmed=True,
+            exposure_confirmed=True,
+            decision_confirmed=True,
+            smry_confirmed=True
+        )
+
+    records = records.order_by('ids')
+
+    context = {
+        'records': records,
+        'total_count': records.count(),
+        'assignee': assignee,
+        'fname': fname,
+        'search_query': search_query,
+        'disease_filter': disease_filter,
+        'job_filter': job_filter,
+        'exposure_filter': exposure_filter,
+        'confirmed_only': confirmed_only,
+    }
+
+    return render(request, 'records/assignee_records.html', context)
+
+
+@login_required
+def progress_dashboard(request):
+    """진행률 대시보드"""
+    assignees = Assignee.objects.filter(is_active=True).order_by('ids_from')
+
+    # 전체 통계
+    total_records = DiseaseRecord.objects.count()
+    completed_records = DiseaseRecord.objects.filter(
+        disease_confirmed=True,
+        job_confirmed=True,
+        exposure_confirmed=True,
+        decision_confirmed=True,
+        smry_confirmed=True
+    ).count()
+
+    overall_progress = round((completed_records / total_records * 100), 1) if total_records > 0 else 0
+
+    context = {
+        'assignees': assignees,
+        'total_records': total_records,
+        'completed_records': completed_records,
+        'overall_progress': overall_progress,
+    }
+
+    return render(request, 'records/progress_dashboard.html', context)

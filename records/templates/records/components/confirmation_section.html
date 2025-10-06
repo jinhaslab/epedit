@@ -1,6 +1,9 @@
 <!-- confirmation_section.html -->
 <div class="confirmation-section">
-  <h3>확인 체크박스</h3>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+    <h3 style="margin: 0;">확인 체크박스</h3>
+    <button type="button" onclick="checkAllConfirmations()" class="btn btn-secondary" style="padding: 8px 16px; font-size: 14px;">일괄 확인</button>
+  </div>
   <table class="confirmation-table">
     <tr>
       <td>
@@ -29,3 +32,18 @@
     </tr>
   </table>
 </div>
+
+<div class="form-section" style="margin-top: 24px;">
+  <h3>논의 사항</h3>
+  <textarea name="discussion_notes" id="id_discussion_notes" rows="5" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; resize: vertical;" placeholder="논의 사항을 입력하세요...">{{ record.discussion_notes|default:'' }}</textarea>
+</div>
+
+<script>
+function checkAllConfirmations() {
+  document.getElementById('id_disease_confirmed').checked = true;
+  document.getElementById('id_job_confirmed').checked = true;
+  document.getElementById('id_exposure_confirmed').checked = true;
+  document.getElementById('id_decision_confirmed').checked = true;
+  document.getElementById('id_smry_confirmed').checked = true;
+}
+</script>

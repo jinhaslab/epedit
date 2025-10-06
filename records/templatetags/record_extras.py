@@ -1,5 +1,6 @@
 from django import template
 import ast
+from records.models import Assignee
 
 register = template.Library()
 
@@ -30,3 +31,11 @@ def clean_summary(value):
     cleaned_value = cleaned_value.strip("'\"")
 
     return cleaned_value
+
+
+@register.simple_tag
+def get_active_assignees():
+    """
+    Returns all active assignees ordered by IDS range.
+    """
+    return Assignee.objects.filter(is_active=True).order_by('ids_from')

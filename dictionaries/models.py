@@ -1,8 +1,8 @@
 from django.db import models
 
 class DiseaseDictionaryEntry(models.Model):
-    disease_name = models.CharField(max_length=255, unique=True, db_index=True, verbose_name="질병명")
-    disease_code = models.CharField(max_length=255, blank=True, null=True, verbose_name="질병코드")
+    disease_name = models.CharField(max_length=255, db_index=True, verbose_name="질병명")
+    disease_code = models.CharField(max_length=255, unique=True, db_index=True, default='', verbose_name="질병코드")
 
     def __str__(self):
         return self.disease_name

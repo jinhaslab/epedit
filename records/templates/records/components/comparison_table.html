@@ -43,7 +43,7 @@
       <td class="initial-value">{{ original_data.disease_code|default:"-" }}</td>
       <td>
         <input type="text" id="disease_code_display" name="disease_code_display"
-               value="{{ current_data.disease_code|default:'' }}" readonly />
+               value="{{ current_data.disease_code|default:'' }}" placeholder="코드 입력 (예: T59)" />
         <input type="hidden" name="disease_code" id="disease_code_hidden_form"
                value="{{ current_data.disease_code|default:'' }}" />
       </td>
@@ -78,7 +78,7 @@
       <td class="initial-value">{{ original_data.job_code|default:"-" }}</td>
       <td>
         <input type="text" id="job_code_display" name="job_code_display"
-               value="{{ current_data.job_code|default:'' }}" readonly />
+               value="{{ current_data.job_code|default:'' }}" placeholder="코드 입력 (예: 111)" />
         <input type="hidden" name="job_code" id="job_code_hidden_form"
                value="{{ current_data.job_code|default:'' }}" />
       </td>

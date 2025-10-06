@@ -1,0 +1,304 @@
+{% extends 'records/base.html' %}
+{% load static %}
+
+{% block title %}진행률 대시보드 - 직업성 질환 기록{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 24px;
+    }
+
+    .dashboard-header {
+        margin-bottom: 32px;
+    }
+
+    .dashboard-header h1 {
+        margin: 0 0 8px 0;
+        font-size: 32px;
+        color: #333;
+    }
+
+    .overall-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 24px;
+        margin-bottom: 40px;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 24px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border-top: 4px solid #2196F3;
+    }
+
+    .stat-card h3 {
+        margin: 0 0 16px 0;
+        color: #666;
+        font-size: 14px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .stat-card .value {
+        font-size: 48px;
+        font-weight: 700;
+        color: #2196F3;
+        margin-bottom: 8px;
+    }
+
+    .stat-card .label {
+        color: #999;
+        font-size: 14px;
+    }
+
+    .assignee-section {
+        margin-bottom: 32px;
+    }
+
+    .assignee-card {
+        background: white;
+        border-radius: 8px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border-left: 6px solid;
+    }
+
+    .assignee-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .assignee-info h2 {
+        margin: 0 0 8px 0;
+        font-size: 24px;
+        color: #333;
+    }
+
+    .assignee-info p {
+        margin: 0;
+        color: #666;
+        font-size: 14px;
+    }
+
+    .assignee-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-top: 20px;
+    }
+
+    .mini-stat {
+        text-align: center;
+        padding: 16px;
+        background: #f5f5f5;
+        border-radius: 6px;
+    }
+
+    .mini-stat strong {
+        display: block;
+        font-size: 28px;
+        margin-bottom: 4px;
+    }
+
+    .mini-stat small {
+        color: #666;
+        font-size: 12px;
+    }
+
+    .progress-section {
+        margin-top: 20px;
+    }
+
+    .progress-label {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 14px;
+        color: #666;
+    }
+
+    .progress-bar-container {
+        height: 24px;
+        background: #e0e0e0;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .progress-bar {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding-right: 12px;
+        color: white;
+        font-weight: 600;
+        font-size: 12px;
+        transition: width 0.5s ease;
+    }
+
+    .chart-container {
+        margin-top: 20px;
+        padding: 20px;
+        background: #f9f9f9;
+        border-radius: 6px;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.2s;
+    }
+
+    .btn-primary {
+        background: #2196F3;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #1976D2;
+    }
+
+    .btn-success {
+        background: #4CAF50;
+        color: white;
+    }
+
+    .btn-success:hover {
+        background: #388E3C;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 64px 24px;
+        color: #999;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>📊 진행률 대시보드</h1>
+        <p style="color: #666;">전체 담당자별 작업 진행 현황</p>
+    </div>
+
+    <div class="overall-stats">
+        <div class="stat-card">
+            <h3>전체 레코드</h3>
+            <div class="value">{{ total_records }}</div>
+            <div class="label">Total Records</div>
+        </div>
+        <div class="stat-card" style="border-top-color: #4CAF50;">
+            <h3>완료된 레코드</h3>
+            <div class="value" style="color: #4CAF50;">{{ completed_records }}</div>
+            <div class="label">Completed</div>
+        </div>
+        <div class="stat-card" style="border-top-color: #FF9800;">
+            <h3>전체 진행률</h3>
+            <div class="value" style="color: #FF9800;">{{ overall_progress }}%</div>
+            <div class="label">Overall Progress</div>
+        </div>
+    </div>
+
+    <div class="assignee-section">
+        <h2 style="margin-bottom: 24px;">담당자별 진행 현황</h2>
+
+        {% if assignees %}
+            {% for assignee in assignees %}
+            <div class="assignee-card" style="border-left-color: {{ assignee.color }};">
+                <div class="assignee-card-header">
+                    <div class="assignee-info">
+                        <h2>{{ assignee.name }}</h2>
+                        <p>IDS 범위: {{ assignee.ids_from }} - {{ assignee.ids_to }}</p>
+                    </div>
+                    <div class="action-buttons">
+                        <a href="{% url 'assignee_records' assignee.pk %}" class="btn btn-success">📋 레코드 보기</a>
+                    </div>
+                </div>
+
+                <div class="assignee-stats">
+                    <div class="mini-stat">
+                        <strong style="color: #2196F3;">{{ assignee.total_records }}</strong>
+                        <small>전체 레코드</small>
+                    </div>
+                    <div class="mini-stat">
+                        <strong style="color: #4CAF50;">{{ assignee.completed_records }}</strong>
+                        <small>완료</small>
+                    </div>
+                    <div class="mini-stat">
+                        <strong style="color: #FF9800;">{{ assignee.progress_percentage }}%</strong>
+                        <small>진행률</small>
+                    </div>
+                </div>
+
+                <div class="progress-section">
+                    <div class="progress-label">
+                        <span>작업 진행 상황</span>
+                        <span><strong>{{ assignee.completed_records }}</strong> / {{ assignee.total_records }}</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" style="width: {{ assignee.progress_percentage }}%; background: {{ assignee.color }};">
+                            {% if assignee.progress_percentage > 10 %}{{ assignee.progress_percentage }}%{% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; text-align: center;">
+                        <div>
+                            <div style="font-size: 24px; font-weight: 700; color: #2196F3;">
+                                {{ assignee.total_records|add:"-"|add:assignee.completed_records }}
+                            </div>
+                            <small style="color: #666;">남은 레코드</small>
+                        </div>
+                        <div>
+                            <div style="font-size: 24px; font-weight: 700; color: #4CAF50;">
+                                {{ assignee.completed_records }}
+                            </div>
+                            <small style="color: #666;">확인 완료</small>
+                        </div>
+                        <div>
+                            <div style="font-size: 24px; font-weight: 700; color: {{ assignee.color }};">
+                                {{ assignee.progress_percentage }}%
+                            </div>
+                            <small style="color: #666;">달성률</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <div style="font-size: 64px;">📊</div>
+                <h3>담당자가 없습니다</h3>
+                <p>담당자를 추가하여 작업을 시작하세요</p>
+                <a href="{% url 'assignee_list' %}" class="btn btn-primary" style="margin-top: 16px;">담당자 추가하기</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <div style="text-align: center; margin-top: 40px;">
+        <a href="{% url 'record_list' %}" class="btn">← 레코드 목록으로</a>
+        <a href="{% url 'assignee_list' %}" class="btn btn-primary">⚙️ 담당자 설정</a>
+    </div>
+</div>
+{% endblock %}

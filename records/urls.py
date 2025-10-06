@@ -22,4 +22,18 @@ urlpatterns = [
 
     # 레코드 복원 API
     path('api/reset-record/<int:pk>/', views.reset_record, name='reset_record'),
+
+    # 🤖 자동 적용 API
+    path('<int:pk>/auto-apply-disease/', views.auto_apply_disease, name='auto_apply_disease'),
+    path('<int:pk>/auto-apply-job/', views.auto_apply_job, name='auto_apply_job'),
+
+    # 담당자 관리 URL
+    path('assignees/', views.assignee_list, name='assignee_list'),
+    path('assignees/create/', views.assignee_create, name='assignee_create'),
+    path('assignees/<int:pk>/update/', views.assignee_update, name='assignee_update'),
+    path('assignees/<int:pk>/delete/', views.assignee_delete, name='assignee_delete'),
+    path('assignees/<int:pk>/records/', views.assignee_records, name='assignee_records'),
+
+    # 진행률 대시보드
+    path('progress/', views.progress_dashboard, name='progress_dashboard'),
 ]

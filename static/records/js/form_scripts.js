@@ -171,15 +171,13 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         function updateSuggestionsPosition() {
+            // CSS로 위치 제어하므로 여기서는 width만 조정
             const suggestionsContainer = document.getElementById(suggestionsContainerId);
             if (!suggestionsContainer || !suggestionsContainer.classList.contains('active')) return;
             const autocompleteWrapper = document.querySelector(`#${inputElementId}`).closest('.autocomplete-wrapper');
-            if (!autocompleteWrapper) return;
-            const wrapperHeight = autocompleteWrapper.offsetHeight;
-            const calculatedTop = wrapperHeight + 5;
-            suggestionsContainer.style.top = `${calculatedTop}px`;
-            suggestionsContainer.style.left = `0px`;
-            suggestionsContainer.style.width = autocompleteWrapper.offsetWidth + 'px';
+            if (autocompleteWrapper) {
+                suggestionsContainer.style.width = autocompleteWrapper.offsetWidth + 'px';
+            }
         }
 
         const fetchSuggestions = debounce(async (query) => {
@@ -269,12 +267,92 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.log(`Blur event on ${inputElementId}`);
                 setTimeout(() => {
                     suggestionsContainer.classList.remove('active');
-                }, 150);
+                }, 300);
             });
         }
         loadInitialTags();
     }
     
+    // 코드로 이름 찾기 (코드 입력 시 자동완성)
+    function setupCodeAutocomplete(codeInputId, nameInputId, hiddenNameInputId, hiddenCodeInputId, fieldType) {
+        const codeInput = document.getElementById(codeInputId);
+        if (!codeInput) return;
+
+        const suggestionsContainer = document.createElement('div');
+        suggestionsContainer.className = 'autocomplete-suggestions';
+        suggestionsContainer.style.cssText = 'position: absolute; background: white; border: 1px solid #ccc; max-height: 200px; overflow-y: auto; z-index: 1000; display: none;';
+        codeInput.parentNode.style.position = 'relative';
+        codeInput.parentNode.appendChild(suggestionsContainer);
+
+        const fetchSuggestions = debounce(async () => {
+            const query = codeInput.value.trim();
+            if (query.length < 1) {
+                suggestionsContainer.style.display = 'none';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${autocompleteUrl}?field_name=${fieldType}&q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+
+                if (data.suggestions && data.suggestions.length > 0) {
+                    suggestionsContainer.innerHTML = '';
+                    data.suggestions.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'suggestion-item';
+                        div.style.cssText = 'padding: 8px; cursor: pointer; border-bottom: 1px solid #eee;';
+                        div.innerHTML = `<strong>${item.code}</strong> - ${item.name}`;
+                        div.addEventListener('click', () => {
+                            codeInput.value = item.code;
+                            const nameInput = document.getElementById(nameInputId);
+                            const hiddenName = document.getElementById(hiddenNameInputId);
+                            const hiddenCode = document.getElementById(hiddenCodeInputId);
+
+                            if (nameInput) nameInput.value = item.name;
+                            if (hiddenName) hiddenName.value = item.name;
+                            if (hiddenCode) hiddenCode.value = item.code;
+
+                            // 태그 업데이트
+                            const tagsContainer = document.getElementById(fieldType === 'disease_code' ? 'disease_tags' : 'job_tags');
+                            if (tagsContainer) {
+                                tagsContainer.innerHTML = '';
+                                const tagItem = document.createElement('div');
+                                tagItem.className = 'tag-item';
+                                tagItem.innerHTML = `<span>${item.name}</span><span class="tag-close">X</span>`;
+                                tagItem.addEventListener('click', function() {
+                                    tagItem.remove();
+                                    if (nameInput) nameInput.value = '';
+                                    if (hiddenName) hiddenName.value = '';
+                                    if (codeInput) codeInput.value = '';
+                                    if (hiddenCode) hiddenCode.value = '';
+                                });
+                                tagsContainer.appendChild(tagItem);
+                            }
+
+                            suggestionsContainer.style.display = 'none';
+                        });
+                        div.addEventListener('mouseenter', () => div.style.background = '#f0f0f0');
+                        div.addEventListener('mouseleave', () => div.style.background = 'white');
+                        suggestionsContainer.appendChild(div);
+                    });
+                    suggestionsContainer.style.display = 'block';
+                } else {
+                    suggestionsContainer.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error fetching code suggestions:', error);
+            }
+        }, 300);
+
+        codeInput.addEventListener('input', fetchSuggestions);
+        codeInput.addEventListener('focus', fetchSuggestions);
+        document.addEventListener('click', (e) => {
+            if (!codeInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
+                suggestionsContainer.style.display = 'none';
+            }
+        });
+    }
+
     console.log('Setting up autocomplete fields...');
 
     // 질병: 단일 선택
@@ -283,11 +361,17 @@ document.addEventListener('DOMContentLoaded', function () {
         (tagText) => updateDiseaseCodeField(tagText),
         (tagText) => updateDiseaseCodeField(tagText), false);
 
+    // 질병 코드로 검색
+    setupCodeAutocomplete('disease_code_display', 'disease_input', 'disease_hidden', 'disease_code_hidden_form', 'disease_code');
+
     // 직종: 단일 선택
     console.log('Setting up job autocomplete...');
     setupAutocomplete('job_input', 'job_suggestions', 'job_tags', 'job_hidden',
         (tagText) => updateJobCodeField(tagText),
         (tagText) => updateJobCodeField(tagText), false);
+
+    // 직종 코드로 검색
+    setupCodeAutocomplete('job_code_display', 'job_input', 'job_hidden', 'job_code_hidden_form', 'job_code');
 
     // 추가 질병: 단일 선택
     console.log('Setting up additional disease autocomplete...');
@@ -296,6 +380,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 유해인자: 다중 선택 (기본값)
     console.log('Setting up exposure autocomplete...');
+    const exposureHiddenInput = document.getElementById('exposure_hidden');
+    if (exposureHiddenInput) {
+        console.log('Exposure hidden input value:', exposureHiddenInput.value);
+    }
     setupAutocomplete('exposure_input', 'exposure_suggestions', 'exposure_tags', 'exposure_hidden');
 
     // 초기 질병 코드 설정
@@ -485,8 +573,13 @@ document.addEventListener('DOMContentLoaded', function () {
             if (diseaseHidden) diseaseHidden.value = diseaseName;
 
             // 질병 코드 직접 설정 (AI 검색 결과의 코드 사용)
-            if (diseaseCodeDisplay) diseaseCodeDisplay.value = diseaseCode;
-            if (diseaseCodeHidden) diseaseCodeHidden.value = diseaseCode;
+            if (diseaseCodeDisplay) {
+                diseaseCodeDisplay.value = diseaseCode;
+                console.log('Disease code set from AI:', diseaseCode);
+            }
+            if (diseaseCodeHidden) {
+                diseaseCodeHidden.value = diseaseCode;
+            }
 
             // 질병 태그 추가
             const diseaseTagsContainer = document.getElementById('disease_tags');
@@ -507,8 +600,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 diseaseTagsContainer.appendChild(tagItem);
             }
 
-            // Dictionary에서 질병 코드도 함께 업데이트 (보조적으로)
-            updateDiseaseCodeField(diseaseName);
+            // AI 검색에서 코드가 없을 때만 Dictionary 조회
+            if (!diseaseCode) {
+                updateDiseaseCodeField(diseaseName);
+            }
 
         } else if (target === 'job') {
             // 직종 필드에 결과 적용

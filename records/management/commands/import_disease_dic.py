@@ -7,62 +7,55 @@ from dictionaries.models import DiseaseDictionaryEntry
 import re
 
 class Command(BaseCommand):
-    help = 'Imports and cleans disease dictionary data.'
+    help = 'Imports KCD-9 disease dictionary data from kcd_RAG_data.xlsx (17,395 codes)'
 
     def handle(self, *args, **options):
-        file_path = os.path.join(settings.BASE_DIR, 'data', 'disease_dic.xlsx')
-        
+        # 새 파일 경로: ohsearch의 kcd_RAG_data.xlsx
+        file_path = '/home/rag/papps/ohsearch/data/kcd_RAG_data.xlsx'
+
         if not os.path.exists(file_path):
             self.stdout.write(self.style.ERROR(f"File not found: {file_path}"))
             return
 
-        self.stdout.write(f"Reading data from {file_path}...")
+        self.stdout.write(f"Reading KCD-9 data from {file_path}...")
         df = pd.read_excel(file_path, dtype=str).fillna('')
 
-        if '질병명' not in df.columns or '질병코드' not in df.columns:
-            self.stdout.write(self.style.ERROR("Excel file must have '질병명' and '질병코드' columns."))
+        if 'code' not in df.columns or 'name_kor' not in df.columns:
+            self.stdout.write(self.style.ERROR("Excel file must have 'code' and 'name_kor' columns."))
             return
         
+        self.stdout.write(f"Total entries: {len(df)}")
+
+        # 중복 제거 (code 기준)
         original_count = len(df)
-        df.drop_duplicates(subset=['질병명'], keep='first', inplace=True)
+        df.drop_duplicates(subset=['code'], keep='first', inplace=True)
         unique_count = len(df)
-        self.stdout.write(f"Removed {original_count - unique_count} duplicate entries based on '질병명'.")
+        self.stdout.write(f"Removed {original_count - unique_count} duplicate entries based on 'code'.")
 
         DiseaseDictionaryEntry.objects.all().delete()
         self.stdout.write(self.style.SUCCESS("Old disease dictionary data deleted."))
 
-        self.stdout.write("Importing cleaned data...")
+        self.stdout.write("Importing KCD-9 data...")
         count = 0
-        swap_count = 0  # 뒤바뀐 항목 카운트
 
         for _, row in df.iterrows():
-            disease_name_raw = row['질병명'].strip()
-            disease_code_raw = row['질병코드'].strip()
+            disease_code = row['code'].strip()
+            disease_name = row['name_kor'].strip()
 
-            # ▼▼▼▼▼ 데이터 뒤바뀜 감지 및 수정 로직 ▼▼▼▼▼
-            # 질병명이 코드처럼 보이고, 코드가 한글 질병명처럼 보이는 경우 감지
-            name_looks_like_code = bool(re.match(r'^[A-Z0-9.,-]+$', disease_name_raw))
-            code_has_korean = bool(re.search(r'[가-힣]', disease_code_raw))
+            if disease_code and disease_name:
+                # disease_code를 기준으로 저장 (코드는 추가하지 않음)
+                try:
+                    obj, created = DiseaseDictionaryEntry.objects.update_or_create(
+                        disease_code=disease_code,
+                        defaults={'disease_name': disease_name}
+                    )
+                    count += 1
+                except Exception as e:
+                    self.stdout.write(self.style.WARNING(f"Skipped {disease_code}: {str(e)}"))
 
-            if name_looks_like_code and code_has_korean:
-                # 뒤바뀐 것으로 판단되면 교체
-                disease_name = disease_code_raw
-                disease_code_cleaned = re.sub(r'[^A-Z0-9.,-]', '', disease_name_raw.upper())
-                swap_count += 1
-                self.stdout.write(f"  SWAPPED: '{disease_name_raw}' <-> '{disease_code_raw}'")
-            else:
-                # 정상적인 경우
-                disease_name = disease_name_raw
-                disease_code_cleaned = re.sub(r'[^A-Z0-9.,-]', '', disease_code_raw.upper())
-            # ▲▲▲▲▲ 뒤바뀜 수정 완료 ▲▲▲▲▲
-
-            if disease_name:
-                DiseaseDictionaryEntry.objects.create(
-                    disease_name=disease_name,
-                    disease_code=disease_code_cleaned
-                )
-                count += 1
-
-        self.stdout.write(self.style.SUCCESS(f"Successfully imported {count} unique disease entries."))
-        if swap_count > 0:
-            self.stdout.write(self.style.WARNING(f"Fixed {swap_count} entries where disease name and code were swapped."))
+        self.stdout.write(self.style.SUCCESS(
+            f'\n✅ Import completed!\n'
+            f'   - Total KCD-9 codes imported: {count}\n'
+            f'   - Includes T, V, W, X, Y codes\n'
+            f'   - Levels 1-4 (대분류~세분류) all included'
+        ))

@@ -320,6 +320,37 @@
         .data-table td { word-break: break-word; }
         .dict-error { color: var(--accent-red); font-weight: bold; font-size: 13px; margin-left: 8px; }
 
+        /* 🤖 자동 적용 버튼 스타일 */
+        .btn-auto-apply {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            margin-left: 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-auto-apply:hover {
+            background: linear-gradient(135deg, #45a049 0%, #388e3c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn-auto-apply:active {
+            transform: translateY(0);
+        }
+
+        .btn-auto-apply:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         /* --- Actions & Buttons --- */
         .actions {
             margin-top: 30px;
@@ -510,8 +541,9 @@
         /* --- Responsive Design --- */
         @media (max-width: 1200px) {
             html, body {
-                min-height: 100vh;
+                height: 100%;
                 overflow-x: hidden;
+                overflow-y: auto;
             }
 
             .main-container {
@@ -520,13 +552,14 @@
                 min-height: 100vh;
                 padding: 0;
                 gap: 0;
+                padding-bottom: 50vh;
             }
 
             .content-container {
                 order: 1;
                 flex: 1;
                 padding: 16px;
-                padding-bottom: calc(50vh + 16px);
+                padding-bottom: 16px;
             }
 
             .pdf-section {
@@ -562,13 +595,9 @@
                 display: none;
             }
 
-            /* Adjust content padding when PDF is visible */
-            .content-container {
-                padding-bottom: calc(50vh + 16px); /* Space for fixed PDF */
-            }
-
-            body:has(.pdf-section.hidden) .content-container {
-                padding-bottom: 16px; /* Normal padding when PDF hidden */
+            /* Adjust content padding when PDF is hidden */
+            body:has(.pdf-section.hidden) .main-container {
+                padding-bottom: 0;
             }
 
             .pdf-toggle-btn {
@@ -759,7 +788,10 @@
             {% endif %}
             
             <div class="container">
-                <h2>데이터 비교</h2>
+                <h2 onclick="toggleSection('dataComparison')" style="cursor: pointer; user-select: none;">
+                    <span id="dataComparison-icon">▼</span> 데이터 비교
+                </h2>
+                <div id="dataComparison" style="display: block;">
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -776,6 +808,9 @@
                                 {{ current_data.disease_name|default:"-" }}
                                 {% if current_data.disease_name and current_data.disease_name != "-" and not record.disease %}
                                 <span class="dict-error">(사전 미등록)</span>
+                                <button class="btn-auto-apply" onclick="autoApplyDisease({{ record.pk }}, '{{ current_data.disease_name|escapejs }}')">
+                                    🤖 자동 적용
+                                </button>
                                 {% endif %}
                             </td>
                         </tr>
@@ -791,6 +826,9 @@
                                 {{ current_data.job|default:"-" }}
                                 {% if current_data.job and current_data.job != "-" and not record.job %}
                                 <span class="dict-error">(사전 미등록)</span>
+                                <button class="btn-auto-apply" onclick="autoApplyJob({{ record.pk }}, '{{ current_data.job|escapejs }}')">
+                                    🤖 자동 적용
+                                </button>
                                 {% endif %}
                             </td>
                         </tr>
@@ -835,11 +873,15 @@
                     <a href="{% url 'record_list' %}?{{ other_params }}" class="btn btn-list">목록으로</a>
                     <a href="{% url 'record_edit' record.pk %}?{{ other_params }}" class="btn btn-edit">수정하기</a>
                 </div>
+                </div>
             </div>
 
             {% if population_data %}
             <div class="container">
-                <h2>인구학적 정보</h2>
+                <h2 onclick="toggleSection('populationInfo')" style="cursor: pointer; user-select: none;">
+                    <span id="populationInfo-icon">▼</span> 인구학적 정보
+                </h2>
+                <div id="populationInfo" style="display: none;">
                 <table class="data-table">
                     <thead><tr><th style="width: 30%">변수</th><th>값</th></tr></thead>
                     <tbody>
@@ -848,12 +890,16 @@
                         {% endfor %}
                     </tbody>
                 </table>
+                </div>
             </div>
             {% endif %}
 
             {% if work_process_data %}
             <div class="container">
-                <h2>작업 공정 정보</h2>
+                <h2 onclick="toggleSection('workProcessInfo')" style="cursor: pointer; user-select: none;">
+                    <span id="workProcessInfo-icon">▼</span> 작업 공정 정보
+                </h2>
+                <div id="workProcessInfo" style="display: none;">
                 <table class="data-table">
                      <thead><tr><th style="width: 30%">변수</th><th>값</th></tr></thead>
                      <tbody>
@@ -862,6 +908,7 @@
                         {% endfor %}
                     </tbody>
                 </table>
+                </div>
             </div>
             {% endif %}
         </div>
@@ -871,12 +918,10 @@
             <!-- PDF Size Controls -->
             <div class="pdf-size-controls">
                 <button data-size="500" onclick="setPdfSize(500)">500px</button>
-                <button data-size="800" onclick="setPdfSize(800)">800px</button>
+                <button data-size="800" onclick="setPdfSize(800)" class="active" id="size800">800px</button>
                 <button data-size="1200" onclick="setPdfSize(1200)">1200px</button>
-                <button data-size="1600" onclick="setPdfSize(1600)" class="active" id="size1600">1600px</button>
-                <button data-size="2000" onclick="setPdfSize(2000)">2000px</button>
-                <input type="range" min="500" max="2000" value="1600" class="pdf-size-slider" id="pdfSizeSlider">
-                <span class="pdf-size-display" id="pdfSizeDisplay">1600px</span>
+                <input type="range" min="500" max="1200" step="100" value="800" class="pdf-size-slider" id="pdfSizeSlider">
+                <span class="pdf-size-display" id="pdfSizeDisplay">800px</span>
                 <button onclick="togglePdfSection()" style="margin-left: auto;">숨기기</button>
             </div>
 
@@ -916,6 +961,87 @@
     </div>
 
     {% csrf_token %}
+
+    <script>
+    // 🤖 자동 적용 함수들
+    async function autoApplyDisease(recordId, diseaseName) {
+        if (!confirm(`"${diseaseName}"을(를) RAG 검색으로 자동 매칭하시겠습니까?`)) return;
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const btn = event.target;
+        btn.disabled = true;
+        btn.textContent = '🔄 처리중...';
+
+        try {
+            const response = await fetch(`/epedit/${recordId}/auto-apply-disease/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ disease_name: diseaseName })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert(`✅ 매칭 완료!\n\n` +
+                      `원본: ${diseaseName}\n` +
+                      `매칭: ${result.matched_name}\n` +
+                      `코드: ${result.matched_code}\n` +
+                      `정확도: ${result.score.toFixed(1)}`);
+                location.reload();
+            } else {
+                alert(`❌ 매칭 실패: ${result.error}`);
+                btn.disabled = false;
+                btn.textContent = '🤖 자동 적용';
+            }
+        } catch (error) {
+            alert('오류 발생: ' + error);
+            btn.disabled = false;
+            btn.textContent = '🤖 자동 적용';
+        }
+    }
+
+    async function autoApplyJob(recordId, jobName) {
+        if (!confirm(`"${jobName}"을(를) RAG 검색으로 자동 매칭하시겠습니까?`)) return;
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const btn = event.target;
+        btn.disabled = true;
+        btn.textContent = '🔄 처리중...';
+
+        try {
+            const response = await fetch(`/epedit/${recordId}/auto-apply-job/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ job_name: jobName })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert(`✅ 매칭 완료!\n\n` +
+                      `원본: ${jobName}\n` +
+                      `매칭: ${result.matched_name}\n` +
+                      `코드: ${result.matched_code}\n` +
+                      `정확도: ${result.score.toFixed(1)}`);
+                location.reload();
+            } else {
+                alert(`❌ 매칭 실패: ${result.error}`);
+                btn.disabled = false;
+                btn.textContent = '🤖 자동 적용';
+            }
+        } catch (error) {
+            alert('오류 발생: ' + error);
+            btn.disabled = false;
+            btn.textContent = '🤖 자동 적용';
+        }
+    }
+    </script>
 
     <script>
     // Detect mobile and show appropriate PDF viewer
@@ -1008,7 +1134,7 @@
         initPdfViewer();
 
         // Load saved size
-        const savedSize = localStorage.getItem('pdfSize') || '1600';
+        const savedSize = localStorage.getItem('pdfSize') || '800';
         setPdfSize(parseInt(savedSize));
 
         // Load saved visibility
@@ -1048,7 +1174,7 @@
 
         // Handle window resize
         window.addEventListener('resize', function() {
-            const savedSize = localStorage.getItem('pdfSize') || '1600';
+            const savedSize = localStorage.getItem('pdfSize') || '800';
             setPdfSize(parseInt(savedSize));
             // Re-initialize PDF viewer on resize (mobile/desktop switch)
             initPdfViewer();
@@ -1079,6 +1205,19 @@
             });
         }
     });
+
+    // 섹션 토글 함수
+    function toggleSection(sectionId) {
+        const section = document.getElementById(sectionId);
+        const icon = document.getElementById(sectionId + '-icon');
+        if (section.style.display === 'none') {
+            section.style.display = 'block';
+            icon.textContent = '▼';
+        } else {
+            section.style.display = 'none';
+            icon.textContent = '▶';
+        }
+    }
     </script>
 </body>
 </html>

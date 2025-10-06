@@ -74,6 +74,7 @@ class DiseaseRecord(models.Model):
     decision_confirmed = models.BooleanField(default=False, verbose_name="결정확인")
     smry_confirmed = models.BooleanField(default=False, verbose_name="고찰확인")
     changed_fields = models.TextField(verbose_name="변경된 항목", null=True, blank=True)
+    discussion_notes = models.TextField(verbose_name="논의 사항", null=True, blank=True)
 
     # 메타데이터
     last_modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="수정한 사람")
@@ -247,6 +248,61 @@ class RecordRevision(models.Model):
             categories.append('확인상태')
 
         return categories
+
+## 담당자 모델 (Assignee)
+class Assignee(models.Model):
+    """레코드 담당자 관리 모델 - IDS 범위 기반 작업 분할"""
+    name = models.CharField(max_length=100, verbose_name="담당자 이름")
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="연결된 사용자")
+    ids_from = models.IntegerField(verbose_name="IDS 시작 번호")
+    ids_to = models.IntegerField(verbose_name="IDS 끝 번호")
+    color = models.CharField(max_length=7, default='#2196F3', verbose_name="담당자 색상")
+    is_active = models.BooleanField(default=True, verbose_name="활성 상태")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="생성 시간")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="수정 시간")
+
+    def __str__(self):
+        return f"{self.name} (IDS: {self.ids_from}-{self.ids_to})"
+
+    class Meta:
+        verbose_name = "담당자"
+        verbose_name_plural = "담당자 목록"
+        ordering = ['ids_from']
+
+    @property
+    def total_records(self):
+        """담당자의 전체 레코드 수"""
+        from django.db.models import Cast, IntegerField
+        return DiseaseRecord.objects.annotate(
+            ids_as_int=Cast('ids', output_field=IntegerField())
+        ).filter(
+            ids_as_int__gte=self.ids_from,
+            ids_as_int__lte=self.ids_to
+        ).count()
+
+    @property
+    def completed_records(self):
+        """확인 완료된 레코드 수 (5개 항목 모두 확인됨)"""
+        from django.db.models import Cast, IntegerField
+        return DiseaseRecord.objects.annotate(
+            ids_as_int=Cast('ids', output_field=IntegerField())
+        ).filter(
+            ids_as_int__gte=self.ids_from,
+            ids_as_int__lte=self.ids_to,
+            disease_confirmed=True,
+            job_confirmed=True,
+            exposure_confirmed=True,
+            decision_confirmed=True,
+            smry_confirmed=True
+        ).count()
+
+    @property
+    def progress_percentage(self):
+        """진행률 (%)"""
+        total = self.total_records
+        if total == 0:
+            return 0
+        return round((self.completed_records / total) * 100, 1)
 
 ## 사용자 프로필 모델
 class Profile(models.Model):

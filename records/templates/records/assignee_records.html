@@ -1,0 +1,241 @@
+{% extends 'records/base.html' %}
+{% load static %}
+
+{% block title %}{{ assignee.name }}의 레코드 - 직업성 질환 기록{% endblock %}
+
+{% block extra_css %}
+<style>
+    .assignee-header {
+        background: linear-gradient(135deg, {{ assignee.color }}22, {{ assignee.color }}44);
+        padding: 24px;
+        border-radius: 8px;
+        margin-bottom: 24px;
+        border-left: 4px solid {{ assignee.color }};
+    }
+
+    .assignee-header h1 {
+        margin: 0 0 8px 0;
+        color: #333;
+    }
+
+    .assignee-header .stats {
+        display: flex;
+        gap: 24px;
+        margin-top: 16px;
+    }
+
+    .stat-item {
+        background: white;
+        padding: 12px 20px;
+        border-radius: 6px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .stat-item strong {
+        display: block;
+        font-size: 24px;
+        color: {{ assignee.color }};
+    }
+
+    .stat-item small {
+        color: #666;
+    }
+
+    .progress-bar-large {
+        height: 12px;
+        background: #e0e0e0;
+        border-radius: 6px;
+        overflow: hidden;
+        margin-top: 12px;
+    }
+
+    .progress-bar-large .progress {
+        height: 100%;
+        background: {{ assignee.color }};
+        transition: width 0.3s ease;
+    }
+
+    .filter-section {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .filter-group {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 16px;
+    }
+
+    .filter-group input {
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .record-table {
+        width: 100%;
+        background: white;
+        border-collapse: collapse;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .record-table thead {
+        background: #f5f5f5;
+    }
+
+    .record-table th,
+    .record-table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .record-table tbody tr:hover {
+        background: #f9f9f9;
+        cursor: pointer;
+    }
+
+    .confirmed-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .badge-yes {
+        background: #E8F5E9;
+        color: #2E7D32;
+    }
+
+    .badge-no {
+        background: #FFEBEE;
+        color: #C62828;
+    }
+
+    .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.2s;
+    }
+
+    .btn-primary {
+        background: {{ assignee.color }};
+        color: white;
+    }
+
+    .btn-primary:hover {
+        opacity: 0.9;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="max-width: 1400px; margin: 0 auto; padding: 24px;">
+    <div class="assignee-header">
+        <h1>👤 {{ assignee.name }}의 작업 영역</h1>
+        <p>IDS 범위: {{ assignee.ids_from }} - {{ assignee.ids_to }}</p>
+        <div class="progress-bar-large">
+            <div class="progress" style="width: {{ assignee.progress_percentage }}%;"></div>
+        </div>
+        <div class="stats">
+            <div class="stat-item">
+                <strong>{{ assignee.total_records }}</strong>
+                <small>전체 레코드</small>
+            </div>
+            <div class="stat-item">
+                <strong>{{ assignee.completed_records }}</strong>
+                <small>완료</small>
+            </div>
+            <div class="stat-item">
+                <strong>{{ assignee.progress_percentage }}%</strong>
+                <small>진행률</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="filter-section">
+        <form method="GET">
+            <div class="filter-group">
+                <input type="text" name="search" placeholder="검색 (IDS, 이름, 질병명...)" value="{{ search_query }}">
+                <input type="text" name="fname" placeholder="이름 필터" value="{{ fname }}">
+                <input type="text" name="disease_name" placeholder="질병명 필터" value="{{ disease_filter }}">
+                <input type="text" name="job_name" placeholder="직종 필터" value="{{ job_filter }}">
+            </div>
+            <div style="margin-top: 12px;">
+                <label>
+                    <input type="checkbox" name="confirmed_only" value="true" {% if confirmed_only == 'true' %}checked{% endif %}>
+                    확인 완료된 레코드만 보기
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary" style="margin-top: 12px;">필터 적용</button>
+            <a href="{% url 'assignee_records' assignee.pk %}" class="btn" style="margin-top: 12px;">초기화</a>
+        </form>
+    </div>
+
+    <table class="record-table">
+        <thead>
+            <tr>
+                <th>IDS</th>
+                <th>이름</th>
+                <th>질병</th>
+                <th>직종</th>
+                <th>확인 상태</th>
+                <th>작업</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in records %}
+            <tr onclick="window.location.href='{% url 'record_detail' record.pk %}'">
+                <td>{{ record.ids }}</td>
+                <td>{{ record.fname }}</td>
+                <td>
+                    {% if record.disease %}
+                        {{ record.disease.disease_name }}
+                    {% else %}
+                        {{ record.original_disease_name|default:"-" }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if record.job %}
+                        {{ record.job.occupation }}
+                    {% else %}
+                        {{ record.original_job|default:"-" }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if record.disease_confirmed and record.job_confirmed and record.exposure_confirmed and record.decision_confirmed and record.smry_confirmed %}
+                        <span class="confirmed-badge badge-yes">완료</span>
+                    {% else %}
+                        <span class="confirmed-badge badge-no">진행중</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'record_edit' record.pk %}" class="btn btn-primary" onclick="event.stopPropagation()">수정</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 48px; color: #999;">
+                    레코드가 없습니다
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div style="margin-top: 24px; text-align: center;">
+        <a href="{% url 'assignee_list' %}" class="btn">← 담당자 목록으로</a>
+        <a href="{% url 'progress_dashboard' %}" class="btn btn-primary">📊 진행률 대시보드</a>
+    </div>
+</div>
+{% endblock %}
