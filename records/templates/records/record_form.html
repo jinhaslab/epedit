@@ -189,6 +189,46 @@
             background-color: #002c5f;
         }
 
+        /* Mobile Quick Actions */
+        .mobile-quick-actions {
+            display: none;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: white;
+            padding: 12px;
+            gap: 8px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            flex-wrap: wrap;
+        }
+
+        .btn-quick-action {
+            flex: 1;
+            min-width: 100px;
+            padding: 10px 16px;
+            border: 1px solid var(--border-color);
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            text-align: center;
+            text-decoration: none;
+            color: var(--text-color);
+            transition: all 0.2s ease;
+            display: inline-block;
+        }
+
+        .btn-quick-action:hover {
+            background: var(--yonsei-blue);
+            color: white;
+            border-color: var(--yonsei-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
         @media (max-width: 1200px) {
             .main-wrapper {
                 grid-template-columns: 1fr;
@@ -216,6 +256,11 @@
                 display: block;
             }
 
+            /* Show mobile quick actions */
+            .mobile-quick-actions {
+                display: flex;
+            }
+
             body {
                 height: auto;
                 overflow: auto;
@@ -240,6 +285,13 @@
     <div class="main-wrapper">
         <!-- Form Content First -->
         <div class="form-content">
+            <!-- Mobile Quick Actions -->
+            <div class="mobile-quick-actions">
+                <button type="button" class="btn-quick-action" onclick="scrollToPdf()">📄 PDF 보기</button>
+                <a href="{% url 'record_list' %}?{{ other_params }}" class="btn-quick-action">📋 목록</a>
+                <a href="{% url 'record_detail' record.pk %}?{{ other_params }}" class="btn-quick-action">👁️ 상세</a>
+            </div>
+
             <h1>기록 수정: {{ record.case.fid }}</h1>
             <form method="post" action="{% url 'record_edit' record.pk %}?{{ other_params }}">
                 {% csrf_token %}
@@ -311,6 +363,19 @@
     <script src="{% static 'records/js/additional_disease_handler.js' %}"></script>
     
     <script>
+    // Scroll to PDF function (for mobile quick action)
+    function scrollToPdf() {
+        const pdfSection = document.getElementById('pdfSection');
+        if (pdfSection) {
+            // Show PDF if hidden
+            pdfSection.classList.remove('hidden');
+            localStorage.setItem('pdfHidden', 'false');
+
+            // Smooth scroll to PDF
+            pdfSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
     // PDF Size Control Functions (same as record_detail.html)
     function setPdfSize(size) {
         const pdfSection = document.getElementById('pdfSection');
