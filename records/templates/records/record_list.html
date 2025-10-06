@@ -172,10 +172,62 @@
             font-weight: 700;
             margin-bottom: 20px;
             color: #343a40;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Filter Toggle Button */
+        .filter-toggle-btn {
+            background: var(--accent-green);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-toggle-btn:hover {
+            background: #1B5E20;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        #filterToggleIcon {
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+
+        .filter-toggle-btn.collapsed #filterToggleIcon {
+            transform: rotate(-90deg);
         }
 
         /* --- Filter Form --- */
-        .filter-form { background-color: var(--card-background); padding: 24px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 40px; box-shadow: 0 4px 16px rgba(0,0,0,0.05); }
+        .filter-form {
+            background-color: var(--card-background);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 40px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .filter-form.collapsed {
+            max-height: 0;
+            padding: 0 24px;
+            margin-bottom: 20px;
+            opacity: 0;
+            border: none;
+            box-shadow: none;
+        }
         .filter-form form { display: flex; flex-direction: column; gap: 20px; }
         .filter-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 24px; }
         .filter-item { display: flex; flex-direction: column; gap: 8px; position: relative; flex: 1; min-width: 180px; }
@@ -325,9 +377,14 @@
         </aside>
 
         <main class="main-content">
-            <h2>사건 기록 필터</h2>
-            <div class="filter-form">
-                <form method="get" id="filterForm">
+            <h2>
+                <span>사건 기록 필터</span>
+                <button type="button" id="filterToggle" class="filter-toggle-btn">
+                    <span id="filterToggleIcon">▼</span> 필터 숨기기
+                </button>
+            </h2>
+            <div class="filter-form" id="filterForm">
+                <form method="get">
                     <div class="filter-row">
                         <div class="filter-item"><label for="fname_input">파일명(유사명 포함):</label><input type="text" name="fname" id="fname_input" class="filter-input" placeholder="파일명 검색" value="{{ request.GET.fname }}"/></div>
                         <div class="filter-item"><label for="disease_name_input">질병명:</label><div class="autocomplete-input-wrapper"><div id="disease_name_tags" class="selected-tags-container"></div><input type="text" id="disease_name_input" class="autocomplete-input" data-field-name="disease_name" placeholder="질병명 검색/선택"/></div><div id="disease_name_suggestions" class="autocomplete-suggestions"></div><input type="hidden" name="disease_name" id="disease_name_hidden" value="{{ request.GET.disease_name }}"/></div>
@@ -464,6 +521,34 @@
                     }
                 }, 250);
             });
+
+            // Filter Toggle
+            const filterToggleBtn = document.getElementById('filterToggle');
+            const filterForm = document.getElementById('filterForm');
+            const filterToggleIcon = document.getElementById('filterToggleIcon');
+
+            if (filterToggleBtn && filterForm) {
+                // Load saved state
+                const filterCollapsed = localStorage.getItem('filterCollapsed') === 'true';
+                if (filterCollapsed) {
+                    filterForm.classList.add('collapsed');
+                    filterToggleBtn.classList.add('collapsed');
+                    filterToggleBtn.innerHTML = '<span id="filterToggleIcon">▶</span> 필터 보기';
+                }
+
+                filterToggleBtn.addEventListener('click', function() {
+                    const isCollapsed = filterForm.classList.toggle('collapsed');
+                    filterToggleBtn.classList.toggle('collapsed');
+
+                    if (isCollapsed) {
+                        filterToggleBtn.innerHTML = '<span id="filterToggleIcon">▶</span> 필터 보기';
+                        localStorage.setItem('filterCollapsed', 'true');
+                    } else {
+                        filterToggleBtn.innerHTML = '<span id="filterToggleIcon">▼</span> 필터 숨기기';
+                        localStorage.setItem('filterCollapsed', 'false');
+                    }
+                });
+            }
 
             // 요약 팝업
             const summaryPopup = document.getElementById("summaryPopup"); if (summaryPopup) { const summaryPopupContent = summaryPopup.querySelector(".summary-popup-content"); document.querySelectorAll(".summary-trigger").forEach(trigger => { trigger.addEventListener("mouseenter", function(event) { summaryPopupContent.textContent = this.dataset.fullText; const rect = this.getBoundingClientRect(); summaryPopup.style.left = `${rect.left + window.scrollX}px`; summaryPopup.style.top = `${rect.bottom + window.scrollY + 5}px`; summaryPopup.style.display = "block"; }); trigger.addEventListener("mouseleave", function() { summaryPopup.style.display = "none"; }); }); } function debounce(func, delay) { let timeout; return function(...args) { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), delay); }; } function setupAutocomplete(inputId, suggestionsId, tagsId, hiddenInputId) { const inputEl = document.getElementById(inputId), suggestionsEl = document.getElementById(suggestionsId), tagsEl = document.getElementById(tagsId), hiddenInputEl = document.getElementById(hiddenInputId); if (!inputEl) return; let selectedTags = new Set(hiddenInputEl.value.split(',').filter(Boolean)); const updateHiddenInput = () => { hiddenInputEl.value = Array.from(selectedTags).join(','); }; const renderTags = () => { tagsEl.innerHTML = ''; selectedTags.forEach(tagText => { const tagItem = document.createElement("div"); tagItem.className = "tag-item"; tagItem.textContent = tagText; const closeButton = document.createElement("span"); closeButton.className = "tag-close"; closeButton.textContent = "×"; closeButton.onclick = (e) => { e.stopPropagation(); selectedTags.delete(tagText); renderTags(); updateHiddenInput(); }; tagItem.appendChild(closeButton); tagsEl.appendChild(tagItem); }); }; const addTag = (suggestion) => { if (!selectedTags.has(suggestion)) { selectedTags.add(suggestion); renderTags(); updateHiddenInput(); } inputEl.value = ''; suggestionsEl.classList.remove("active"); }; const fetchSuggestions = async (query) => { const fieldName = inputEl.dataset.fieldName; try { const response = await fetch(`{% url 'autocomplete_suggestions' %}?field_name=${fieldName}&q=${encodeURIComponent(query)}`), data = await response.json(); suggestionsEl.innerHTML = ""; if (data.suggestions.length > 0) { data.suggestions.forEach((suggestion) => { const item = document.createElement("div"); item.className = "suggestion-item"; item.textContent = suggestion.name; item.addEventListener('mousedown', () => addTag(suggestion.name)); suggestionsEl.appendChild(item); }); suggestionsEl.classList.add("active"); } else { suggestionsEl.classList.remove("active"); } } catch (error) { console.error("Error fetching suggestions:", error); } }; const debouncedFetch = debounce(fetchSuggestions, 300); inputEl.addEventListener('input', () => debouncedFetch(inputEl.value)); inputEl.addEventListener('focus', () => fetchSuggestions(inputEl.value)); inputEl.addEventListener('blur', () => { setTimeout(() => suggestionsEl.classList.remove("active"), 150); }); renderTags(); } setupAutocomplete("disease_name_input", "disease_name_suggestions", "disease_name_tags", "disease_name_hidden"); setupAutocomplete("job_input", "job_suggestions", "job_tags", "job_hidden");
