@@ -28,32 +28,37 @@
             margin: 0;
             padding: 0;
             background-color: var(--background-color);
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
 
         .main-container {
             display: grid;
             grid-template-columns: 1fr 400px; /* Content first, PDF 400px */
-            height: 100%;
+            min-height: 100vh;
             gap: 24px;
             padding: 24px;
             box-sizing: border-box;
         }
 
         .content-container {
-            height: 100%;
             display: flex;
             flex-direction: column;
-            overflow-y: auto;
             order: 1; /* Content first */
+            min-height: 100%;
         }
 
         .pdf-section {
-            height: 100%;
+            position: sticky;
+            top: 24px;
+            height: calc(100vh - 48px);
             display: flex;
             flex-direction: column;
             order: 2; /* PDF second */
+        }
+
+        .pdf-section.hidden {
+            display: none;
         }
 
         /* PDF Size Controls */
@@ -154,7 +159,10 @@
             padding-bottom: 12px;
             margin: 0 0 20px 0;
             border-bottom: 2px solid var(--accent-green);
-            display: inline-block;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
         }
 
         /* --- Modern Table Styles --- */
@@ -227,7 +235,49 @@
         .btn-list:hover { background-color: #5a6268; }
 
         /* --- Revision History Styles --- */
-        .revision-history { max-height: 300px; overflow-y: auto; }
+        .revision-history-container {
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .revision-history-container.collapsed .revision-history {
+            max-height: 0;
+            opacity: 0;
+            margin-top: 0;
+        }
+
+        .revision-toggle-btn {
+            background: none;
+            border: none;
+            color: var(--accent-green);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 4px 8px;
+            transition: all 0.2s ease;
+        }
+
+        .revision-toggle-btn:hover {
+            color: #1B5E20;
+        }
+
+        .revision-toggle-icon {
+            display: inline-block;
+            transition: transform 0.3s ease;
+            margin-left: 8px;
+        }
+
+        .revision-history-container.collapsed .revision-toggle-icon {
+            transform: rotate(-90deg);
+        }
+
+        .revision-history {
+            max-height: 300px;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+        }
+
         .revision-item { padding: 15px; border-bottom: 1px solid var(--border-color); }
         .revision-item:last-child { border-bottom: none; }
         .revision-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
@@ -303,11 +353,17 @@
 
         /* --- Responsive Design --- */
         @media (max-width: 1200px) {
+            html, body {
+                height: auto;
+                overflow-x: hidden;
+                overflow-y: auto;
+            }
+
             .main-container {
                 grid-template-columns: 1fr;
-                grid-template-rows: 1fr auto;
-                height: auto;
+                grid-template-rows: auto auto;
                 min-height: 100vh;
+                height: auto;
                 padding: 16px;
                 box-sizing: border-box;
             }
@@ -315,12 +371,13 @@
             .content-container {
                 order: 1; /* Content first on mobile */
                 height: auto;
-                overflow-y: visible;
+                min-height: auto;
             }
 
             .pdf-section {
                 position: relative;
-                height: 400px; /* Default height on mobile */
+                top: auto;
+                height: 50vh; /* 50% of viewport height */
                 margin-top: 24px;
                 order: 2; /* PDF below content */
             }
@@ -342,11 +399,6 @@
             .pdf-size-controls button[data-size] {
                 display: inline-block;
             }
-
-            body {
-                height: auto;
-                overflow: auto;
-            }
         }
 
         @media (max-width: 576px) {
@@ -358,7 +410,7 @@
             .data-table tbody th { width: 25%; }
             .actions { display: flex; flex-direction: column; gap: 10px; }
             .btn { width: 100%; margin: 0; box-sizing: border-box; }
-            .pdf-section { height: 350px; }
+            .pdf-section { height: 50vh; } /* Keep 50% on small screens */
             .pdf-size-controls { padding: 8px; gap: 6px; }
             .pdf-size-controls button { padding: 5px 10px; font-size: 12px; }
         }
@@ -382,18 +434,25 @@
 
             {% if revision_history %}
             <div class="container">
-                <h2>수정 이력</h2>
-                <div class="revision-history">
-                    {% for revision in revision_history %}
-                    <div class="revision-item">
-                        <div class="revision-header">
-                            <span class="revision-time">{{ revision.modified_at|date:"Y-m-d H:i:s" }}</span>
-                            <span class="revision-user">{{ revision.modified_by.username|default:"시스템" }}</span>
+                <h2>
+                    <span>수정 이력</span>
+                    <button type="button" class="revision-toggle-btn" id="revisionToggle">
+                        숨기기<span class="revision-toggle-icon">▼</span>
+                    </button>
+                </h2>
+                <div class="revision-history-container" id="revisionHistoryContainer">
+                    <div class="revision-history">
+                        {% for revision in revision_history %}
+                        <div class="revision-item">
+                            <div class="revision-header">
+                                <span class="revision-time">{{ revision.modified_at|date:"Y-m-d H:i:s" }}</span>
+                                <span class="revision-user">{{ revision.modified_by.username|default:"시스템" }}</span>
+                            </div>
+                            <div class="revision-summary">{{ revision.summary }}</div>
+                            <div class="revision-fields">변경 필드: {{ revision.changed_fields|default:"없음" }}</div>
                         </div>
-                        <div class="revision-summary">{{ revision.summary }}</div>
-                        <div class="revision-fields">변경 필드: {{ revision.changed_fields|default:"없음" }}</div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
                 </div>
             </div>
             {% endif %}
@@ -634,6 +693,31 @@
             const savedSize = localStorage.getItem('pdfSize') || '400';
             setPdfSize(parseInt(savedSize));
         });
+
+        // Revision History Toggle
+        const revisionToggle = document.getElementById('revisionToggle');
+        const revisionContainer = document.getElementById('revisionHistoryContainer');
+
+        if (revisionToggle && revisionContainer) {
+            // Load saved state
+            const revisionCollapsed = localStorage.getItem('revisionCollapsed') === 'true';
+            if (revisionCollapsed) {
+                revisionContainer.classList.add('collapsed');
+                revisionToggle.innerHTML = '보기<span class="revision-toggle-icon">▶</span>';
+            }
+
+            revisionToggle.addEventListener('click', function() {
+                const isCollapsed = revisionContainer.classList.toggle('collapsed');
+
+                if (isCollapsed) {
+                    revisionToggle.innerHTML = '보기<span class="revision-toggle-icon">▶</span>';
+                    localStorage.setItem('revisionCollapsed', 'true');
+                } else {
+                    revisionToggle.innerHTML = '숨기기<span class="revision-toggle-icon">▼</span>';
+                    localStorage.setItem('revisionCollapsed', 'false');
+                }
+            });
+        }
     });
     </script>
 </body>
