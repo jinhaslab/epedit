@@ -1,0 +1,14 @@
+  커밋 내용:
+  - 모바일 반응형 UI 개선
+    - 사이드바 토글 기능
+    - localStorage 상태 유지
+    - 부드러운 애니메이션
+  - PostgreSQL Trigram 유사도 검색
+    - "파키인슨" → "파킨슨병" 검색 지원
+    - 오타/유사어 자동 검색
+
+  변경된 파일:
+  - core/settings.py - django.contrib.postgres 추가
+  - records/views.py - TrigramSimilarity 검색 구현
+  - records/templates/records/record_list.html - 모바일 UI 개선
+  - records/templates/records/record_detail.html

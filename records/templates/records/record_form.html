@@ -1,120 +1,159 @@
 <!DOCTYPE html>
 <html lang="ko">
-  {% load record_extras %} {% load static %}
+{% load record_extras %} {% load static %}
 
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>기록 수정:{{ record.case.fid }}</title>
+    <title>기록 수정: {{ record.case.fid }}</title>
+    <!-- Bootstrap CSS for modal functionality -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="{% static 'records/css/record_form.css' %}" />
     <style>
-      /* Override Bootstrap link styles with highest specificity */
-      .readonly-field a.readonly-value.link-style,
-      .readonly-field-group a.readonly-value.link-style,
-      a.readonly-value.link-style {
-        display: inline-block !important;
-        padding: 6px 12px !important;
-        border: 1px solid #6c757d !important;
-        border-radius: 4px !important;
-        color: #007bff !important;
-        text-decoration: none !important;
-        font-size: 14px !important;
-        background-color: transparent !important;
-        background: none !important;
-        transition: all 0.2s ease !important;
-      }
+        @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap");
 
-      .readonly-field a.readonly-value.link-style:hover,
-      .readonly-field-group a.readonly-value.link-style:hover,
-      a.readonly-value.link-style:hover {
-        background-color: #6c757d !important;
-        background: #6c757d !important;
-        color: white !important;
-        text-decoration: none !important;
-        border-color: #6c757d !important;
-      }
+        :root {
+            --yonsei-blue: #003876;
+            --accent-green: #2E7D32;
+            --accent-red: #D32F2F;
+            --text-color: #212529;
+            --text-secondary-color: #6c757d;
+            --background-color: #f8f9fa;
+            --card-background: #ffffff;
+            --border-color: #e9ecef;
+            --border-dark-color: #ced4da;
+            --input-border-color: #ced4da;
+            --pastel-blue: #eef2ff;
+            --pastel-light-green: #e8f5e9;
+            --table-header-bg: #f1f3f5;
+            --highlight-yellow: #ffeb3b;
+            --highlight-orange: #ffcc80;
+        }
 
-      .readonly-field a.readonly-value.link-style:visited,
-      .readonly-field-group a.readonly-value.link-style:visited,
-      a.readonly-value.link-style:visited {
-        color: #007bff !important;
-        background-color: transparent !important;
-        background: none !important;
-      }
+        /* --- Base & Layout --- */
+        html, body { font-family: "Noto Sans KR", sans-serif; margin: 0; padding: 0; background-color: var(--background-color); height: 100vh; overflow: hidden; }
+        .main-wrapper { display: grid; grid-template-columns: 900px 1fr; height: 100%; }
+        .pdf-section { position: relative; display: flex; height: 100%; background: var(--card-background); box-shadow: 2px 0 10px rgba(0,0,0,0.05); }
+        .resizer { position: absolute; top: 0; right: -4px; width: 8px; height: 100%; cursor: col-resize; background: transparent; z-index: 10; }
+        .resizer:hover, .resizer.active { background: var(--accent-green); opacity: 0.5; }
+        .pdf-viewer { flex-grow: 1; width: 100%; height: 100%; overflow: hidden; }
+        .pdf-viewer iframe { width: 100%; height: 100%; border: none; }
+        
+        .form-content { padding: 32px; overflow-y: auto; height: 100vh; box-sizing: border-box; }
+        .form-content h1 { font-size: 26px; font-weight: 700; margin: 0 0 24px 0; background-color: var(--pastel-blue); color: var(--text-color); padding: 8px 16px; border-radius: 8px; display: inline-block; }
+        .form-content h2 { font-size: 20px; color: var(--accent-green); padding-bottom: 12px; margin: 0 0 20px 0; border-bottom: 2px solid var(--accent-green); display: flex; justify-content: space-between; align-items: center; }
+        .form-section { background: var(--card-background); padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 24px; border: 1px solid var(--border-color); }
+        
+        /* Readonly Fields */
+        .readonly-field-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px 24px; }
+        .readonly-field .label { font-weight: 500; color: #495057; margin-bottom: 6px; font-size: 15px; }
+        .readonly-field .readonly-value { color: var(--text-secondary-color); background-color: var(--table-header-bg); padding: 8px 12px; border-radius: 4px; display: block; min-height: 21px; }
+        
+        /* Comparison Table & Forms */
+        .comparison-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 15px; }
+        .comparison-table th, .comparison-table td { padding: 12px; vertical-align: middle; border-bottom: 1px solid var(--border-color); }
+        .comparison-table thead th { background-color: var(--table-header-bg); color: #495057; font-weight: 700; font-size: 15px; border-bottom: 2px solid var(--border-dark-color); text-align: left; }
+        .comparison-table tbody th { width: 15%; font-weight: 500; background-color: var(--table-header-bg); text-align: right; padding-right: 15px; border-right: 1px solid var(--border-dark-color); }
+        .comparison-table tr:last-child th, .comparison-table tr:last-child td { border-bottom: none; }
+        .comparison-table tbody td:last-child { font-size: 12px; }
+        .comparison-table tbody td:last-child input,
+        .comparison-table tbody td:last-child textarea { font-size: 12px; }
+        
+        .form-control, .form-control-sm, select { width: 100%; padding: 8px 12px; font-size: 14px; border: 1px solid var(--input-border-color); border-radius: 4px; height: 40px; box-sizing: border-box; transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out; }
+        textarea.form-control { height: auto; min-height: 100px; }
+        .form-control:focus, select:focus { border-color: var(--accent-green); box-shadow: 0 0 0 0.2rem rgba(46, 125, 50, 0.25); outline: none; }
+        
+        /* --- Tag-based Input Styling --- */
+        .tag-input-container { background-color: white; border: 1px solid var(--input-border-color); border-radius: 4px; padding: 5px; display: flex; flex-wrap: wrap; gap: 6px; min-height: 40px; box-sizing: border-box; cursor: text; transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out; }
+        .tag-input-container:focus-within { border-color: var(--accent-green); box-shadow: 0 0 0 0.2rem rgba(46, 125, 50, 0.25); }
+        .tag-item { display: inline-flex; align-items: center; background-color: var(--pastel-light-green); color: var(--accent-green); border-radius: 16px; padding: 4px 12px; font-weight: 500; white-space: nowrap; }
+        .tag-item .remove-tag { font-size: 20px; margin-left: 16px; cursor: pointer; color: var(--text-secondary-color); line-height: 1; transition: color 0.2s; }
+        .tag-item .remove-tag:hover { color: var(--accent-red); }
+        .tag-input-container input { flex-grow: 1; border: none; outline: none; padding: 4px; font-size: 14px; background: transparent; min-width: 120px; }
 
-      .readonly-field a.readonly-value.link-style:focus,
-      .readonly-field-group a.readonly-value.link-style:focus,
-      a.readonly-value.link-style:focus {
-        color: #007bff !important;
-        background-color: transparent !important;
-        background: none !important;
-        outline: none !important;
-        box-shadow: none !important;
-      }
+        .ai-button { background: var(--yonsei-blue); color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 12px; cursor: pointer; margin-left: 8px; transition: background-color 0.2s; }
+        .ai-button:hover { background-color: #002c5f; }
+        
+        /* Highlight borders for dictionary buttons */
+        #disease-dict-btn { border: 2px solid var(--highlight-yellow); }
+        #job-dict-btn { border: 2px solid var(--highlight-orange); }
 
-      .readonly-field a.readonly-value.link-style:active,
-      .readonly-field-group a.readonly-value.link-style:active,
-      a.readonly-value.link-style:active {
-        color: #007bff !important;
-        background-color: #f8f9fa !important;
-        background: #f8f9fa !important;
-      }
+        .input-group > .form-control { border-radius: 4px 0 0 4px; }
+        .input-group-append .btn { border-radius: 0 4px 4px 0;}
+
+        .autocomplete-suggestions { border: 1px solid #ddd; max-height: 180px; overflow-y: auto; position: absolute; background-color: white; z-index: 1000; width: 100%; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: none; border-radius: 4px; }
+        .suggestion-item { padding: 10px 12px; cursor: pointer; font-size: 14px; border-bottom: 1px solid var(--border-color); }
+        .suggestion-item:last-child { border-bottom: none; }
+        .suggestion-item:hover { background-color: var(--pastel-light-green); }
+
+        .confirmation-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; }
+        .custom-checkbox { display: flex; align-items: center; }
+        .custom-checkbox input[type="checkbox"] { opacity: 0; width: 0; height: 0; }
+        .custom-checkbox label { cursor: pointer; display: flex; align-items: center; font-size: 15px; margin-bottom: 0; }
+        .custom-checkbox label::before { content: ''; display: inline-block; width: 20px; height: 20px; border: 2px solid var(--input-border-color); border-radius: 4px; margin-right: 10px; transition: all 0.2s ease; }
+        .custom-checkbox input[type="checkbox"]:checked + label::before { background-color: var(--accent-green); border-color: var(--accent-green); background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23fff' d='M6.564.75l-3.59 3.612-1.538-1.55L0 4.26l2.974 2.99L8 2.193z'/%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: center; }
+        .custom-checkbox input[type="checkbox"]:focus + label::before { box-shadow: 0 0 0 0.2rem rgba(46, 125, 50, 0.25); }
+        
+        .action-buttons { margin-top: 30px; text-align: right; }
+        .btn { display: inline-block; padding: 10px 24px; margin-left: 10px; border-radius: 6px; text-decoration: none; color: #fff; font-weight: 500; border: none; cursor: pointer; transition: all 0.2s ease; font-size: 15px; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .btn-primary { background-color: var(--accent-green); }
+        .btn-secondary, .cancel-link { background-color: var(--text-secondary-color); color: white; text-decoration: none; }
+        
+        .modal-header { background: var(--yonsei-blue); color: white; }
+        .modal-header .close { color: white; opacity: 0.9; }
+        .modal-body { max-height: 60vh; overflow-y: auto; }
+
+        @media (max-width: 1200px) { .main-wrapper { grid-template-columns: 1fr; } .pdf-section { display: none; } .form-content { height: auto; } }
     </style>
-  </head>
-  <body>
+</head>
+<body>
     <div class="main-wrapper">
-      <div class="pdf-section">
-        <div class="resizer" id="resizer"></div>
-        <div class="pdf-viewer">
-          {% if record.pdf_link %}
-          <iframe src="{{ record.pdf_link }}" title="PDF 뷰어"></iframe>
-          {% else %}
-          <p style="text-align: center; padding-top: 40px">표시할 PDF가 없습니다.</p>
-          {% endif %}
+        <div class="pdf-section">
+            <div class="pdf-viewer">
+                {% if record.pdf_link %}
+                <iframe src="{{ record.pdf_link }}" title="PDF 뷰어"></iframe>
+                {% else %}
+                <p style="text-align: center; padding-top: 40px">표시할 PDF가 없습니다.</p>
+                {% endif %}
+            </div>
+            <div class="resizer" id="resizer"></div>
         </div>
-      </div>
 
-      <div class="form-content">
-        <h1>기록 수정 {{ record.case.fid }}</h1>
-        <form method="post" action="{% url 'record_edit' record.pk %}?{{ other_params }}">
-          {% csrf_token %}
-          <!-- IDS 필드 보존을 위한 hidden input -->
-          <input type="hidden" name="ids" value="{{ record.ids|default:'' }}" />
+        <div class="form-content">
+            <h1>기록 수정: {{ record.case.fid }}</h1>
+            <form method="post" action="{% url 'record_edit' record.pk %}?{{ other_params }}">
+                {% csrf_token %}
+                <input type="hidden" name="ids" value="{{ record.ids|default:'' }}" />
 
-          <!-- Readonly 필드들 -->
-          {% include 'records/components/readonly_fields.html' %}
+                <div class="form-section">
+                     {% include 'records/components/readonly_fields.html' %}
+                </div>
 
-          <h2>
-            최초 & 최종 변경 내역
-            <!--button type="button" class="btn btn-secondary mt-2" id="rag-search-button" data-toggle="modal" data-target="#ragSearchModal">
-              RAG 검색
-            </button-->
-          </h2>
+                <div class="form-section">
+                    <h2>최초 & 최종 변경 내역</h2>
+                     {% include 'records/components/comparison_table.html' %}
+                </div>
+                
+                <div class="form-section">
+                    <h2>최종 확인</h2>
+                     {% include 'records/components/confirmation_section.html' %}
+                </div>
 
-          <!-- 비교 테이블 -->
-          {% include 'records/components/comparison_table.html' %}
-
-          <!-- 확인 체크박스 -->
-          {% include 'records/components/confirmation_section.html' %}
-
-          <div class="action-buttons">
-            <button type="submit">저장</button>
-            <a href="{% url 'record_list' %}?{{ other_params }}" class="cancel-link">취소</a>
-          </div>
-        </form>
-      </div>
+                <div class="action-buttons">
+                    <a href="{% url 'record_detail' record.pk %}?{{ other_params }}" class="btn btn-secondary">취소</a>
+                    <button type="submit" class="btn btn-primary">저장</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- RAG 검색 모달 -->
     {% include 'records/components/rag_search_modal.html' %}
 
-    <!-- JavaScript -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
-    <!-- 설정 객체 -->
     <script>
       window.RECORD_FORM_CONFIG = {
         autocompleteUrl: "{% url 'autocomplete_suggestions' %}",
@@ -126,194 +165,42 @@
       };
     </script>
 
-    <!-- 메인 JavaScript -->
     <script src="{% static 'records/js/form_scripts.js' %}"></script>
     <script src="{% static 'records/js/additional_disease_handler.js' %}"></script>
-
-    <!-- 디버깅용 인라인 스크립트 -->
+    
     <script>
-      console.log("=== DEBUGGING START ===");
-      console.log("Disease input:", document.getElementById("disease_input"));
-      console.log("Disease suggestions:", document.getElementById("disease_suggestions"));
-      console.log("Disease hidden:", document.getElementById("disease_hidden"));
-      console.log("RECORD_FORM_CONFIG:", window.RECORD_FORM_CONFIG);
+    document.addEventListener('DOMContentLoaded', function () {
+        // Resizer Logic
+        const resizer = document.getElementById('resizer');
+        const mainWrapper = document.querySelector('.main-wrapper');
+        let isResizing = false;
 
-      // DEBUG: current_data 값 확인
-      const debugData = document.getElementById("debug-data");
-      if (debugData) {
-        console.log("DEBUG DATA:", debugData.textContent);
-      }
+        resizer.addEventListener('mousedown', function (e) {
+            isResizing = true;
+            resizer.classList.add('active');
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', function () {
+                isResizing = false;
+                resizer.classList.remove('active');
+                document.removeEventListener('mousemove', handleMouseMove);
+            });
+        });
 
-      // DEBUG: hidden input 값 확인
-      console.log("disease_hidden value:", document.getElementById("disease_hidden")?.value);
-      console.log("additional_disease_hidden value:", document.getElementById("additional_disease_hidden")?.value);
-      console.log("job_hidden value:", document.getElementById("job_hidden")?.value);
-      console.log("exposure_hidden value:", document.getElementById("exposure_hidden")?.value);
-
-      // 간단한 테스트
-      document.addEventListener("DOMContentLoaded", function () {
-        console.log("DOM loaded, testing disease input...");
-        const diseaseInput = document.getElementById("disease_input");
-        const diseaseSuggestions = document.getElementById("disease_suggestions");
-
-        if (diseaseInput) {
-          console.log("Disease input found, adding test listeners");
-
-          // 클릭 테스트
-          diseaseInput.addEventListener("click", function () {
-            console.log("Disease input clicked!");
-          });
-
-          // 간단한 autocomplete 테스트
-          diseaseInput.addEventListener("input", async function (e) {
-            console.log("Input event:", e.target.value);
-
-            if (e.target.value.length > 0) {
-              try {
-                const config = window.RECORD_FORM_CONFIG || {};
-                const url = config.autocompleteUrl || "/api/autocomplete/";
-                const fullUrl = `${url}?field_name=disease_name&q=${encodeURIComponent(e.target.value)}`;
-                console.log("Fetching:", fullUrl);
-
-                const response = await fetch(fullUrl);
-                const data = await response.json();
-                console.log("Response:", data);
-
-                if (diseaseSuggestions && data.suggestions) {
-                  diseaseSuggestions.innerHTML = "";
-                  data.suggestions.forEach((suggestion) => {
-                    const div = document.createElement("div");
-                    div.className = "suggestion-item";
-                    div.textContent = suggestion.name || suggestion;
-                    div.style.padding = "10px";
-                    div.style.cursor = "pointer";
-                    div.style.borderBottom = "1px solid #eee";
-                    div.addEventListener("click", () => {
-                      diseaseInput.value = suggestion.name || suggestion;
-                      diseaseSuggestions.style.display = "none";
-                    });
-                    diseaseSuggestions.appendChild(div);
-                  });
-                  diseaseSuggestions.style.display = "block";
-                  diseaseSuggestions.style.position = "absolute";
-                  diseaseSuggestions.style.background = "white";
-                  diseaseSuggestions.style.border = "1px solid #ddd";
-                  diseaseSuggestions.style.zIndex = "9999";
-                  diseaseSuggestions.style.maxHeight = "200px";
-                  diseaseSuggestions.style.overflow = "auto";
-                }
-              } catch (error) {
-                console.error("Fetch error:", error);
-              }
-            } else {
-              if (diseaseSuggestions) {
-                diseaseSuggestions.style.display = "none";
-              }
-            }
-          });
-        } else {
-          console.error("Disease input NOT found!");
-        }
-
-        // 🎡 **SCROLL WHEEL RESIZER SYSTEM (600px start) - TOP POSITION**
-        const resizer = document.getElementById("resizer");
-        const mainWrapper = document.querySelector(".main-wrapper");
-        const pdfSection = document.querySelector(".pdf-section");
-
-        console.log("🎡 Initializing TOP RESIZER system...");
-
-        if (resizer && mainWrapper && pdfSection) {
-          let currentPdfWidth = 4800; // 초기값
-          let isHoveringResizer = false;
-
-          // 🎡 **Get current PDF width from grid**
-          function getCurrentPdfWidth() {
-            const currentCols = window.getComputedStyle(mainWrapper).gridTemplateColumns;
-            const match = currentCols.match(/^(\d+)px/);
-            return match ? parseInt(match[1]) : 4800;
-          }
-
-          // 🎨 **Update PDF section width**
-          function updatePdfWidth(newWidth) {
+        function handleMouseMove(e) {
+            if (!isResizing) return;
             const containerRect = mainWrapper.getBoundingClientRect();
-            const totalWidth = containerRect.width;
-            const gap = 12; // grid gap
-
-            const minPdfWidth = 200;
-            const minContentWidth = 300;
-            const maxPdfWidth = totalWidth - gap - minContentWidth;
-
-            // 🎨 **Smooth clamping**
-            const clampedWidth = Math.max(minPdfWidth, Math.min(newWidth, maxPdfWidth));
-
-            // ✨ **Update grid template columns**
-            mainWrapper.style.gridTemplateColumns = `${clampedWidth}px 1fr`;
-            currentPdfWidth = clampedWidth;
-
-            console.log(`🎡 TOP Resize: ${clampedWidth}px`);
-            return clampedWidth;
-          }
-
-          // 🎡 **Scroll wheel event handler**
-          function handleWheelResize(e) {
-            if (!isHoveringResizer) return;
-
-            e.preventDefault(); // 페이지 스크롤 방지
-
-            // 🎡 **Scroll direction and step size**
-            const delta = e.deltaY > 0 ? -20 : 20; // 아래 스크롤 = 축소, 위 스크롤 = 확대
-            const newWidth = getCurrentPdfWidth() + delta;
-
-            updatePdfWidth(newWidth);
-
-            // 🎨 **Visual feedback during scroll**
-            resizer.style.background = "linear-gradient(90deg, #667eea 0%, #764ba2 100%)";
-            resizer.style.transform = "scale(1.1)";
-
-            // Reset visual feedback after 200ms
-            setTimeout(() => {
-              resizer.style.background = "linear-gradient(90deg, #e2e8f0 0%, #cbd5e0 50%, #e2e8f0 100%)";
-              resizer.style.transform = "scale(1)";
-            }, 200);
-          }
-
-          // 🖱️ **Hover detection for resizer**
-          resizer.addEventListener("mouseenter", function () {
-            isHoveringResizer = true;
-            resizer.style.background = "linear-gradient(90deg, #28a745 0%, #20c997 50%, #28a745 100%)";
-            resizer.style.cursor = "grab";
-            console.log("🎡 Hovering resizer - scroll to resize!");
-          });
-
-          resizer.addEventListener("mouseleave", function () {
-            isHoveringResizer = false;
-            resizer.style.background = "linear-gradient(90deg, #e2e8f0 0%, #cbd5e0 50%, #e2e8f0 100%)";
-            resizer.style.cursor = "col-resize";
-            console.log("🎡 Left resizer");
-          });
-
-          // 🎡 **Add scroll event listener**
-          resizer.addEventListener("wheel", handleWheelResize, { passive: false });
-
-          // 🎯 **Optional: Keyboard shortcuts**
-          document.addEventListener("keydown", function (e) {
-            if (!isHoveringResizer) return;
-
-            if (e.key === "ArrowLeft" || e.key === "-") {
-              e.preventDefault();
-              updatePdfWidth(getCurrentPdfWidth() - 50);
-            } else if (e.key === "ArrowRight" || e.key === "+") {
-              e.preventDefault();
-              updatePdfWidth(getCurrentPdfWidth() + 50);
+            let newPdfWidth = e.clientX - containerRect.left;
+            
+            const minPdfWidth = 300;
+            const minContentWidth = 400;
+            if (newPdfWidth < minPdfWidth) newPdfWidth = minPdfWidth;
+            if (newPdfWidth > containerRect.width - minContentWidth) {
+                newPdfWidth = containerRect.width - minContentWidth;
             }
-          });
-
-          console.log("✅ SCROLL WHEEL Resizer initialized! Starting at 4800px");
-          console.log("💡 Hover over resizer and use mouse wheel to resize!");
-        } else {
-          console.error("❌ Failed to initialize resizer");
+            mainWrapper.style.gridTemplateColumns = `${newPdfWidth}px 1fr`;
         }
-      });
+    });
     </script>
-  </body>
+</body>
 </html>
+

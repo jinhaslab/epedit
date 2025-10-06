@@ -9,17 +9,19 @@
         @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap");
         
         :root {
+            /* Color Palette */
             --yonsei-blue: #003876;
-            --primary-color: var(--yonsei-blue);
-            --background-color: #f8f9fa;
-            --card-background: #ffffff;
+            --header-gradient-end: #005eb8;
+            --accent-green: #2E7D32;
+            --sidebar-hover-bg: #E8F5E9;
             --text-color: #212529;
             --text-secondary-color: #6c757d;
+            --background-color: #f8f9fa;
+            --card-background: #ffffff;
             --border-color: #e9ecef;
             --sidebar-width: 280px;
             --sidebar-collapsed-width: 80px;
-            --pdf-red-color: #E53E3E;
-            --success-color: #28a745;
+            --pdf-red-color: #D32F2F;
         }
 
         /* --- Base & Layout --- */
@@ -35,7 +37,7 @@
         }
 
         .yonsei-header {
-            background: linear-gradient(135deg, #002c5f 0%, #004ea2 100%);
+            background: linear-gradient(135deg, var(--yonsei-blue) 0%, var(--header-gradient-end) 100%);
             color: white;
             padding: 16px 30px;
             display: flex;
@@ -50,6 +52,17 @@
             font-size: 22px;
             font-weight: 700;
             letter-spacing: -0.5px;
+        }
+
+        .yonsei-header h1 a {
+            color: white;
+            text-decoration: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .yonsei-header h1 a:hover {
+            opacity: 0.9;
+            text-decoration: underline;
         }
 
         .dashboard-layout {
@@ -72,7 +85,7 @@
 
         .main-content {
             flex-grow: 1;
-            padding: 40px;
+            padding: 20px 40px 40px 40px;
             overflow-y: auto;
         }
 
@@ -82,12 +95,11 @@
         #sidebar-toggle { background: none; border: none; cursor: pointer; font-size: 24px; padding: 5px; line-height: 1; color: var(--text-secondary-color); }
         .sidebar-user { padding: 20px; border-bottom: 1px solid var(--border-color); white-space: nowrap; font-size: 14px; flex-shrink: 0; }
         .sidebar-user p { margin: 0 0 8px 0; }
-        .sidebar-user strong { color: var(--primary-color); }
-        .sidebar-user button { font-size: 14px; }
-        .sidebar-user a { color: var(--primary-color); text-decoration: none; }
+        .sidebar-user strong { color: var(--accent-green); }
+        .sidebar-user button, .sidebar-user a { font-size: 14px; color: var(--accent-green); text-decoration: none; }
         .sidebar-menu { padding: 15px; border-bottom: 1px solid var(--border-color); }
         .menu-item { display: flex; align-items: center; gap: 15px; padding: 14px; border-radius: 8px; text-decoration: none; color: #343a40; font-weight: 500; transition: background-color 0.2s, color 0.2s; }
-        .menu-item:hover { background-color: #eef2ff; color: var(--primary-color); }
+        .menu-item:hover { background-color: var(--sidebar-hover-bg); color: var(--accent-green); }
         .menu-item svg { width: 22px; height: 22px; }
         .sidebar-status { padding: 20px 15px; }
         .status-title { font-size: 16px; font-weight: 700; margin: 0 0 15px 0; padding-left: 5px; }
@@ -111,14 +123,14 @@
         .filter-group { display: flex; flex-direction: column; gap: 8px; }
         .filter-group--ids { flex: 1; }
         .range-filter { display: flex; align-items: center; gap: 8px; }
-        .range-filter input { flex: 1; } /* IDS 범위 입력 상자 길이 수정 */
+        .range-filter input { flex: 1; }
         .filter-actions { margin-left: auto; display: flex; gap: 10px; }
         .filter-actions button, .filter-actions a { padding: 10px 20px; font-size: 14px; border-radius: 6px; cursor: pointer; font-weight: 500; border: none; color: white; text-decoration: none; display: inline-block; transition: all 0.2s ease; }
         .filter-actions button:hover, .filter-actions a:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .filter-actions button { background-color: var(--primary-color); }
+        .filter-actions button { background-color: var(--accent-green); }
         .filter-actions a { background-color: var(--text-secondary-color); }
         .filter-select, .autocomplete-input-wrapper, .filter-input { width: 100%; padding: 8px 12px; font-size: 14px; border: 1px solid #ced4da; border-radius: 6px; height: 40px; box-sizing: border-box; background-color: #fff; transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out; }
-        .filter-select:focus, .autocomplete-input-wrapper:focus-within, .filter-input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 0.2rem rgba(0, 56, 118, 0.25); outline: none; }
+        .filter-select:focus, .autocomplete-input-wrapper:focus-within, .filter-input:focus { border-color: var(--accent-green); box-shadow: 0 0 0 0.2rem rgba(46, 125, 50, 0.25); outline: none; }
         .autocomplete-input-wrapper { display: flex; flex-wrap: wrap; align-items: center; padding: 2px 5px; }
         .autocomplete-input { flex-grow: 1; min-width: 80px; border: none; padding: 5px; outline: none; font-size: 14px; background: transparent; }
         .checkbox-group { display: flex; align-items: center; flex-wrap: wrap; }
@@ -136,18 +148,19 @@
         .details span { cursor: pointer; }
         .record-actions { display: flex; align-items: center; gap: 20px; white-space: nowrap; flex-shrink: 0; padding-left: 20px; }
         .confirmation-status { font-size: 24px; }
-        .detail-link { background-color: var(--primary-color); color: #fff; padding: 10px 24px; border-radius: 6px; text-decoration: none; font-weight: 500; transition: background-color 0.2s, transform 0.2s; }
-        .detail-link:hover { background-color: #002c5c; transform: scale(1.05); }
+        .detail-link { background-color: var(--yonsei-blue); color: #fff; padding: 10px 24px; border-radius: 6px; text-decoration: none; font-weight: 500; transition: background-color 0.2s, transform 0.2s; }
+        .detail-link:hover { background-color: #002c5f; transform: scale(1.05); }
         
         /* --- Popup & Pagination --- */
         .summary-popup { display: none; position: absolute; background-color: #fff; border: 1px solid #ccc; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); padding: 15px; max-width: 400px; z-index: 1000; border-radius: 8px; font-size: 14px; line-height: 1.6; word-wrap: break-word; white-space: normal; }
         .pagination { margin-top: 40px; display: flex; justify-content: center; align-items: center; gap: 8px; }
-        .pagination a, .pagination .current { color: var(--text-secondary-color); padding: 8px 16px; text-decoration: none; border: 1px solid var(--border-color); border-radius: 6px; transition: all 0.2s ease; }
-        .pagination a:hover { background-color: #e9ecef; border-color: #ced4da; }
-        .pagination .current { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
+        .pagination a { color: var(--yonsei-blue); padding: 8px 16px; text-decoration: none; border: 1px solid var(--yonsei-blue); border-radius: 6px; transition: all 0.2s ease; }
+        .pagination a:hover { background-color: var(--yonsei-blue); color: white; border-color: var(--yonsei-blue); }
+        .pagination .current { background-color: var(--yonsei-blue); color: white; padding: 8px 16px; text-decoration: none; border: 1px solid var(--yonsei-blue); border-radius: 6px; }
         .page-input-group { margin: 0 10px; display: flex; align-items: center; }
         .page-input-group input[type="number"] { width: 60px; text-align: center; border: 1px solid #ccc; border-radius: 4px; padding: 6px; margin-right: 5px; }
-        .page-input-group button { padding: 6px 12px; border: 1px solid #ccc; background-color: #f0f0f0; cursor: pointer; border-radius: 4px; margin-left: 12px; }
+        .page-input-group button { padding: 6px 12px; border: 1px solid var(--yonsei-blue); color: var(--yonsei-blue); background-color: #f0f0f0; cursor: pointer; border-radius: 4px; margin-left: 12px; transition: all 0.2s ease; }
+        .page-input-group button:hover { background-color: var(--yonsei-blue); color: white; }
         .selected-tags-container { display: flex; flex-wrap: wrap; gap: 4px; }
         .tag-item { background-color: #e9ecef; color: #495057; padding: 4px 10px; border-radius: 12px; display: flex; align-items: center; font-size: 13px; white-space: nowrap; }
         .tag-close { margin-left: 6px; cursor: pointer; font-weight: bold; }
@@ -160,7 +173,7 @@
         /* --- Mobile Sidebar Toggle --- */
         .mobile-sidebar-toggle {
             display: none;
-            background-color: var(--primary-color);
+            background-color: var(--accent-green);
             color: white;
             border: none;
             padding: 12px 20px;
@@ -176,7 +189,7 @@
         }
 
         .mobile-sidebar-toggle:hover {
-            background-color: #002c5c;
+            background-color: #1B5E20;
         }
 
         .mobile-sidebar-toggle .toggle-icon {
@@ -219,7 +232,7 @@
 </head>
 <body>
     <header class="yonsei-header">
-        <h1>연세대학교 역학조사 DB 대시보드</h1>
+        <h1><a href="{% url 'record_list' %}">연세대학교 역학조사 DB 대시보드</a></h1>
     </header>
 
     <div class="dashboard-layout">
@@ -233,7 +246,7 @@
                 <p>안녕하세요, <strong>{{ user.username }}</strong>님!</p>
                 <form action="{% url 'logout' %}" method="post" style="display: inline">
                     {% csrf_token %}
-                    <button type="submit" style="background:none; border:none; padding:0; color:var(--primary-color); cursor:pointer; text-decoration:underline;">로그아웃</button>
+                    <button type="submit" style="background:none; border:none; padding:0; cursor:pointer; text-decoration:underline;">로그아웃</button>
                 </form>
                 {% else %}
                 <a href="{% url 'login' %}">로그인</a>
@@ -262,7 +275,7 @@
             <div class="filter-form">
                 <form method="get" id="filterForm">
                     <div class="filter-row">
-                        <div class="filter-item"><label for="fname_input">파일명:</label><input type="text" name="fname" id="fname_input" class="filter-input" placeholder="파일명 검색" value="{{ request.GET.fname }}"/></div>
+                        <div class="filter-item"><label for="fname_input">파일명(유사명 포함):</label><input type="text" name="fname" id="fname_input" class="filter-input" placeholder="파일명 검색" value="{{ request.GET.fname }}"/></div>
                         <div class="filter-item"><label for="disease_name_input">질병명:</label><div class="autocomplete-input-wrapper"><div id="disease_name_tags" class="selected-tags-container"></div><input type="text" id="disease_name_input" class="autocomplete-input" data-field-name="disease_name" placeholder="질병명 검색/선택"/></div><div id="disease_name_suggestions" class="autocomplete-suggestions"></div><input type="hidden" name="disease_name" id="disease_name_hidden" value="{{ request.GET.disease_name }}"/></div>
                         <div class="filter-item"><label for="job_input">직종:</label><div class="autocomplete-input-wrapper"><div id="job_tags" class="selected-tags-container"></div><input type="text" id="job_input" class="autocomplete-input" data-field-name="job" placeholder="직종 검색/선택"/></div><div id="job_suggestions" class="autocomplete-suggestions"></div><input type="hidden" name="job" id="job_hidden" value="{{ request.GET.job }}"/></div>
                         <div class="filter-item"><label for="decision_select">결정사항:</label><select name="decision" id="decision_select" class="filter-select"><option value="" {% if not request.GET.decision %}selected{% endif %}>전체</option><option value="높음" {% if request.GET.decision == "높음" %}selected{% endif %}>높음</option><option value="낮음" {% if request.GET.decision == "낮음" %}selected{% endif %}>낮음</option></select></div>
@@ -363,4 +376,3 @@
     </script>
 </body>
 </html>
-

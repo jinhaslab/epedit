@@ -3,8 +3,8 @@
     <ul class="user-list">
         {% for user in online_users %}
             <li class="status-item">
-                <span class="status-indicator"></span>
                 <span class="status-user">{{ user.username }}</span>
+                <span class="status-indicator"></span>
             </li>
         {% empty %}
             <li class="status-item-empty">
@@ -21,8 +21,32 @@
     padding: 0;
     margin: 0;
 }
+
+.status-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 5px;
+    font-size: 14px;
+}
+
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    background-color: #2E7D32;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.status-user {
+    color: #343a40;
+    font-weight: 500;
+}
+
 .status-item-empty {
     font-size: 14px;
     color: #6c757d;
+    padding: 6px 5px;
 }
 </style>
