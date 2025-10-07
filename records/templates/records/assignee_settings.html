@@ -1,389 +1,446 @@
-{% extends 'records/base.html' %}
-{% load static %}
+{% load online_users %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>담당자 설정 - 직업성 질환 기록</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap");
 
-{% block title %}담당자 설정 - 직업성 질환 기록{% endblock %}
+        :root {
+            --yonsei-blue: #003876;
+            --header-gradient-end: #005eb8;
+            --accent-green: #2E7D32;
+        }
 
-{% block extra_css %}
-<style>
-    .settings-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 24px;
-    }
+        body {
+            font-family: "Noto Sans KR", sans-serif;
+            margin: 0;
+            background-color: #f8f9fa;
+            color: #212529;
+        }
 
-    .header-section {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 32px;
-    }
+        .yonsei-header {
+            background: linear-gradient(135deg, var(--yonsei-blue) 0%, var(--header-gradient-end) 100%);
+            color: white;
+            padding: 16px 30px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
 
-    .header-section h1 {
-        margin: 0;
-        font-size: 28px;
-        color: #333;
-    }
+        .yonsei-header h1 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 700;
+        }
 
-    .btn {
-        padding: 10px 20px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 14px;
-        transition: all 0.2s;
-    }
+        .yonsei-header h1 a {
+            color: white;
+            text-decoration: none;
+        }
 
-    .btn-primary {
-        background: #2196F3;
-        color: white;
-    }
+        .settings-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
 
-    .btn-primary:hover {
-        background: #1976D2;
-    }
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
 
-    .btn-success {
-        background: #4CAF50;
-        color: white;
-    }
+        .header-section h2 {
+            margin: 0;
+            font-size: 28px;
+            color: #333;
+        }
 
-    .btn-danger {
-        background: #f44336;
-        color: white;
-    }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
 
-    .btn-warning {
-        background: #FF9800;
-        color: white;
-    }
+        .btn-primary {
+            background: #2196F3;
+            color: white;
+        }
 
-    .assignee-table {
-        width: 100%;
-        border-collapse: collapse;
-        background: white;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        border-radius: 8px;
-        overflow: hidden;
-    }
+        .btn-primary:hover {
+            background: #1976D2;
+        }
 
-    .assignee-table thead {
-        background: #f5f5f5;
-    }
+        .btn-success {
+            background: #4CAF50;
+            color: white;
+        }
 
-    .assignee-table th,
-    .assignee-table td {
-        padding: 16px;
-        text-align: left;
-        border-bottom: 1px solid #e0e0e0;
-    }
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
 
-    .assignee-table th {
-        font-weight: 600;
-        color: #666;
-    }
+        .btn-warning {
+            background: #FF9800;
+            color: white;
+        }
 
-    .assignee-table tbody tr:hover {
-        background: #f9f9f9;
-    }
+        .assignee-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
 
-    .color-badge {
-        display: inline-block;
-        width: 32px;
-        height: 32px;
-        border-radius: 4px;
-        border: 2px solid #ddd;
-    }
+        .assignee-table thead {
+            background: #f5f5f5;
+        }
 
-    .status-badge {
-        padding: 4px 12px;
-        border-radius: 12px;
-        font-size: 12px;
-        font-weight: 600;
-    }
+        .assignee-table th,
+        .assignee-table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
 
-    .status-active {
-        background: #E8F5E9;
-        color: #2E7D32;
-    }
+        .assignee-table th {
+            font-weight: 600;
+            color: #666;
+        }
 
-    .status-inactive {
-        background: #FFEBEE;
-        color: #C62828;
-    }
+        .assignee-table tbody tr:hover {
+            background: #f9f9f9;
+        }
 
-    .progress-bar-container {
-        width: 100%;
-        height: 8px;
-        background: #e0e0e0;
-        border-radius: 4px;
-        overflow: hidden;
-    }
+        .color-badge {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            border: 2px solid #ddd;
+        }
 
-    .progress-bar {
-        height: 100%;
-        background: linear-gradient(90deg, #4CAF50, #81C784);
-        transition: width 0.3s ease;
-    }
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
 
-    .actions {
-        display: flex;
-        gap: 8px;
-    }
+        .status-active {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
 
-    .modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.5);
-        z-index: 1000;
-        align-items: center;
-        justify-content: center;
-    }
+        .status-inactive {
+            background: #FFEBEE;
+            color: #C62828;
+        }
 
-    .modal.active {
-        display: flex;
-    }
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
 
-    .modal-content {
-        background: white;
-        padding: 32px;
-        border-radius: 8px;
-        max-width: 500px;
-        width: 90%;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-    }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #81C784);
+            transition: width 0.3s ease;
+        }
 
-    .modal-content h2 {
-        margin: 0 0 24px 0;
-        font-size: 24px;
-    }
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
 
-    .form-group {
-        margin-bottom: 20px;
-    }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
 
-    .form-group label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: 600;
-        color: #333;
-    }
+        .modal.active {
+            display: flex;
+        }
 
-    .form-group input[type="text"],
-    .form-group input[type="number"],
-    .form-group input[type="color"] {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 14px;
-    }
+        .modal-content {
+            background: white;
+            padding: 32px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
 
-    .form-group input[type="checkbox"] {
-        width: 20px;
-        height: 20px;
-        cursor: pointer;
-    }
+        .modal-content h3 {
+            margin: 0 0 24px 0;
+            font-size: 24px;
+        }
 
-    .modal-actions {
-        display: flex;
-        gap: 12px;
-        justify-content: flex-end;
-        margin-top: 24px;
-    }
+        .form-group {
+            margin-bottom: 20px;
+        }
 
-    .empty-state {
-        text-align: center;
-        padding: 64px 24px;
-        color: #999;
-    }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
 
-    .empty-state i {
-        font-size: 64px;
-        margin-bottom: 16px;
-    }
-</style>
-{% endblock %}
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group input[type="color"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
 
-{% block content %}
-<div class="settings-container">
-    <div class="header-section">
-        <h1>👥 담당자 설정</h1>
-        <button class="btn btn-primary" onclick="showCreateModal()">+ 담당자 추가</button>
+        .form-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 64px 24px;
+            color: #999;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .nav-buttons {
+            margin-top: 24px;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <header class="yonsei-header">
+        <h1><a href="{% url 'record_list' %}">연세대학교 역학조사 DB 대시보드</a></h1>
+    </header>
+
+    <div class="settings-container">
+        <div class="header-section">
+            <h2>👥 담당자 설정</h2>
+            <button class="btn btn-primary" onclick="showCreateModal()">+ 담당자 추가</button>
+        </div>
+
+        {% if assignees %}
+        <table class="assignee-table">
+            <thead>
+                <tr>
+                    <th>담당자</th>
+                    <th>IDS 범위</th>
+                    <th>색상</th>
+                    <th>진행률</th>
+                    <th>상태</th>
+                    <th>작업</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for assignee in assignees %}
+                <tr>
+                    <td>
+                        <strong>{{ assignee.name }}</strong>
+                    </td>
+                    <td>
+                        {{ assignee.ids_from }} - {{ assignee.ids_to }}
+                        <small style="color: #999;">({{ assignee.total_records }}개)</small>
+                    </td>
+                    <td>
+                        <span class="color-badge" style="background-color: {{ assignee.color }};"></span>
+                    </td>
+                    <td>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: {{ assignee.progress_percentage }}%;"></div>
+                        </div>
+                        <small>{{ assignee.completed_records }}/{{ assignee.total_records }} ({{ assignee.progress_percentage }}%)</small>
+                    </td>
+                    <td>
+                        <span class="status-badge {% if assignee.is_active %}status-active{% else %}status-inactive{% endif %}">
+                            {% if assignee.is_active %}활성{% else %}비활성{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="actions">
+                            <button class="btn btn-success" onclick="window.location.href='{% url 'assignee_records' assignee.pk %}'">📋 목록</button>
+                            <button class="btn btn-warning" onclick="showEditModal({{ assignee.pk }}, '{{ assignee.name }}', {{ assignee.ids_from }}, {{ assignee.ids_to }}, '{{ assignee.color }}', {{ assignee.is_active|yesno:'true,false' }})">수정</button>
+                            <button class="btn btn-danger" onclick="confirmDelete({{ assignee.pk }}, '{{ assignee.name }}')">삭제</button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <div style="font-size: 64px;">👤</div>
+            <h3>담당자가 없습니다</h3>
+            <p>담당자를 추가하여 작업을 나누어 관리하세요</p>
+        </div>
+        {% endif %}
+
+        <div class="nav-buttons">
+            <a href="{% url 'record_list' %}" class="btn">← 레코드 목록</a>
+            <a href="{% url 'progress_dashboard' %}" class="btn btn-primary">📊 진행률 대시보드</a>
+        </div>
     </div>
 
-    {% if assignees %}
-    <table class="assignee-table">
-        <thead>
-            <tr>
-                <th>담당자</th>
-                <th>IDS 범위</th>
-                <th>색상</th>
-                <th>진행률</th>
-                <th>상태</th>
-                <th>작업</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for assignee in assignees %}
-            <tr>
-                <td>
-                    <strong>{{ assignee.name }}</strong>
-                </td>
-                <td>
-                    {{ assignee.ids_from }} - {{ assignee.ids_to }}
-                    <small style="color: #999;">({{ assignee.total_records }}개)</small>
-                </td>
-                <td>
-                    <span class="color-badge" style="background-color: {{ assignee.color }};"></span>
-                </td>
-                <td>
-                    <div class="progress-bar-container">
-                        <div class="progress-bar" style="width: {{ assignee.progress_percentage }}%;"></div>
-                    </div>
-                    <small>{{ assignee.completed_records }}/{{ assignee.total_records }} ({{ assignee.progress_percentage }}%)</small>
-                </td>
-                <td>
-                    <span class="status-badge {% if assignee.is_active %}status-active{% else %}status-inactive{% endif %}">
-                        {% if assignee.is_active %}활성{% else %}비활성{% endif %}
-                    </span>
-                </td>
-                <td>
-                    <div class="actions">
-                        <button class="btn btn-success" onclick="window.location.href='{% url 'assignee_records' assignee.pk %}'">📋 목록</button>
-                        <button class="btn btn-warning" onclick="showEditModal({{ assignee.pk }}, '{{ assignee.name }}', {{ assignee.ids_from }}, {{ assignee.ids_to }}, '{{ assignee.color }}', {{ assignee.is_active|yesno:'true,false' }})">수정</button>
-                        <button class="btn btn-danger" onclick="confirmDelete({{ assignee.pk }}, '{{ assignee.name }}')">삭제</button>
-                    </div>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <div class="empty-state">
-        <div style="font-size: 64px;">👤</div>
-        <h3>담당자가 없습니다</h3>
-        <p>담당자를 추가하여 작업을 나누어 관리하세요</p>
+    <!-- 생성 모달 -->
+    <div id="createModal" class="modal">
+        <div class="modal-content">
+            <h3>담당자 추가</h3>
+            <form method="POST" action="{% url 'assignee_create' %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="create_name">이름</label>
+                    <input type="text" id="create_name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="create_ids_from">IDS 시작 번호</label>
+                    <input type="number" id="create_ids_from" name="ids_from" required>
+                </div>
+                <div class="form-group">
+                    <label for="create_ids_to">IDS 끝 번호</label>
+                    <input type="number" id="create_ids_to" name="ids_to" required>
+                </div>
+                <div class="form-group">
+                    <label for="create_color">색상</label>
+                    <input type="color" id="create_color" name="color" value="#2196F3">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn" onclick="hideCreateModal()">취소</button>
+                    <button type="submit" class="btn btn-primary">생성</button>
+                </div>
+            </form>
+        </div>
     </div>
-    {% endif %}
-</div>
 
-<!-- 생성 모달 -->
-<div id="createModal" class="modal">
-    <div class="modal-content">
-        <h2>담당자 추가</h2>
-        <form method="POST" action="{% url 'assignee_create' %}">
-            {% csrf_token %}
-            <div class="form-group">
-                <label for="create_name">이름</label>
-                <input type="text" id="create_name" name="name" required>
-            </div>
-            <div class="form-group">
-                <label for="create_ids_from">IDS 시작 번호</label>
-                <input type="number" id="create_ids_from" name="ids_from" required>
-            </div>
-            <div class="form-group">
-                <label for="create_ids_to">IDS 끝 번호</label>
-                <input type="number" id="create_ids_to" name="ids_to" required>
-            </div>
-            <div class="form-group">
-                <label for="create_color">색상</label>
-                <input type="color" id="create_color" name="color" value="#2196F3">
-            </div>
-            <div class="modal-actions">
-                <button type="button" class="btn" onclick="hideCreateModal()">취소</button>
-                <button type="submit" class="btn btn-primary">생성</button>
-            </div>
-        </form>
+    <!-- 수정 모달 -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h3>담당자 수정</h3>
+            <form method="POST" id="editForm">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="edit_name">이름</label>
+                    <input type="text" id="edit_name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_ids_from">IDS 시작 번호</label>
+                    <input type="number" id="edit_ids_from" name="ids_from" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_ids_to">IDS 끝 번호</label>
+                    <input type="number" id="edit_ids_to" name="ids_to" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_color">색상</label>
+                    <input type="color" id="edit_color" name="color">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="edit_is_active" name="is_active">
+                        활성 상태
+                    </label>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn" onclick="hideEditModal()">취소</button>
+                    <button type="submit" class="btn btn-primary">저장</button>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
 
-<!-- 수정 모달 -->
-<div id="editModal" class="modal">
-    <div class="modal-content">
-        <h2>담당자 수정</h2>
-        <form method="POST" id="editForm">
-            {% csrf_token %}
-            <div class="form-group">
-                <label for="edit_name">이름</label>
-                <input type="text" id="edit_name" name="name" required>
-            </div>
-            <div class="form-group">
-                <label for="edit_ids_from">IDS 시작 번호</label>
-                <input type="number" id="edit_ids_from" name="ids_from" required>
-            </div>
-            <div class="form-group">
-                <label for="edit_ids_to">IDS 끝 번호</label>
-                <input type="number" id="edit_ids_to" name="ids_to" required>
-            </div>
-            <div class="form-group">
-                <label for="edit_color">색상</label>
-                <input type="color" id="edit_color" name="color">
-            </div>
-            <div class="form-group">
-                <label>
-                    <input type="checkbox" id="edit_is_active" name="is_active">
-                    활성 상태
-                </label>
-            </div>
-            <div class="modal-actions">
-                <button type="button" class="btn" onclick="hideEditModal()">취소</button>
-                <button type="submit" class="btn btn-primary">저장</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script>
-function showCreateModal() {
-    document.getElementById('createModal').classList.add('active');
-}
-
-function hideCreateModal() {
-    document.getElementById('createModal').classList.remove('active');
-}
-
-function showEditModal(pk, name, idsFrom, idsTo, color, isActive) {
-    document.getElementById('editForm').action = `/assignees/${pk}/update/`;
-    document.getElementById('edit_name').value = name;
-    document.getElementById('edit_ids_from').value = idsFrom;
-    document.getElementById('edit_ids_to').value = idsTo;
-    document.getElementById('edit_color').value = color;
-    document.getElementById('edit_is_active').checked = isActive;
-    document.getElementById('editModal').classList.add('active');
-}
-
-function hideEditModal() {
-    document.getElementById('editModal').classList.remove('active');
-}
-
-function confirmDelete(pk, name) {
-    if (confirm(`"${name}" 담당자를 삭제하시겠습니까?`)) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/assignees/${pk}/delete/`;
-
-        const csrfInput = document.createElement('input');
-        csrfInput.type = 'hidden';
-        csrfInput.name = 'csrfmiddlewaretoken';
-        csrfInput.value = '{{ csrf_token }}';
-        form.appendChild(csrfInput);
-
-        document.body.appendChild(form);
-        form.submit();
+    <script>
+    function showCreateModal() {
+        document.getElementById('createModal').classList.add('active');
     }
-}
 
-// 모달 외부 클릭시 닫기
-document.getElementById('createModal').addEventListener('click', function(e) {
-    if (e.target === this) hideCreateModal();
-});
+    function hideCreateModal() {
+        document.getElementById('createModal').classList.remove('active');
+    }
 
-document.getElementById('editModal').addEventListener('click', function(e) {
-    if (e.target === this) hideEditModal();
-});
-</script>
-{% endblock %}
+    function showEditModal(pk, name, idsFrom, idsTo, color, isActive) {
+        document.getElementById('editForm').action = `/epedit/assignees/${pk}/update/`;
+        document.getElementById('edit_name').value = name;
+        document.getElementById('edit_ids_from').value = idsFrom;
+        document.getElementById('edit_ids_to').value = idsTo;
+        document.getElementById('edit_color').value = color;
+        document.getElementById('edit_is_active').checked = isActive;
+        document.getElementById('editModal').classList.add('active');
+    }
+
+    function hideEditModal() {
+        document.getElementById('editModal').classList.remove('active');
+    }
+
+    function confirmDelete(pk, name) {
+        if (confirm(`"${name}" 담당자를 삭제하시겠습니까?`)) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/epedit/assignees/${pk}/delete/`;
+
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = '{{ csrf_token }}';
+            form.appendChild(csrfInput);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+
+    // 모달 외부 클릭시 닫기
+    document.getElementById('createModal').addEventListener('click', function(e) {
+        if (e.target === this) hideCreateModal();
+    });
+
+    document.getElementById('editModal').addEventListener('click', function(e) {
+        if (e.target === this) hideEditModal();
+    });
+    </script>
+</body>
+</html>
