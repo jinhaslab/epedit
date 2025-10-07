@@ -272,7 +272,8 @@ class Assignee(models.Model):
     @property
     def total_records(self):
         """담당자의 전체 레코드 수"""
-        from django.db.models import Cast, IntegerField
+        from django.db.models.functions import Cast
+        from django.db.models import IntegerField
         return DiseaseRecord.objects.annotate(
             ids_as_int=Cast('ids', output_field=IntegerField())
         ).filter(
@@ -283,7 +284,8 @@ class Assignee(models.Model):
     @property
     def completed_records(self):
         """확인 완료된 레코드 수 (5개 항목 모두 확인됨)"""
-        from django.db.models import Cast, IntegerField
+        from django.db.models.functions import Cast
+        from django.db.models import IntegerField
         return DiseaseRecord.objects.annotate(
             ids_as_int=Cast('ids', output_field=IntegerField())
         ).filter(
