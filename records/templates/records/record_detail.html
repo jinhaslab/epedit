@@ -609,7 +609,11 @@
                 display: flex;
             }
 
-            /* Mobile PDF size controls - keep all buttons */
+            /* Mobile PDF size controls - hide slider and display on mobile */
+            .pdf-size-slider,
+            .pdf-size-display {
+                display: none !important;
+            }
         }
 
         @media (max-width: 576px) {
