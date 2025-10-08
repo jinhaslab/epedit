@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>연세대학교 역학조사 DB 대시보드</title>
+    <title>{{ assignee.name }}의 작업 영역 - 연세대학교 역학조사 DB</title>
     {% include "records/includes/_styles.html" %}
 </head>
 <body>
@@ -22,7 +22,7 @@
         {% include "records/includes/_sidebar.html" %}
 
         <main class="main-content">
-            {% include "records/includes/_mapping_stats.html" %}
+            {% include "records/includes/_assignee_header.html" %}
 
             {% include "records/includes/_filter_form.html" %}
 

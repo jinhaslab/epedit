@@ -444,9 +444,18 @@ class RecordUpdateView(LoginRequiredMixin, UpdateView):
         return context
 
     def get_success_url(self):
-        query_params = self.request.GET.urlencode()
-        base_detail_url = reverse('record_detail', kwargs={'pk': self.object.pk})
-        return f"{base_detail_url}?{query_params}" if query_params else base_detail_url
+        query_params = self.request.GET.copy()
+        assignee_id = query_params.get('assignee_id')
+
+        if assignee_id:
+            # 담당자 페이지로 복귀
+            # assignee_id는 이미 query_params에 있으므로 그대로 사용
+            base_assignee_url = reverse('assignee_records', kwargs={'pk': assignee_id})
+            return f"{base_assignee_url}?{query_params.urlencode()}" if query_params else base_assignee_url
+        else:
+            # 전체 목록 상세 페이지로 복귀
+            base_detail_url = reverse('record_detail', kwargs={'pk': self.object.pk})
+            return f"{base_detail_url}?{query_params.urlencode()}" if query_params else base_detail_url
 
     def form_invalid(self, form):
         """폼이 유효하지 않을 때 호출되며, context를 다시 생성하여 템플릿에 전달"""
@@ -977,80 +986,134 @@ def assignee_delete(request, pk):
     return redirect('assignee_list')
 
 
-@login_required
-def assignee_records(request, pk):
-    """특정 담당자의 레코드 목록"""
-    assignee = get_object_or_404(Assignee, pk=pk)
+class AssigneeRecordsView(LoginRequiredMixin, ListView):
+    """특정 담당자의 레코드 목록 (RecordListView와 동일한 UI 사용)"""
+    model = DiseaseRecord
+    template_name = 'records/assignee_records_view.html'
+    context_object_name = 'records'
+    paginate_by = 10
+    login_url = reverse_lazy('login')
 
-    # IDS 범위로 필터링
-    records = DiseaseRecord.objects.annotate(
-        ids_as_int=Cast('ids', output_field=IntegerField())
-    ).filter(
-        ids_as_int__gte=assignee.ids_from,
-        ids_as_int__lte=assignee.ids_to
-    ).select_related('disease', 'job', 'case').prefetch_related('exposure')
+    def get_queryset(self):
+        # Assignee 필터 적용
+        assignee = get_object_or_404(Assignee, pk=self.kwargs['pk'])
+        queryset = super().get_queryset().annotate(
+            ids_as_int=Cast('ids', output_field=IntegerField())
+        ).filter(
+            ids_as_int__gte=assignee.ids_from,
+            ids_as_int__lte=assignee.ids_to
+        ).select_related('case', 'last_modified_by', 'disease', 'job').prefetch_related('exposure')
 
-    # 기존 필터링 로직 적용
-    fname = request.GET.get('fname', '').strip()
-    if fname:
-        records = records.filter(fname__icontains=fname)
+        # RecordListView의 나머지 필터링 로직 재사용
+        query = self.request.GET.get('q', '').strip()
+        if query:
+            queryset = queryset.filter(
+                Q(case__fid__icontains=query) |
+                Q(disease__disease_name__icontains=query) |
+                Q(job__occupation__icontains=query) |
+                Q(exposure__name__icontains=query) |
+                Q(fnames__icontains=query) |
+                Q(decision__icontains=query) |
+                Q(smry__icontains=query)
+            ).distinct()
 
-    search_query = request.GET.get('search', '').strip()
-    if search_query:
-        records = records.filter(
-            Q(ids__icontains=search_query) |
-            Q(fname__icontains=search_query) |
-            Q(disease__disease_name__icontains=search_query) |
-            Q(original_disease_name__icontains=search_query)
-        )
+        fid_query = self.request.GET.get('fid')
+        if fid_query:
+            queryset = queryset.filter(case__fid__icontains=fid_query)
 
-    disease_filter = request.GET.get('disease_name', '').strip()
-    if disease_filter:
-        records = records.filter(
-            Q(disease__disease_name__icontains=disease_filter) |
-            Q(original_disease_name__icontains=disease_filter)
-        )
+        # fname 필터
+        fname = self.request.GET.get('fname', '').strip()
+        if fname:
+            from django.contrib.postgres.search import TrigramSimilarity
+            queryset = queryset.annotate(
+                similarity=TrigramSimilarity('fnames', fname)
+            ).filter(
+                Q(fnames__icontains=fname) |
+                Q(similarity__gt=0.03)
+            ).order_by('-similarity', 'fnames')
 
-    job_filter = request.GET.get('job_name', '').strip()
-    if job_filter:
-        records = records.filter(
-            Q(job__occupation_name__icontains=job_filter) |
-            Q(original_job_name__icontains=job_filter)
-        )
+        filter_configs = {
+            'disease_name': self.request.GET.get('disease_name'),
+            'job': self.request.GET.get('job'),
+            'exposure': self.request.GET.get('exposure'),
+            'decision': self.request.GET.get('decision'),
+        }
 
-    exposure_filter = request.GET.get('exposure_name', '').strip()
-    if exposure_filter:
-        records = records.filter(
-            Q(exposure__name__icontains=exposure_filter) |
-            Q(original_exposure__icontains=exposure_filter)
-        )
+        for field, param_value in filter_configs.items():
+            if param_value:
+                values = [v.strip() for v in param_value.split(',') if v.strip()]
+                if values:
+                    if field == 'exposure':
+                        q_objects = Q()
+                        for val in values:
+                            q_objects |= Q(exposure__name=val)
+                        queryset = queryset.filter(q_objects).distinct()
+                    elif field == 'disease_name':
+                        q_objects = Q()
+                        for val in values:
+                            q_objects |= (
+                                Q(disease__disease_name__iexact=val) |
+                                Q(disease__isnull=True, original_disease_name__iexact=val)
+                            )
+                        queryset = queryset.filter(q_objects)
+                    elif field == 'job':
+                        q_objects = Q()
+                        for val in values:
+                            q_objects |= (
+                                Q(job__occupation__iexact=val) |
+                                Q(job__isnull=True, original_job__iexact=val)
+                            )
+                        queryset = queryset.filter(q_objects)
+                    else:
+                        q_objects = Q()
+                        for val in values:
+                            q_objects |= Q(**{f"{field}__iexact": val})
+                        queryset = queryset.filter(q_objects)
 
-    # 확인 상태 필터
-    confirmed_only = request.GET.get('confirmed_only', '')
-    if confirmed_only == 'true':
-        records = records.filter(
-            disease_confirmed=True,
-            job_confirmed=True,
-            exposure_confirmed=True,
-            decision_confirmed=True,
-            smry_confirmed=True
-        )
+        selected_changed_fields = self.request.GET.getlist('changed_fields')
+        if selected_changed_fields:
+            for field in selected_changed_fields:
+                queryset = queryset.filter(changed_fields__icontains=field)
 
-    records = records.order_by('ids')
+        sort_by = self.request.GET.get('sort', 'ids')
+        order = self.request.GET.get('order', 'asc')
 
-    context = {
-        'records': records,
-        'total_count': records.count(),
-        'assignee': assignee,
-        'fname': fname,
-        'search_query': search_query,
-        'disease_filter': disease_filter,
-        'job_filter': job_filter,
-        'exposure_filter': exposure_filter,
-        'confirmed_only': confirmed_only,
-    }
+        if order == 'desc':
+            sort_by = f"-{sort_by.lstrip('-')}"
+        else:
+            sort_by = sort_by.lstrip('-')
 
-    return render(request, 'records/assignee_records.html', context)
+        if hasattr(DiseaseRecord, sort_by.lstrip('-').split('__')[0]):
+            queryset = queryset.order_by(sort_by)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        assignee = get_object_or_404(Assignee, pk=self.kwargs['pk'])
+
+        # Assignee 모드 플래그
+        context['assignee'] = assignee
+        context['assignee_mode'] = True
+
+        # URL 파라미터 (assignee_id 포함)
+        query_params = self.request.GET.copy()
+        query_params['assignee_id'] = assignee.pk
+        context['all_params'] = query_params.urlencode()
+
+        # 페이지네이션용 파라미터 (페이지 제외)
+        other_params = self.request.GET.copy()
+        if 'page' in other_params:
+            del other_params['page']
+        context['other_params'] = other_params.urlencode()
+
+        # 필터 상태
+        context['sort_by'] = self.request.GET.get('sort', 'ids')
+        context['order'] = self.request.GET.get('order', 'asc')
+        context['selected_changed_fields'] = self.request.GET.getlist('changed_fields')
+        context['fname'] = self.request.GET.get('fname', '')
+
+        return context
 
 
 @login_required

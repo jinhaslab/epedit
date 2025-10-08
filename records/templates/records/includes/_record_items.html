@@ -1,0 +1,16 @@
+{% if records %}
+<div class="record-list">
+    {% for record in records %}
+    <div class="record-item">
+        <div class="record-main">
+            <div class="details"><span class="summary-trigger" data-full-text="{{ record.ids|default:'-' }}"><strong>ID:</strong> {{ record.ids|default:"-"|truncatechars:20 }}</span><span class="summary-trigger" data-full-text="{{ record.case|default:'-' }}"><strong>Case:</strong> {{ record.case|default:"-"|truncatechars:20 }}</span></div>
+            <div class="file-name"><a href="{{ record.get_pdf_url }}" target="_blank"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="min-width: 24px;"><path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" fill="var(--pdf-red-color)"/><path d="M14 2V8H20L14 2Z" fill="#F5B9B9"/><g fill="white"><path d="M8.5 15.5H7V18H8.5V17.25H9.5V16.25H8.5V15.5Z"/><path d="M13 18H11.5V15.5H13C13.8284 15.5 14.5 16.1716 14.5 17C14.5 17.8284 13.8284 18.5 13 18.5H12V18H13C13.5523 18 14 17.5523 14 17C14 16.4477 13.5523 16 13 16H12V18H11.5L12 18H11.5V15.5L12 15.5L13 15.5"/><path d="M17.5 15.5H16V18H17.5V15.5Z"/></g></svg><span class="summary-trigger" data-full-text="{{ record.fnames|default:'파일 이름 없음' }}">{{ record.fnames|default:"파일 이름 없음"|truncatechars:60 }}</span></a></div>
+            <div class="details"><span class="summary-trigger" data-full-text="{% if record.disease %}{{ record.disease.disease_name }}{% else %}{{ record.original_disease_name|default:'-' }}{% endif %}"><strong>질병명:</strong> {% if record.disease %}{{ record.disease.disease_name|truncatechars:20 }}{% elif record.original_disease_name and record.original_disease_name != "" %}<span class="unmapped-badge" title="사전 미매칭">⚠️</span> {{ record.original_disease_name|truncatechars:20 }}{% else %}-{% endif %}</span><span class="summary-trigger" data-full-text="{% if record.job %}{{ record.job.occupation }}{% else %}{{ record.original_job|default:'-' }}{% endif %}"><strong>직종:</strong> {% if record.job %}{{ record.job.occupation|truncatechars:20 }}{% elif record.original_job and record.original_job != "" %}<span class="unmapped-badge" title="사전 미매칭">⚠️</span> {{ record.original_job|truncatechars:20 }}{% else %}-{% endif %}</span><span class="summary-trigger" data-full-text="{{ record.decision|default:'-' }}"><strong>결정사항:</strong> {{ record.decision|default:"-" }}</span><span class="summary-trigger" data-full-text="{{ record.changed_fields_str|default:'-' }}"><strong>변경 항목:</strong> {{ record.changed_fields_str|default:"-" }}</span></div>
+        </div>
+        <div class="record-actions"><span class="confirmation-status">{% if record.disease_confirmed and record.job_confirmed and record.exposure_confirmed and record.decision_confirmed and record.smry_confirmed %} ✔️ {% else %} ➖ {% endif %}</span><a href="{% url 'record_detail' record.pk %}?{{ all_params }}" class="detail-link">상세</a></div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p>표시할 기록이 없습니다.</p>
+{% endif %}

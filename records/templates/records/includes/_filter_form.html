@@ -1,0 +1,30 @@
+<h2>
+    <span>사건 기록 필터</span>
+    <button type="button" id="filterToggle" class="filter-toggle-btn">
+        <span id="filterToggleIcon">▼</span> 필터 숨기기
+    </button>
+</h2>
+<div class="filter-form" id="filterForm">
+    <form method="get">
+        <div class="filter-row">
+            <div class="filter-item"><label for="fname_input">파일명(유사명 포함):</label><input type="text" name="fname" id="fname_input" class="filter-input" placeholder="파일명 검색" value="{{ request.GET.fname }}"/></div>
+            <div class="filter-item"><label for="disease_name_input">질병명:</label><div class="autocomplete-input-wrapper"><div id="disease_name_tags" class="selected-tags-container"></div><input type="text" id="disease_name_input" class="autocomplete-input" data-field-name="disease_name" placeholder="질병명 검색/선택"/></div><div id="disease_name_suggestions" class="autocomplete-suggestions"></div><input type="hidden" name="disease_name" id="disease_name_hidden" value="{{ request.GET.disease_name }}"/></div>
+            <div class="filter-item"><label for="job_input">직종:</label><div class="autocomplete-input-wrapper"><div id="job_tags" class="selected-tags-container"></div><input type="text" id="job_input" class="autocomplete-input" data-field-name="job" placeholder="직종 검색/선택"/></div><div id="job_suggestions" class="autocomplete-suggestions"></div><input type="hidden" name="job" id="job_hidden" value="{{ request.GET.job }}"/></div>
+            <div class="filter-item"><label for="decision_select">결정사항:</label><select name="decision" id="decision_select" class="filter-select"><option value="" {% if not request.GET.decision %}selected{% endif %}>전체</option><option value="높음" {% if request.GET.decision == "높음" %}selected{% endif %}>높음</option><option value="낮음" {% if request.GET.decision == "낮음" %}selected{% endif %}>낮음</option></select></div>
+        </div>
+        <div class="filter-row">
+            <div class="filter-group"><label>변경 항목:</label><div class="checkbox-group"><input type="checkbox" id="changed_disease" name="changed_fields" value="disease_name" {% if 'disease_name' in selected_changed_fields %}checked{% endif %}/><label for="changed_disease">질병</label><input type="checkbox" id="changed_job" name="changed_fields" value="job" {% if 'job' in selected_changed_fields %}checked{% endif %}/><label for="changed_job">직종</label><input type="checkbox" id="changed_decision" name="changed_fields" value="decision" {% if 'decision' in selected_changed_fields %}checked{% endif %}/><label for="changed_decision">결정</label><input type="checkbox" id="changed_smry" name="changed_fields" value="smry" {% if 'smry' in selected_changed_fields %}checked{% endif %}/><label for="changed_smry">논리</label></div></div>
+            {% if not assignee_mode %}
+            <div class="filter-group filter-group--ids"><label>파일번호 IDS 범위</label><div class="range-filter"><input type="text" name="ids_from" placeholder="시작 번호" value="{{ ids_from|default:'' }}" class="filter-input"/><span>-</span><input type="text" name="ids_to" placeholder="끝 번호" value="{{ ids_to|default:'' }}" class="filter-input"/></div></div>
+            {% endif %}
+            <div class="filter-actions">
+                <button type="submit">필터 적용</button>
+                {% if assignee_mode %}
+                <a href="{% url 'assignee_records' assignee.pk %}">초기화</a>
+                {% else %}
+                <a href="{% url 'record_list' %}">초기화</a>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+</div>

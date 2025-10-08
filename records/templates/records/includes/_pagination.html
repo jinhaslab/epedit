@@ -1,0 +1,7 @@
+{% if records %}
+<div class="pagination">
+    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}{% if other_params %}&{{ other_params }}{% endif %}">이전</a>{% endif %}
+    <span class="page-input-group"><input type="number" id="page-input" value="{{ page_obj.number }}" min="1" max="{{ page_obj.paginator.num_pages }}"><span class="page-total"> / {{ page_obj.paginator.num_pages }}</span><button type="button" id="page-go-btn">이동</button></span>
+    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% if other_params %}&{{ other_params }}{% endif %}">다음</a>{% endif %}
+</div>
+{% endif %}

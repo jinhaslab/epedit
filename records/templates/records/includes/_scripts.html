@@ -1,0 +1,254 @@
+<div id="summaryPopup" class="summary-popup"><div class="summary-popup-content"></div></div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 페이지 이동 기능
+        const goBtn = document.getElementById('page-go-btn'), pageInput = document.getElementById('page-input');
+        function goToPage() {
+            const pageNum = parseInt(pageInput.value, 10);
+            if (pageInput.value&&!isNaN(pageNum)) {
+                const maxPage={{ page_obj.paginator.num_pages|default:1 }};
+                if(pageNum<1||pageNum>maxPage) {
+                    alert(`1부터 ${maxPage} 사이의 페이지 번호를 입력해주세요.`);
+                    return;
+                }
+                const otherParams="{{ other_params|escapejs }}", separator=otherParams?'&':'';
+                window.location.href=`?page=${pageNum}${separator}${otherParams}`;
+            }
+        }
+        if (goBtn && pageInput) {
+            goBtn.addEventListener('click',goToPage);
+            pageInput.addEventListener('keypress',function(e){
+                if(e.key==='Enter') {
+                    e.preventDefault();
+                    goToPage();
+                }
+            });
+        }
+
+        // 떠다니는 고정 메뉴 (Floating Fixed Menu)
+        const sidebar = document.getElementById('sidebar');
+        const floatingToggle = document.getElementById('floatingMenuToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const sidebarToggleBtn = document.getElementById('sidebar-toggle');
+
+        // Floating toggle button click
+        if (floatingToggle) {
+            floatingToggle.addEventListener('click', function() {
+                const isActive = sidebar.classList.contains('active');
+                if (isActive) {
+                    sidebar.classList.remove('active');
+                    sidebarOverlay.classList.remove('active');
+                } else {
+                    sidebar.classList.add('active');
+                    sidebarOverlay.classList.add('active');
+                }
+            });
+        }
+
+        // Sidebar header toggle button (inside sidebar)
+        if (sidebarToggleBtn) {
+            sidebarToggleBtn.addEventListener('click', function() {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+            });
+        }
+
+        // Overlay click to close sidebar
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', function() {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+            });
+        }
+
+        // Handle window resize - close sidebar on resize
+        let resizeTimer;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function() {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+            }, 250);
+        });
+
+        // Filter Toggle
+        const filterToggleBtn = document.getElementById('filterToggle');
+        const filterForm = document.getElementById('filterForm');
+        const filterToggleIcon = document.getElementById('filterToggleIcon');
+
+        if (filterToggleBtn && filterForm) {
+            // Load saved state
+            const filterCollapsed = localStorage.getItem('filterCollapsed') === 'true';
+            if (filterCollapsed) {
+                filterForm.classList.add('collapsed');
+                filterToggleBtn.classList.add('collapsed');
+                filterToggleBtn.innerHTML = '<span id="filterToggleIcon">▶</span> 필터 보기';
+            }
+
+            filterToggleBtn.addEventListener('click', function() {
+                const isCollapsed = filterForm.classList.toggle('collapsed');
+                filterToggleBtn.classList.toggle('collapsed');
+
+                if (isCollapsed) {
+                    filterToggleBtn.innerHTML = '<span id="filterToggleIcon">▶</span> 필터 보기';
+                    localStorage.setItem('filterCollapsed', 'true');
+                } else {
+                    filterToggleBtn.innerHTML = '<span id="filterToggleIcon">▼</span> 필터 숨기기';
+                    localStorage.setItem('filterCollapsed', 'false');
+                }
+            });
+        }
+
+        // 📊 사전 매칭 통계 토글 함수
+        window.toggleMappingStats = function() {
+            const content = document.getElementById('mappingStatsContent');
+            const icon = document.getElementById('mappingStats-icon');
+            if (content && icon) {
+                if (content.style.display === 'none') {
+                    content.style.display = 'block';
+                    icon.textContent = '▼';
+                } else {
+                    content.style.display = 'none';
+                    icon.textContent = '▶';
+                }
+            }
+        };
+
+        // 📊 사전 매칭 필터 함수
+        window.applyMappingFilter = function() {
+            const url = new URL(window.location);
+
+            // 체크박스 상태를 URL 파라미터에 반영
+            const unmappedDisease = document.getElementById('unmapped_disease');
+            const unmappedJob = document.getElementById('unmapped_job');
+            const unmappedExposure = document.getElementById('unmapped_exposure');
+
+            if (unmappedDisease && unmappedDisease.checked) {
+                url.searchParams.set('unmapped_disease', 'on');
+            } else {
+                url.searchParams.delete('unmapped_disease');
+            }
+
+            if (unmappedJob && unmappedJob.checked) {
+                url.searchParams.set('unmapped_job', 'on');
+            } else {
+                url.searchParams.delete('unmapped_job');
+            }
+
+            if (unmappedExposure && unmappedExposure.checked) {
+                url.searchParams.set('unmapped_exposure', 'on');
+            } else {
+                url.searchParams.delete('unmapped_exposure');
+            }
+
+            // 페이지 새로고침
+            window.location.href = url.toString();
+        };
+
+        // 요약 팝업
+        const summaryPopup = document.getElementById("summaryPopup");
+        if (summaryPopup) {
+            const summaryPopupContent = summaryPopup.querySelector(".summary-popup-content");
+            document.querySelectorAll(".summary-trigger").forEach(trigger => {
+                trigger.addEventListener("mouseenter", function(event) {
+                    summaryPopupContent.textContent = this.dataset.fullText;
+                    const rect = this.getBoundingClientRect();
+                    summaryPopup.style.left = `${rect.left + window.scrollX}px`;
+                    summaryPopup.style.top = `${rect.bottom + window.scrollY + 5}px`;
+                    summaryPopup.style.display = "block";
+                });
+                trigger.addEventListener("mouseleave", function() {
+                    summaryPopup.style.display = "none";
+                });
+            });
+        }
+
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
+
+        function setupAutocomplete(inputId, suggestionsId, tagsId, hiddenInputId) {
+            const inputEl = document.getElementById(inputId),
+                  suggestionsEl = document.getElementById(suggestionsId),
+                  tagsEl = document.getElementById(tagsId),
+                  hiddenInputEl = document.getElementById(hiddenInputId);
+            if (!inputEl) return;
+
+            let selectedTags = new Set(hiddenInputEl.value.split(',').filter(Boolean));
+
+            const updateHiddenInput = () => {
+                hiddenInputEl.value = Array.from(selectedTags).join(',');
+            };
+
+            const renderTags = () => {
+                tagsEl.innerHTML = '';
+                selectedTags.forEach(tagText => {
+                    const tagItem = document.createElement("div");
+                    tagItem.className = "tag-item";
+                    tagItem.textContent = tagText;
+                    const closeButton = document.createElement("span");
+                    closeButton.className = "tag-close";
+                    closeButton.textContent = "×";
+                    closeButton.onclick = (e) => {
+                        e.stopPropagation();
+                        selectedTags.delete(tagText);
+                        renderTags();
+                        updateHiddenInput();
+                    };
+                    tagItem.appendChild(closeButton);
+                    tagsEl.appendChild(tagItem);
+                });
+            };
+
+            const addTag = (suggestion) => {
+                if (!selectedTags.has(suggestion)) {
+                    selectedTags.add(suggestion);
+                    renderTags();
+                    updateHiddenInput();
+                }
+                inputEl.value = '';
+                suggestionsEl.classList.remove("active");
+            };
+
+            const fetchSuggestions = async (query) => {
+                const fieldName = inputEl.dataset.fieldName;
+                try {
+                    const response = await fetch(`{% url 'autocomplete_suggestions' %}?field_name=${fieldName}&q=${encodeURIComponent(query)}`);
+                    const data = await response.json();
+                    suggestionsEl.innerHTML = "";
+                    if (data.suggestions.length > 0) {
+                        data.suggestions.forEach((suggestion) => {
+                            const item = document.createElement("div");
+                            item.className = "suggestion-item";
+                            item.textContent = suggestion.name;
+                            item.addEventListener('mousedown', () => addTag(suggestion.name));
+                            suggestionsEl.appendChild(item);
+                        });
+                        suggestionsEl.classList.add("active");
+                    } else {
+                        suggestionsEl.classList.remove("active");
+                    }
+                } catch (error) {
+                    console.error("Error fetching suggestions:", error);
+                }
+            };
+
+            const debouncedFetch = debounce(fetchSuggestions, 300);
+            inputEl.addEventListener('input', () => debouncedFetch(inputEl.value));
+            inputEl.addEventListener('focus', () => fetchSuggestions(inputEl.value));
+            inputEl.addEventListener('blur', () => {
+                setTimeout(() => suggestionsEl.classList.remove("active"), 150);
+            });
+
+            renderTags();
+        }
+
+        setupAutocomplete("disease_name_input", "disease_name_suggestions", "disease_name_tags", "disease_name_hidden");
+        setupAutocomplete("job_input", "job_suggestions", "job_tags", "job_hidden");
+    });
+</script>

@@ -32,7 +32,7 @@ urlpatterns = [
     path('assignees/create/', views.assignee_create, name='assignee_create'),
     path('assignees/<int:pk>/update/', views.assignee_update, name='assignee_update'),
     path('assignees/<int:pk>/delete/', views.assignee_delete, name='assignee_delete'),
-    path('assignees/<int:pk>/records/', views.assignee_records, name='assignee_records'),
+    path('assignees/<int:pk>/records/', views.AssigneeRecordsView.as_view(), name='assignee_records'),
 
     # 진행률 대시보드
     path('progress/', views.progress_dashboard, name='progress_dashboard'),

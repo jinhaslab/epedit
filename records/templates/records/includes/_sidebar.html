@@ -1,0 +1,57 @@
+{% load record_extras %}
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <button id="sidebar-toggle">☰</button>
+        <h1>DB 수정 작업 검수</h1>
+    </div>
+    <div class="sidebar-user">
+        {% if user.is_authenticated %}
+        <p>안녕하세요, <strong>{{ user.username }}</strong>님!</p>
+        <form action="{% url 'logout' %}" method="post" style="display: inline">
+            {% csrf_token %}
+            <button type="submit" style="background:none; border:none; padding:0; cursor:pointer; text-decoration:underline;">로그아웃</button>
+        </form>
+        {% else %}
+        <a href="{% url 'login' %}">로그인</a>
+        {% endif %}
+    </div>
+    <div class="sidebar-menu">
+        <a href="{% url 'record_list' %}" class="menu-item">
+            <svg fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zM3 10a7 7 0 1114 0 7 7 0 01-14 0z"></path><path d="M10 4a1 1 0 011 1v4a1 1 0 11-2 0V5a1 1 0 011-1zM9 11a1 1 0 102 0v3a1 1 0 10-2 0v-3z"></path></svg>
+            <span>사건 목록</span>
+        </a>
+        <a href="{% url 'progress_dashboard' %}" class="menu-item">
+            <svg fill="currentColor" viewBox="0 0 20 20"><path d="M3 12v3c0 1.657 3.134 3 7 3s7-1.343 7-3v-3c0 1.657-3.134 3-7 3s-7-1.343-7-3z"></path><path d="M3 7v3c0 1.657 3.134 3 7 3s7-1.343 7-3V7c0 1.657-3.134 3-7 3S3 8.657 3 7z"></path><path d="M17 5c0 1.657-3.134 3-7 3S3 6.657 3 5s3.134-3 7-3 7 1.343 7 3z"></path></svg>
+            <span>📊 진행률 대시보드</span>
+        </a>
+        <a href="{% url 'assignee_list' %}" class="menu-item">
+            <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path></svg>
+            <span>👥 담당자 관리</span>
+        </a>
+    </div>
+    <!-- 담당자 목록 섹션 -->
+    <div class="sidebar-status" style="border-top: 1px solid var(--border-color);">
+        <h3 class="status-title">담당자 목록</h3>
+        <div id="assignee-list-container">
+            {% get_active_assignees as active_assignees %}
+            {% if active_assignees %}
+                {% for assignee in active_assignees %}
+                <a href="{% url 'assignee_records' assignee.pk %}" class="menu-item" style="margin-bottom: 8px; border-left: 3px solid {{ assignee.color }};">
+                    <span style="display: flex; flex-direction: column; width: 100%;">
+                        <strong>{{ assignee.name }}</strong>
+                        <small style="color: #999; font-size: 11px;">{{ assignee.ids_from }}-{{ assignee.ids_to }} ({{ assignee.progress_percentage }}%)</small>
+                    </span>
+                </a>
+                {% endfor %}
+            {% else %}
+                <p style="color: #999; font-size: 12px; padding: 10px;">담당자가 없습니다</p>
+            {% endif %}
+        </div>
+    </div>
+    <div class="sidebar-status">
+        <h3 class="status-title">로그인 상태</h3>
+        <div>
+            {% online_user_list %}
+        </div>
+    </div>
+</aside>

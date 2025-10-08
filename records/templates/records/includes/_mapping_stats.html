@@ -1,0 +1,49 @@
+{% if not assignee_mode %}
+<!-- 📊 사전 매칭 통계 섹션 -->
+<div class="mapping-stats-section">
+    <h3 onclick="toggleMappingStats()" style="margin: 0 0 16px 0; font-size: 18px; color: var(--yonsei-blue); cursor: pointer; user-select: none;">
+        <span id="mappingStats-icon">▼</span> 📊 사전 매칭 통계
+    </h3>
+    <div id="mappingStatsContent" style="display: block;">
+    <div class="stats-cards">
+        <div class="stat-card total">
+            <div class="stat-number">{{ total_records|default:0 }}</div>
+            <div class="stat-label">전체 레코드</div>
+        </div>
+        <div class="stat-card unmapped">
+            <div class="stat-number">{{ unmapped_disease_count|default:0 }}</div>
+            <div class="stat-label">질병 미매칭</div>
+        </div>
+        <div class="stat-card unmapped">
+            <div class="stat-number">{{ unmapped_job_count|default:0 }}</div>
+            <div class="stat-label">직종 미매칭</div>
+        </div>
+        <div class="stat-card unmapped">
+            <div class="stat-number">{{ unmapped_exposure_count|default:0 }}</div>
+            <div class="stat-label">유해인자 미매칭</div>
+        </div>
+    </div>
+
+    <div class="filter-checkboxes">
+        <label class="checkbox-label">
+            <input type="checkbox" name="unmapped_disease" id="unmapped_disease"
+                   {% if show_unmapped_disease %}checked{% endif %}
+                   onchange="applyMappingFilter()">
+            <span>🔴 질병 미매칭만 보기</span>
+        </label>
+        <label class="checkbox-label">
+            <input type="checkbox" name="unmapped_job" id="unmapped_job"
+                   {% if show_unmapped_job %}checked{% endif %}
+                   onchange="applyMappingFilter()">
+            <span>🟡 직종 미매칭만 보기</span>
+        </label>
+        <label class="checkbox-label">
+            <input type="checkbox" name="unmapped_exposure" id="unmapped_exposure"
+                   {% if show_unmapped_exposure %}checked{% endif %}
+                   onchange="applyMappingFilter()">
+            <span>🟠 유해인자 미매칭만 보기</span>
+        </label>
+    </div>
+    </div>
+</div>
+{% endif %}
