@@ -747,7 +747,7 @@
             </div>
 
             <h1>기록 수정: {{ record.case.fid }}</h1>
-            <form method="post" action="{% url 'record_edit' record.pk %}?{{ other_params }}">
+            <form method="post" action="{% url 'record_edit' record.pk %}?{{ all_params }}">
                 {% csrf_token %}
                 <input type="hidden" name="ids" value="{{ record.ids|default:'' }}" />
 
