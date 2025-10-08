@@ -120,7 +120,12 @@
       <th>결정 사항</th>
       <td class="initial-value">{{ original_data.decision|default:"-" }}</td>
       <td>
-        <textarea name="decision" class="form-control" rows="2" placeholder="결정 사항">{{ current_data.decision|default:'' }}</textarea>
+        <select name="decision" class="form-control">
+          <option value="">선택하세요</option>
+          <option value="높음" {% if current_data.decision == "높음" %}selected{% endif %}>높음</option>
+          <option value="낮음" {% if current_data.decision == "낮음" %}selected{% endif %}>낮음</option>
+          <option value="모름" {% if current_data.decision == "모름" %}selected{% endif %}>모름</option>
+        </select>
       </td>
     </tr>
     <tr>
