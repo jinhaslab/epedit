@@ -502,13 +502,31 @@ document.addEventListener('DOMContentLoaded', function () {
             // 검색어 준비
             let searchQuery = '';
             if (target === 'disease') {
-                // 질병: 고찰 내용 사용
-                const smryField = document.getElementById('id_smry');
-                searchQuery = smryField && smryField.value.trim() ? smryField.value.trim() : '';
+                // 질병: 최초 입력된 질병명 사용 (original_disease_name)
+                const diseaseHidden = document.getElementById('disease_hidden');
+                if (diseaseHidden) {
+                    // data-initial-name 속성에서 최초 값 가져오기
+                    const initialName = diseaseHidden.dataset.initialName || diseaseHidden.dataset.currentValue || '';
+                    searchQuery = initialName.trim();
+                }
+                // 초기값이 없으면 현재 입력된 값 사용
+                if (!searchQuery) {
+                    const diseaseInput = document.getElementById('disease_input');
+                    searchQuery = diseaseInput && diseaseInput.value.trim() ? diseaseInput.value.trim() : '';
+                }
             } else if (target === 'job') {
-                // 직종: 현재 입력된 직종명 사용
-                const jobInput = document.getElementById('job_input');
-                searchQuery = jobInput && jobInput.value.trim() ? jobInput.value.trim() : '';
+                // 직종: 최초 입력된 직종명 사용 (original_job)
+                const jobHidden = document.getElementById('job_hidden');
+                if (jobHidden) {
+                    // data-initial-name 속성에서 최초 값 가져오기
+                    const initialName = jobHidden.dataset.initialName || jobHidden.dataset.currentValue || '';
+                    searchQuery = initialName.trim();
+                }
+                // 초기값이 없으면 현재 입력된 값 사용
+                if (!searchQuery) {
+                    const jobInput = document.getElementById('job_input');
+                    searchQuery = jobInput && jobInput.value.trim() ? jobInput.value.trim() : '';
+                }
             }
 
             console.log('검색어:', searchQuery); // 디버그 로그

@@ -878,13 +878,17 @@ def auto_apply_disease(request, pk):
         record.disease = disease_entry
         record.disease_code = matched_code
         record.last_modified_by = request.user
-        record.save()
+        record.save(update_fields=['disease', 'disease_code', 'last_modified_by', 'updated_at'])
+
+        # DB에서 다시 가져와서 저장 확인
+        record.refresh_from_db()
 
         return JsonResponse({
             'success': True,
             'matched_code': matched_code,
             'matched_name': matched_name,
-            'score': matched_score
+            'score': matched_score,
+            'saved_disease_code': record.disease_code  # 실제 저장된 값 확인
         })
 
     except DiseaseRecord.DoesNotExist:
@@ -943,13 +947,17 @@ def auto_apply_job(request, pk):
         record.job = job_entry
         record.job_code = matched_code
         record.last_modified_by = request.user
-        record.save()
+        record.save(update_fields=['job', 'job_code', 'last_modified_by', 'updated_at'])
+
+        # DB에서 다시 가져와서 저장 확인
+        record.refresh_from_db()
 
         return JsonResponse({
             'success': True,
             'matched_code': matched_code,
             'matched_name': matched_name,
-            'score': matched_score
+            'score': matched_score,
+            'saved_job_code': record.job_code  # 실제 저장된 값 확인
         })
 
     except DiseaseRecord.DoesNotExist:
