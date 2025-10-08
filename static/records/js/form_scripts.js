@@ -506,30 +506,34 @@ document.addEventListener('DOMContentLoaded', function () {
                 const diseaseHidden = document.getElementById('disease_hidden');
                 if (diseaseHidden) {
                     // data-initial-name 속성에서 최초 값 가져오기
-                    const initialName = diseaseHidden.dataset.initialName || diseaseHidden.dataset.currentValue || '';
-                    searchQuery = initialName.trim();
+                    const initialName = diseaseHidden.getAttribute('data-initial-name') || '';
+                    const currentValue = diseaseHidden.getAttribute('data-current-value') || '';
+                    searchQuery = (initialName || currentValue).trim();
                 }
                 // 초기값이 없으면 현재 입력된 값 사용
                 if (!searchQuery) {
                     const diseaseInput = document.getElementById('disease_input');
-                    searchQuery = diseaseInput && diseaseInput.value.trim() ? diseaseInput.value.trim() : '';
+                    searchQuery = diseaseInput && diseaseInput.value ? diseaseInput.value.trim() : '';
                 }
+                console.log('D-ai 검색어:', searchQuery, 'disease_hidden:', diseaseHidden); // 디버그 로그
             } else if (target === 'job') {
                 // 직종: 최초 입력된 직종명 사용 (original_job)
                 const jobHidden = document.getElementById('job_hidden');
                 if (jobHidden) {
                     // data-initial-name 속성에서 최초 값 가져오기
-                    const initialName = jobHidden.dataset.initialName || jobHidden.dataset.currentValue || '';
-                    searchQuery = initialName.trim();
+                    const initialName = jobHidden.getAttribute('data-initial-name') || '';
+                    const currentValue = jobHidden.getAttribute('data-current-value') || '';
+                    searchQuery = (initialName || currentValue).trim();
                 }
                 // 초기값이 없으면 현재 입력된 값 사용
                 if (!searchQuery) {
                     const jobInput = document.getElementById('job_input');
-                    searchQuery = jobInput && jobInput.value.trim() ? jobInput.value.trim() : '';
+                    searchQuery = jobInput && jobInput.value ? jobInput.value.trim() : '';
                 }
+                console.log('J-ai 검색어:', searchQuery, 'job_hidden:', jobHidden); // 디버그 로그
             }
 
-            console.log('검색어:', searchQuery); // 디버그 로그
+            console.log('최종 검색어:', searchQuery); // 디버그 로그
 
             // 팝업 창 열기
             let popupTitle = target === 'disease' ? 'D-ai: 질병 AI 검색' : 'J-ai: 직종 AI 검색';
