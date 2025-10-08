@@ -720,17 +720,27 @@
     <div class="main-wrapper">
         <!-- Form Content First -->
         <div class="form-content">
+            <!-- Breadcrumb Navigation -->
+            {% include "records/includes/_breadcrumb.html" with current_page="수정" %}
+
             <!-- Mobile Quick Actions -->
             <div class="mobile-quick-actions">
                 <button type="button" class="btn-quick-action" onclick="scrollToPdf()">
                     <span class="icon">📄</span>
                     <span class="label">PDF</span>
                 </button>
+                {% if assignee %}
+                <a href="{% url 'assignee_records' assignee.pk %}" class="btn-quick-action">
+                    <span class="icon">📋</span>
+                    <span class="label">목록</span>
+                </a>
+                {% else %}
                 <a href="{% url 'record_list' %}?{{ other_params }}" class="btn-quick-action">
                     <span class="icon">📋</span>
                     <span class="label">목록</span>
                 </a>
-                <a href="{% url 'record_detail' record.pk %}?{{ other_params }}" class="btn-quick-action">
+                {% endif %}
+                <a href="{% url 'record_detail' record.pk %}?{{ all_params }}" class="btn-quick-action">
                     <span class="icon">👁️</span>
                     <span class="label">상세</span>
                 </a>
@@ -756,7 +766,12 @@
                 </div>
 
                 <div class="action-buttons">
-                    <a href="{% url 'record_detail' record.pk %}?{{ other_params }}" class="btn btn-secondary">취소</a>
+                    {% if assignee %}
+                        <a href="{% url 'assignee_records' assignee.pk %}" class="btn btn-secondary">← {{ assignee.name }}의 작업 목록으로</a>
+                        <a href="{% url 'record_list' %}" class="btn btn-secondary" style="background-color: var(--yonsei-blue);">🏠 전체 목록</a>
+                    {% else %}
+                        <a href="{% url 'record_detail' record.pk %}?{{ other_params }}" class="btn btn-secondary">취소</a>
+                    {% endif %}
                     <button type="submit" class="btn btn-primary">저장</button>
                 </div>
             </form>

@@ -20,6 +20,10 @@ from .utils.disease_field_handler import (
     get_additional_disease_context,
     save_additional_disease_fields
 )
+from .utils.redirect_handler import (
+    get_assignee_redirect_url,
+    get_record_detail_redirect_url
+)
 
 # -----------------------------------------------------------
 # API 엔드포인트 뷰
@@ -335,6 +339,19 @@ class RecordDetailView(LoginRequiredMixin, DetailView):
         query_params = self.request.GET.copy()
         context['other_params'] = query_params.urlencode()
 
+        # All params including assignee_id for navigation
+        all_params = self.request.GET.copy()
+        context['all_params'] = all_params.urlencode()
+
+        # Add assignee context if assignee_id is in parameters
+        assignee_id = self.request.GET.get('assignee_id')
+        if assignee_id:
+            try:
+                assignee = Assignee.objects.get(pk=assignee_id)
+                context['assignee'] = assignee
+            except Assignee.DoesNotExist:
+                pass
+
         # ✅ original_data는 "최초" 열에 표시되는 값 (original_* 필드)
         context['original_data'] = {
             'disease_name': record.original_disease_name or '',
@@ -399,6 +416,19 @@ class RecordUpdateView(LoginRequiredMixin, UpdateView):
         query_params = self.request.GET.copy()
         context['other_params'] = query_params.urlencode()
 
+        # All params including assignee_id for navigation
+        all_params = self.request.GET.copy()
+        context['all_params'] = all_params.urlencode()
+
+        # Add assignee context if assignee_id is in parameters
+        assignee_id = self.request.GET.get('assignee_id')
+        if assignee_id:
+            try:
+                assignee = Assignee.objects.get(pk=assignee_id)
+                context['assignee'] = assignee
+            except Assignee.DoesNotExist:
+                pass
+
         # ✅ original_data는 "최초" 열에 표시되는 값 (original_* 필드)
         context['original_data'] = {
             'disease_name': record.original_disease_name or '',
@@ -444,18 +474,16 @@ class RecordUpdateView(LoginRequiredMixin, UpdateView):
         return context
 
     def get_success_url(self):
+        """Determine redirect URL after successful form submission."""
         query_params = self.request.GET.copy()
         assignee_id = query_params.get('assignee_id')
 
         if assignee_id:
-            # 담당자 페이지로 복귀
-            # assignee_id는 이미 query_params에 있으므로 그대로 사용
-            base_assignee_url = reverse('assignee_records', kwargs={'pk': assignee_id})
-            return f"{base_assignee_url}?{query_params.urlencode()}" if query_params else base_assignee_url
+            # Redirect to assignee's record list
+            return get_assignee_redirect_url(assignee_id, query_params)
         else:
-            # 전체 목록 상세 페이지로 복귀
-            base_detail_url = reverse('record_detail', kwargs={'pk': self.object.pk})
-            return f"{base_detail_url}?{query_params.urlencode()}" if query_params else base_detail_url
+            # Redirect to record detail page
+            return get_record_detail_redirect_url(self.object.pk, query_params)
 
     def form_invalid(self, form):
         """폼이 유효하지 않을 때 호출되며, context를 다시 생성하여 템플릿에 전달"""

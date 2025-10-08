@@ -1,0 +1,21 @@
+{% comment %}
+Breadcrumb Navigation Component
+- Shows hierarchy: 전체 목록 › [Assignee Name] › Current Page
+- Conditionally renders assignee context when assignee_id is present
+{% endcomment %}
+
+<nav class="breadcrumb-nav" style="padding: 15px 20px; background: #f8f9fa; border-bottom: 1px solid #e0e0e0; margin-bottom: 20px;">
+    <a href="{% url 'record_list' %}" style="color: #0066cc; text-decoration: none; font-weight: 500;">🏠 전체 목록</a>
+
+    {% if assignee %}
+        <span style="margin: 0 8px; color: #999;">›</span>
+        <a href="{% url 'assignee_records' assignee.pk %}" style="color: #0066cc; text-decoration: none; font-weight: 500;">
+            {{ assignee.name }}의 작업 영역
+        </a>
+    {% endif %}
+
+    {% if current_page %}
+        <span style="margin: 0 8px; color: #999;">›</span>
+        <span style="color: #666;">{{ current_page }}</span>
+    {% endif %}
+</nav>

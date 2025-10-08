@@ -742,17 +742,27 @@
     <div class="main-container">
         <!-- Content First -->
         <div class="content-container">
+            <!-- Breadcrumb Navigation -->
+            {% include "records/includes/_breadcrumb.html" with current_page="상세 보기" %}
+
             <!-- Mobile Quick Actions -->
             <div class="mobile-quick-actions">
                 <button class="btn-quick-action" onclick="scrollToPdf()">
                     <span class="icon">📄</span>
                     <span class="label">PDF</span>
                 </button>
+                {% if assignee %}
+                <a href="{% url 'assignee_records' assignee.pk %}" class="btn-quick-action">
+                    <span class="icon">📋</span>
+                    <span class="label">목록</span>
+                </a>
+                {% else %}
                 <a href="{% url 'record_list' %}?{{ other_params }}" class="btn-quick-action">
                     <span class="icon">📋</span>
                     <span class="label">목록</span>
                 </a>
-                <a href="{% url 'record_edit' record.pk %}?{{ other_params }}" class="btn-quick-action">
+                {% endif %}
+                <a href="{% url 'record_edit' record.pk %}?{{ all_params }}" class="btn-quick-action">
                     <span class="icon">✏️</span>
                     <span class="label">수정</span>
                 </a>
@@ -870,8 +880,13 @@
                     </tbody>
                 </table>
                 <div class="actions">
-                    <a href="{% url 'record_list' %}?{{ other_params }}" class="btn btn-list">목록으로</a>
-                    <a href="{% url 'record_edit' record.pk %}?{{ other_params }}" class="btn btn-edit">수정하기</a>
+                    {% if assignee %}
+                        <a href="{% url 'assignee_records' assignee.pk %}" class="btn btn-list">← {{ assignee.name }}의 작업 목록으로</a>
+                        <a href="{% url 'record_list' %}" class="btn btn-list" style="background-color: var(--yonsei-blue);">🏠 전체 목록</a>
+                    {% else %}
+                        <a href="{% url 'record_list' %}?{{ other_params }}" class="btn btn-list">← 전체 목록으로</a>
+                    {% endif %}
+                    <a href="{% url 'record_edit' record.pk %}?{{ all_params }}" class="btn btn-edit">수정하기</a>
                 </div>
                 </div>
             </div>
