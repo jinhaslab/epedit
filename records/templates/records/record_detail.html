@@ -609,19 +609,7 @@
                 display: flex;
             }
 
-            /* Mobile PDF size controls - hide size buttons, keep toggle */
-            .pdf-size-controls button[data-size="500"],
-            .pdf-size-controls button[data-size="800"],
-            .pdf-size-controls button[data-size="1200"],
-            .pdf-size-controls .pdf-size-slider,
-            .pdf-size-controls .pdf-size-display {
-                display: none !important;
-            }
-
-            /* Keep only the hide button visible */
-            .pdf-size-controls {
-                justify-content: flex-end;
-            }
+            /* Mobile PDF size controls - keep all buttons */
         }
 
         @media (max-width: 576px) {
