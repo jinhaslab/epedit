@@ -504,18 +504,30 @@ document.addEventListener('DOMContentLoaded', function () {
             if (target === 'disease') {
                 // 질병: 최초 입력된 질병명 사용 (original_disease_name)
                 const diseaseHidden = document.getElementById('disease_hidden');
+                const diseaseInput = document.getElementById('disease_input');
+
                 if (diseaseHidden) {
                     // data-initial-name 속성에서 최초 값 가져오기
                     const initialName = diseaseHidden.getAttribute('data-initial-name') || '';
                     const currentValue = diseaseHidden.getAttribute('data-current-value') || '';
-                    searchQuery = (initialName || currentValue).trim();
+                    const hiddenValue = diseaseHidden.value || '';
+
+                    console.log('D-ai data attributes:', {
+                        initialName,
+                        currentValue,
+                        hiddenValue,
+                        inputValue: diseaseInput ? diseaseInput.value : 'no input'
+                    });
+
+                    searchQuery = (initialName || currentValue || hiddenValue).trim();
                 }
+
                 // 초기값이 없으면 현재 입력된 값 사용
-                if (!searchQuery) {
-                    const diseaseInput = document.getElementById('disease_input');
-                    searchQuery = diseaseInput && diseaseInput.value ? diseaseInput.value.trim() : '';
+                if (!searchQuery && diseaseInput) {
+                    searchQuery = diseaseInput.value ? diseaseInput.value.trim() : '';
                 }
-                console.log('D-ai 검색어:', searchQuery, 'disease_hidden:', diseaseHidden); // 디버그 로그
+
+                console.log('D-ai 최종 검색어:', searchQuery); // 디버그 로그
             } else if (target === 'job') {
                 // 직종: 최초 입력된 직종명 사용 (original_job)
                 const jobHidden = document.getElementById('job_hidden');

@@ -614,6 +614,13 @@
                 display: flex;
             }
 
+            /* Mobile PDF size controls - hide size buttons, keep toggle */
+            .pdf-size-controls button[data-size],
+            .pdf-size-slider,
+            .pdf-size-display {
+                display: none !important;
+            }
+
             body {
                 height: auto;
                 overflow: auto;

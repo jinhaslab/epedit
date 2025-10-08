@@ -609,9 +609,11 @@
                 display: flex;
             }
 
-            /* Mobile PDF size controls - height instead of width */
-            .pdf-size-controls button[data-size] {
-                display: inline-block;
+            /* Mobile PDF size controls - hide size buttons, keep toggle */
+            .pdf-size-controls button[data-size],
+            .pdf-size-slider,
+            .pdf-size-display {
+                display: none !important;
             }
         }
 
